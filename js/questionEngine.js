@@ -159,7 +159,35 @@
     { en: 'adventure', kr: '모험', pron: '어드벤처', emoji: '🧭', theme: 'concept', level: 3 },
     { en: 'trophy', kr: '트로피', pron: '트로피', emoji: '🏆', theme: 'concept', level: 2 },
     { en: 'victory', kr: '승리', pron: '빅토리', emoji: '✌️', theme: 'concept', level: 3 },
-    { en: 'champion', kr: '챔피언/우승자', pron: '챔피언', emoji: '🥇', theme: 'concept', level: 3 }
+    { en: 'champion', kr: '챔피언/우승자', pron: '챔피언', emoji: '🥇', theme: 'concept', level: 3 },
+
+    // Tier 4-5: Higher-Stage Advanced Vocabulary (for stages where speed is capped at 2.5x and word difficulty continues scaling!)
+    { en: 'environment', kr: '환경/자연환경', pron: '인바이런먼트', emoji: '🌱', theme: 'nature', level: 4 },
+    { en: 'temperature', kr: '온도/기온', pron: '템퍼러처', emoji: '🌡️', theme: 'science', level: 4 },
+    { en: 'experiment', kr: '실험', pron: '익스페리먼트', emoji: '🧪', theme: 'science', level: 4 },
+    { en: 'invention', kr: '발명/발명품', pron: '인벤션', emoji: '💡', theme: 'science', level: 4 },
+    { en: 'telescope', kr: '망원경', pron: '텔레스코프', emoji: '🔭', theme: 'space', level: 4 },
+    { en: 'microscope', kr: '현미경', pron: '마이크로스코프', emoji: '🔬', theme: 'science', level: 4 },
+    { en: 'continent', kr: '대륙', pron: '컨티넌트', emoji: '🗺️', theme: 'nature', level: 4 },
+    { en: 'volcano', kr: '화산', pron: '볼케이노', emoji: '🌋', theme: 'nature', level: 4 },
+    { en: 'earthquake', kr: '지진', pron: '어스퀘이크', emoji: '🫨', theme: 'nature', level: 4 },
+    { en: 'hurricane', kr: '태풍/허리케인', pron: '허리케인', emoji: '🌀', theme: 'nature', level: 4 },
+    { en: 'passenger', kr: '승객', pron: '패신저', emoji: '🧳', theme: 'vehicle', level: 4 },
+    { en: 'destination', kr: '목적지', pron: '데스티네이션', emoji: '🏁', theme: 'vehicle', level: 4 },
+    { en: 'schedule', kr: '일정/시간표', pron: '스케줄', emoji: '🗓️', theme: 'study', level: 4 },
+    { en: 'education', kr: '교육', pron: '에듀케이션', emoji: '🎓', theme: 'study', level: 4 },
+    { en: 'knowledge', kr: '지식', pron: '날리지', emoji: '📘', theme: 'study', level: 4 },
+    { en: 'experience', kr: '경험', pron: '익스피리언스', emoji: '🌟', theme: 'concept', level: 4 },
+    { en: 'imagination', kr: '상상력', pron: '이매지네이션', emoji: '🦄', theme: 'concept', level: 5 },
+    { en: 'communication', kr: '의사소통/대화', pron: '커뮤니케이션', emoji: '💬', theme: 'concept', level: 5 },
+    { en: 'opportunity', kr: '기회', pron: '오퍼튜니티', emoji: '🚪', theme: 'concept', level: 5 },
+    { en: 'responsibility', kr: '책임감', pron: '리스판서빌리티', emoji: '🛡️', theme: 'concept', level: 5 },
+    { en: 'achievement', kr: '성취/달성', pron: '어치브먼트', emoji: '🏅', theme: 'concept', level: 5 },
+    { en: 'encourage', kr: '격려하다/용기를 주다', pron: '인커리지', emoji: '👏', theme: 'adjective', level: 5 },
+    { en: 'independent', kr: '독립적인/스스로 하는', pron: '인디펜던트', emoji: '🦅', theme: 'adjective', level: 5 },
+    { en: 'magnificent', kr: '장엄한/멋진', pron: '매그니피선트', emoji: '👑', theme: 'adjective', level: 5 },
+    { en: 'constellation', kr: '별자리', pron: '컨스털레이션', emoji: '✨', theme: 'space', level: 5 },
+    { en: 'civilization', kr: '문명', pron: '시빌라이제이션', emoji: '🏛️', theme: 'subject', level: 5 }
   ];
 
   /**
