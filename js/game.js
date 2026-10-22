@@ -2536,7 +2536,7 @@
         });
       }
 
-      // Boss Clear Step 2 & Pre-Start: Sky-Ascending World Tree Map Popup (#next-stage-modal)
+      // Boss Clear Step 2 & Pre-Start: Visual Treasure-Island World Adventure Map (#next-stage-modal)
       const btnNextStageYes = document.getElementById('btn-next-stage-yes');
       if (btnNextStageYes) {
         btnNextStageYes.addEventListener('click', function (e) {
@@ -2556,26 +2556,41 @@
           if (window.UIManager && typeof window.UIManager.hideNextStageModal === 'function') {
             window.UIManager.hideNextStageModal();
           }
-          if (mode !== 'start') {
+          if (mode === 'start') {
+            if (window.UIManager && typeof window.UIManager.setStartScreenVisible === 'function') {
+              window.UIManager.setStartScreenVisible(true);
+            }
+          } else {
             self.returnToDashboard();
           }
         });
       }
 
-      // Clicking an unlocked stage node on the Sky Tree Map in 'start' mode selects that stage
+      // Clicking an island or number sphere on the Treasure Map immediately starts that stage!
       const skyTreeList = document.getElementById('sky-treemap-list');
       if (skyTreeList) {
         skyTreeList.addEventListener('click', function (e) {
           const modal = document.getElementById('next-stage-modal');
-          if (!modal || modal.getAttribute('data-treemap-mode') !== 'start') return;
+          if (!modal) return;
+          const mode = modal.getAttribute('data-treemap-mode') || 'start';
           const node = e.target.closest('[data-treemap-stage]');
-          if (!node || node.getAttribute('data-unlocked') !== 'true') return;
+          if (!node) return;
           const stg = parseInt(node.getAttribute('data-treemap-stage'), 10);
-          if (!isNaN(stg) && stg >= 1) {
-            self.openPreStartTreeMap(stg);
-            if (window.UIManager && window.SaveManager) {
-              window.UIManager.renderDashboard(window.SaveManager.getState(), stg);
-            }
+          const isUnlocked = node.getAttribute('data-unlocked') === 'true';
+
+          if (mode === 'next_stage') {
+            e.preventDefault();
+            e.stopPropagation();
+            self.confirmNextStageStart();
+            return;
+          }
+
+          if (!isNaN(stg) && stg >= 1 && isUnlocked) {
+            e.preventDefault();
+            e.stopPropagation();
+            state.selectedDashboardStage = stg;
+            modal.setAttribute('data-target-stage', String(stg));
+            self.startGame(stg);
           }
         });
       }
