@@ -8,116 +8,116 @@
   const STAGES = [
     {
       stage: 1,
-      title: '🌈 레인보우 스타터 오비 (Rainbow Obby)',
+      title: '🏞️ 에메랄드 강변 & 알프스 대자연 숲',
       subtitle: '이소윤의 기초 연산·구구단 밖 곱셈·나눗셈 & 기초 영단어·생활영어!',
       questionsToBoss: 15, // 15문제 풀어야 보스 출현
       bossName: '블록 골렘 렉스 (Blocky Rex)',
-      bossTitle: '1단계 로블록스 연산 수문장',
+      bossTitle: '1단계 대자연 강변 수문장',
       bossHp: 9, // 보스 체력 9
       baseSpeed: 36, // 문제 풀이 시간 약 9.5초
       gateSolveSeconds: 9.5,
-      themeColor: '#00f2fe',
-      roadColor: '#1a103c',
-      skyColor: '#07051a',
-      fogColor: '#12092b',
+      themeColor: '#00e676',
+      roadColor: '#1f2e3d',
+      skyColor: '#0d47a1',
+      fogColor: '#1d4d4f',
       bossColor: 0xff3366
     },
     {
       stage: 2,
-      title: '🍕 피자 팩토리 타워 (Pizza Obby Tower)',
+      title: '☁️ 천공의 구름 왕국 · 하늘 위 무지개 길',
       subtitle: '구구단 밖 곱셈·나눗셈 & 초등 필수 생활영어 회화!',
       questionsToBoss: 18,
       bossName: '알파벳 빌런 눕킹 (Noob King)',
-      bossTitle: '2단계 생활영어·연산 보스',
+      bossTitle: '2단계 하늘 구름왕국 보스',
       bossHp: 10,
       baseSpeed: 36.5, // 단계별 미세 가속 (+0.5)
       gateSolveSeconds: 9.4,
-      themeColor: '#ff007f',
-      roadColor: '#220b38',
-      skyColor: '#160526',
-      fogColor: '#24093a',
+      themeColor: '#00e5ff',
+      roadColor: '#1e3a5f',
+      skyColor: '#0277bd',
+      fogColor: '#3a7bd5',
       bossColor: 0xff9900
     },
     {
       stage: 3,
-      title: '💎 크리스탈 점프 아일랜드 (Crystal Obby)',
+      title: '🐠 신비한 바닷속 산호초 & 아틀란티스 해저월드',
       subtitle: '곱셈·나눗셈·두자리 연산 & 실전 생활영어 마스터!',
       questionsToBoss: 16,
       bossName: '코블록스 스핑크스 (Korblox Sphinx)',
-      bossTitle: '3단계 로블록스 수수께끼 보스',
+      bossTitle: '3단계 해저 아틀란티스 보스',
       bossHp: 10,
       baseSpeed: 37.0, // 단계별 미세 가속 (+0.5)
       gateSolveSeconds: 9.2,
-      themeColor: '#00ff88',
-      roadColor: '#0d2638',
-      skyColor: '#04121c',
-      fogColor: '#0a2233',
+      themeColor: '#00f5d4',
+      roadColor: '#06283d',
+      skyColor: '#001233',
+      fogColor: '#003554',
       bossColor: 0x00ffcc
     },
     {
       stage: 4,
-      title: '🌋 용암 탈출 메가 오비 (Lava Escape Obby)',
+      title: '🌋 불타는 화산 용암지대 & 마그마 협곡',
       subtitle: '심화 곱셈·나눗셈 & 필수 생활영어 스피드 배틀!',
       questionsToBoss: 17,
       bossName: '밴해머 레드 드래곤 (Ban-Hammer Dragon)',
-      bossTitle: '4단계 로블록스 연산 드래곤',
+      bossTitle: '4단계 화산 용암 드래곤',
       bossHp: 11,
       baseSpeed: 37.5, // 단계별 미세 가속 (+0.5)
       gateSolveSeconds: 9.1,
-      themeColor: '#ffcc00',
-      roadColor: '#331111',
-      skyColor: '#1a0505',
-      fogColor: '#2b0b0b',
+      themeColor: '#ff6d00',
+      roadColor: '#240905',
+      skyColor: '#1a0000',
+      fogColor: '#2d0604',
       bossColor: 0xff2200
     }
   ];
 
-  // 무한 스테이지(STAGE 5 ~ ∞)를 위한 12종 로블록스 오비 월드 템플릿
+  // 무한 스테이지(STAGE 5 ~ ∞)를 위한 다채로운 배경 월드 템플릿 (상상의 나라·벚꽃 호수·설산 오로라·환상의 세계 등)
   const EXTRA_STAGE_TEMPLATES = [
     {
-      titlePrefix: '🌌 갤럭시 발키리 타워',
-      bossName: '오메가 발키리 (Omega Valkyrie)',
-      bossRole: '우주 로블록스 지배자',
-      themeColor: '#a855f7',
-      roadColor: '#1f1038',
-      skyColor: '#0c051c',
-      fogColor: '#1a0b36',
-      bossColor: 0xc084fc
-    },
-    {
-      titlePrefix: '⚡ 사이버 로블록스 스타 링',
-      bossName: '도미누스 타이탄 (Dominus Titan)',
-      bossRole: '은하계 수리·언어 수호신',
-      themeColor: '#38bdf8',
-      roadColor: '#0f243c',
-      skyColor: '#050e1a',
-      fogColor: '#0b1b30',
-      bossColor: 0x38bdf8
-    },
-    {
-      titlePrefix: '🍭 스윗 캔디랜드 타이쿤',
+      titlePrefix: '🎠 상상의 나라 · 마법 동화 & 캔디 원더랜드',
       bossName: '마시멜로 골렘 킹 (Marshmallow King)',
-      bossRole: '캔디 오비 수호 보스',
-      themeColor: '#ff66cc',
-      roadColor: '#2e102c',
-      skyColor: '#170616',
-      fogColor: '#290b27',
+      bossRole: '상상의 나라 마법 보스',
+      themeColor: '#ff70a6',
+      roadColor: '#311442',
+      skyColor: '#3c096c',
+      fogColor: '#2b0f42',
       bossColor: 0xff66cc
     },
     {
-      titlePrefix: '❄️ 프로즌 크리스탈 캐슬',
+      titlePrefix: '🌸 벚꽃 호수 & 봄날의 산악 계곡',
+      bossName: '도미누스 타이탄 (Dominus Titan)',
+      bossRole: '벚꽃 호수 수호신',
+      themeColor: '#ff8fab',
+      roadColor: '#281c2d',
+      skyColor: '#2b193d',
+      fogColor: '#361f32',
+      bossColor: 0xff8fab
+    },
+    {
+      titlePrefix: '❄️ 알래스카 설산 & 빙하 강 오로라 월드',
       bossName: '아이스 프로스트 드래곤 (Frost Dragon)',
-      bossRole: '빙하 오비 지배자',
-      themeColor: '#00f5ff',
-      roadColor: '#0b2236',
-      skyColor: '#04101c',
-      fogColor: '#081b2e',
+      bossRole: '설산 빙하 오로라 지배자',
+      themeColor: '#64ffda',
+      roadColor: '#102538',
+      skyColor: '#021124',
+      fogColor: '#0d2b45',
       bossColor: 0x00f5ff
     },
     {
-      titlePrefix: '🦖 쥬라기 블록 파크',
+      titlePrefix: '🌈 사이버 은하수 & 네온 환상의 세계',
+      bossName: '오메가 발키리 (Omega Valkyrie)',
+      bossRole: '환상의 세계 지배자',
+      themeColor: '#00f3ff',
+      roadColor: '#16092c',
+      skyColor: '#040112',
+      fogColor: '#0d041d',
+      bossColor: 0xc084fc
+    },
+    {
+      titlePrefix: '🏞️ 에메랄드 대자연 협곡 & 폭포 숲',
       bossName: '메카 티라노 렉스 (Mecha T-Rex)',
-      bossRole: '공룡 아일랜드 챔피언',
+      bossRole: '대자연 아일랜드 챔피언',
       themeColor: '#22c55e',
       roadColor: '#0f2918',
       skyColor: '#06140b',
@@ -125,9 +125,9 @@
       bossColor: 0x22c55e
     },
     {
-      titlePrefix: '🌊 아틀란티스 아쿠아 오비',
-      bossName: '포세이돈 샤크 메카 (Shark Mecha)',
-      bossRole: '심해 신전 수호자',
+      titlePrefix: '☁️ 천공의 무지개 아일랜드 & 구름 신전',
+      bossName: '포세이돈 스카이 메카 (Sky Mecha)',
+      bossRole: '하늘 신전 수호자',
       themeColor: '#06b6d4',
       roadColor: '#082530',
       skyColor: '#031217',
@@ -135,19 +135,19 @@
       bossColor: 0x06b6d4
     },
     {
-      titlePrefix: '🔥 인피니티 블록 아레나',
+      titlePrefix: '🐠 아틀란티스 산호초 & 심해 보물 해협',
       bossName: '인피니티 엠페러 (Infinity Emperor)',
-      bossRole: '차원 초월 브레인 마스터',
-      themeColor: '#f43f5e',
-      roadColor: '#2d0c1e',
-      skyColor: '#17040d',
-      fogColor: '#290a19',
-      bossColor: 0xf43f5e
+      bossRole: '바닷속 심해 마스터',
+      themeColor: '#00f5d4',
+      roadColor: '#06283d',
+      skyColor: '#001233',
+      fogColor: '#003554',
+      bossColor: 0x00f5d4
     },
     {
-      titlePrefix: '👑 골든 로벅스 제국',
+      titlePrefix: '🌋 마그마 볼케이노 & 불꽃 드래곤 밸리',
       bossName: '갤럭시 오버로드 (Galaxy Overlord)',
-      bossRole: '전설의 오비 챔피언',
+      bossRole: '용암 협곡 챔피언',
       themeColor: '#facc15',
       roadColor: '#2b230c',
       skyColor: '#141004',
