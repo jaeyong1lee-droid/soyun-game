@@ -1346,10 +1346,47 @@
       }
     },
 
+    commitPendingParentBonusInputs: function (excludeCountKey) {
+      if (!window.SaveManager) return;
+      const container = document.getElementById('parent-bonus-list-container');
+      if (!container) return;
+      const s = window.SaveManager.getState();
+
+      const nameInputs = container.querySelectorAll('.parent-bonus-name-input');
+      nameInputs.forEach(function (inp) {
+        const key = inp.getAttribute('data-bonus-key');
+        const val = String(inp.value || '').trim();
+        if (!key || !val) return;
+        if (key === 'pocket' && val !== s.bonusNamePocket) {
+          window.SaveManager.setBonusName('pocket', val);
+        } else if (key === 'ashley' && val !== s.bonusNameAshley) {
+          window.SaveManager.setBonusName('ashley', val);
+        } else if (key === 'jackpot' && val !== s.bonusNameJackpot) {
+          window.SaveManager.setBonusName('jackpot', val);
+        }
+      });
+
+      const countInputs = container.querySelectorAll('.parent-bonus-count-input');
+      countInputs.forEach(function (inp) {
+        const key = inp.getAttribute('data-bonus-key');
+        if (!key || key === excludeCountKey) return;
+        const num = Math.max(1, Math.min(99999, parseInt(inp.value, 10) || 0));
+        if (!num) return;
+        if (key === 'pocket' && num !== s.bonusTargetPocket) {
+          window.SaveManager.setBonusAchievedCount('pocket', num);
+        } else if (key === 'ashley' && num !== s.bonusTargetAshley) {
+          window.SaveManager.setBonusAchievedCount('ashley', num);
+        } else if (key === 'jackpot' && num !== s.bonusTargetJackpot) {
+          window.SaveManager.setBonusAchievedCount('jackpot', num);
+        }
+      });
+    },
+
     closeParentModal: function () {
       if (window.SoundEngine) {
         window.SoundEngine.playClick();
       }
+      this.commitPendingParentBonusInputs();
       if (window.UIManager && typeof window.UIManager.hideParentModal === 'function') {
         window.UIManager.hideParentModal();
       }
@@ -1365,6 +1402,7 @@
      */
     markBonusPaid: function (bonusKey) {
       if (!window.SaveManager || typeof window.SaveManager.markBonusPaid !== 'function') return;
+      this.commitPendingParentBonusInputs();
       if (window.SoundEngine) {
         window.SoundEngine.playStageClear();
       }
@@ -1382,6 +1420,7 @@
 
     undoBonusPaid: function (bonusKey) {
       if (!window.SaveManager || typeof window.SaveManager.undoBonusPaid !== 'function') return;
+      this.commitPendingParentBonusInputs();
       if (window.SoundEngine) {
         window.SoundEngine.playClick();
       }
@@ -1404,6 +1443,7 @@
         window.alert('보너스 이름을 입력해 주세요.');
         return;
       }
+      this.commitPendingParentBonusInputs();
       if (window.SoundEngine) {
         window.SoundEngine.playCorrect(1);
       }
@@ -1418,6 +1458,7 @@
 
     setBonusAchievedCount: function (bonusKey, targetCount) {
       if (!window.SaveManager || typeof window.SaveManager.setBonusAchievedCount !== 'function') return;
+      this.commitPendingParentBonusInputs(bonusKey);
       const num = Math.max(1, Math.min(99999, parseInt(targetCount, 10) || 1));
       if (window.SoundEngine) {
         window.SoundEngine.playCorrect(1);
@@ -1434,6 +1475,7 @@
 
     stepBonusAchievedCount: function (bonusKey, delta) {
       if (!window.SaveManager) return;
+      this.commitPendingParentBonusInputs(bonusKey);
       const s = window.SaveManager.getState();
       let cur = 100;
       if (bonusKey === 'pocket') cur = Math.max(1, parseInt(s.bonusTargetPocket, 10) || 100);
