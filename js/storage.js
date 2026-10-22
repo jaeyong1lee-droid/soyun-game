@@ -31,7 +31,8 @@
       totalScore: 0,            // Cumulative score across all sessions
       highScore: 0,             // Highest cumulative/session score record
       maxSpeed: getBaseSpeedDefault(), // Highest speed (km/h) ever reached
-      speedMultiplier: 1.0,     // User-adjustable speed multiplier (0.5x ~ 2.0x)
+      speedMultiplier: 1.0,     // User-adjustable speed multiplier (1.0x ~ 2.5x)
+      obbySpeedMultiplier: 1.2, // Parent-adjustable Obby Jump Mini-Game speed multiplier (default 1.2x of current speed)
       totalSolved: 0,           // Cumulative total questions attempted
       totalCorrect: 0,          // Cumulative total correct answers
       totalWrong: 0,            // Cumulative total wrong answers
@@ -88,6 +89,7 @@
         paidAshleyCount: typeof stateObj.paidAshleyCount === 'number' ? stateObj.paidAshleyCount : (existing.paidAshleyCount || 0),
         paidJackpotCount: typeof stateObj.paidJackpotCount === 'number' ? stateObj.paidJackpotCount : (existing.paidJackpotCount || 0),
         speedMultiplier: stateObj.speedMultiplier || existing.speedMultiplier || 1.0,
+        obbySpeedMultiplier: stateObj.obbySpeedMultiplier || existing.obbySpeedMultiplier || 1.2,
         subjectMode: stateObj.subjectMode || existing.subjectMode || 'mixed',
         updatedAt: Date.now()
       };
@@ -202,6 +204,11 @@
       ? Math.round(parsedMult * 100) / 100
       : 1.0;
 
+    const parsedObbyMult = parseFloat(raw.obbySpeedMultiplier);
+    const obbySpeedMultiplier = (!isNaN(parsedObbyMult) && parsedObbyMult >= 0.8 && parsedObbyMult <= 2.5)
+      ? Math.round(parsedObbyMult * 100) / 100
+      : 1.2;
+
     const wrongAnswerQueue = Array.isArray(raw.wrongAnswerQueue)
       ? raw.wrongAnswerQueue.filter(Boolean)
       : [];
@@ -218,6 +225,7 @@
       highScore: highScore,
       maxSpeed: maxSpeed,
       speedMultiplier: speedMultiplier,
+      obbySpeedMultiplier: obbySpeedMultiplier,
       totalSolved: totalSolved,
       totalCorrect: totalCorrect,
       totalWrong: totalWrong,
