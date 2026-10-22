@@ -980,8 +980,41 @@
     },
 
     /**
+     * Opens the Sky-Ascending World Tree Map Popup (#next-stage-modal in 'start' mode) BEFORE starting the game
+     * so Soyun can see which world/country each stage is and her current climbing position!
+     */
+    openPreStartTreeMap: function (stageOverride) {
+      if (!state.initialized) {
+        this.init();
+      }
+      if (window.SoundEngine) {
+        window.SoundEngine.init();
+        window.SoundEngine.playClick();
+      }
+      const saveState = window.SaveManager ? window.SaveManager.getState() : { currentStage: 1, maxStageReached: 1 };
+      const targetStage = Math.max(
+        1,
+        parseInt(stageOverride !== undefined ? stageOverride : (state.selectedDashboardStage || saveState.currentStage), 10) || 1
+      );
+      state.selectedDashboardStage = targetStage;
+      const targetCfg = getStageCfg(targetStage);
+
+      if (window.Engine3D && typeof window.Engine3D.setStageTheme === 'function') {
+        window.Engine3D.setStageTheme(targetCfg);
+      }
+
+      if (window.UIManager && typeof window.UIManager.showNextStageModal === 'function') {
+        window.UIManager.showNextStageModal(targetStage, targetCfg, {
+          mode: 'start',
+          maxStageReached: Math.max(targetStage, parseInt(saveState.maxStageReached || saveState.currentStage, 10) || 1)
+        });
+      }
+      return this;
+    },
+
+    /**
      * Step 1 -> Step 2 on Boss Clear:
-     * Clicking the Center Reward Status Popup (#boss-reward-modal) hides it and opens the Next Stage Confirm Popup (#next-stage-modal).
+     * Clicking the Center Reward Status Popup (#boss-reward-modal) hides it and opens the Sky-Ascending World Tree Map Popup (#next-stage-modal).
      */
     onBossRewardModalClick: function () {
       if (window.SoundEngine) {
@@ -992,16 +1025,31 @@
           window.UIManager.hideBossRewardModal();
         }
         if (typeof window.UIManager.showNextStageModal === 'function') {
-          window.UIManager.showNextStageModal(state.stage, state.stageConfig);
+          const saveState = window.SaveManager ? window.SaveManager.getState() : {};
+          window.UIManager.showNextStageModal(state.stage, state.stageConfig, {
+            mode: 'next_stage',
+            clearedStage: Math.max(1, state.stage - 1),
+            maxStageReached: Math.max(state.stage, parseInt(saveState.maxStageReached, 10) || state.stage)
+          });
         }
       }
     },
 
     /**
-     * Step 2 Confirm on Boss Clear:
-     * Starts the newly unlocked next stage immediately when the user clicks [네! STAGE X 출발하기!].
+     * Confirms starting the stage from the Sky-Ascending World Tree Map Popup (#next-stage-modal):
+     * - If opened before game start (mode === 'start'), calls startGame(targetStage).
+     * - If opened on Boss Clear (mode === 'next_stage'), resumes 3D engine and starts the new stage.
      */
     confirmNextStageStart: function () {
+      const modal = document.getElementById('next-stage-modal');
+      const mode = modal ? modal.getAttribute('data-treemap-mode') : 'next_stage';
+      const targetAttr = modal ? parseInt(modal.getAttribute('data-target-stage'), 10) : NaN;
+
+      if (mode === 'start') {
+        const startStg = !isNaN(targetAttr) && targetAttr >= 1 ? targetAttr : state.selectedDashboardStage;
+        return this.startGame(startStg);
+      }
+
       if (window.SoundEngine) {
         window.SoundEngine.playClick();
         window.SoundEngine.setSpeedTempo(getEffectiveSpeed());
