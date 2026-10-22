@@ -4918,6 +4918,12 @@
       this.shakeIntensity = isSecondaryChain ? 0.78 : 1.08;
       this.shakeTimer = isSecondaryChain ? 0.32 : 0.48;
       this.cameraZoomPunch = isSecondaryChain ? 12.0 : 17.5;
+      this.bossSpotlightTimer = Math.max(this.bossSpotlightTimer || 0, 0.95);
+
+      if (this.bossImpactLight) {
+        this.bossImpactLight.color.setHex(sphereColor);
+        this.bossImpactLight.intensity = isSecondaryChain ? 6.5 : 9.0;
+      }
 
       // 5. Exploding Roblox Bricks & High-Velocity Particle Fountain!
       const brickCnt = isSecondaryChain ? 28 : 64;
@@ -4929,8 +4935,8 @@
       // 6. Queue 2 secondary chain-detonations on the Boss's shoulders/hammer for BOOM-BOOM-BOOM impact!
       if (!isSecondaryChain && Array.isArray(this.bossChainExplosions)) {
         this.bossChainExplosions.push(
-          { delay: 0.11, offsetX: -3.2, offsetY: 1.4, offsetZ: 0.6, attackType: atkType },
-          { delay: 0.23, offsetX: 3.4, offsetY: -0.6, offsetZ: 1.0, attackType: atkType }
+          { delay: 0.16, offsetX: -3.2, offsetY: 1.4, offsetZ: 0.6, attackType: atkType },
+          { delay: 0.34, offsetX: 3.4, offsetY: -0.6, offsetZ: 1.0, attackType: atkType }
         );
       }
 
@@ -5303,11 +5309,16 @@
         spawnBeam(petStart, endPos, 0xff2a85, 0.16, 0.28, 0.85, 0.30);
       }
 
-      // Immediate launch recoil + muzzle blast!
+      // Immediate launch recoil + muzzle blast + 1.35s Boss Camera Spotlight!
+      this.bossSpotlightTimer = 1.35;
+      if (this.bossImpactLight) {
+        this.bossImpactLight.color.setHex(chosen.type === 'water_gun' ? 0x00e5ff : 0xffe600);
+        this.bossImpactLight.intensity = 6.5;
+      }
       this.bossHitTimer = Math.max(this.bossHitTimer, 0.55);
       this.bossSquashTimer = Math.max(this.bossSquashTimer, 0.32);
-      this.bossRecoilZ = Math.min(this.bossRecoilZ, -7.2);
-      this.bossRecoilY = Math.max(this.bossRecoilY, 1.4);
+      this.bossRecoilZ = Math.min(this.bossRecoilZ, -6.5);
+      this.bossRecoilY = Math.max(this.bossRecoilY, 1.2);
       this.bossRecoilPitch = -0.48;
       this.bossRecoilYaw = (Math.random() < 0.5 ? 1 : -1) * 0.52;
       this.shakeIntensity = Math.max(this.shakeIntensity, 0.72);
@@ -5940,7 +5951,22 @@
         }
 
         const lookCurveX = this._getRoadCurveX(-26) * 0.22;
-        this.camera.lookAt(this.carGroup.position.x * (0.2 + pf * 0.12) + lookCurveX, 1.8 - pf * 0.35, -30);
+        if (this.bossSpotlightTimer > 0 && this.isBossActive && this.bossGroup && this.bossGroup.visible) {
+          this.bossSpotlightTimer = Math.max(0, this.bossSpotlightTimer - dt);
+          const spotWeight = Math.min(1, this.bossSpotlightTimer * 2.2);
+          const normalLookX = this.carGroup.position.x * (0.2 + pf * 0.12) + lookCurveX;
+          const normalLookY = 1.8 - pf * 0.35;
+          const bossLookX = this.bossGroup.position.x * 0.55;
+          const bossLookY = this.bossGroup.position.y + 0.35;
+          const bossLookZ = this.bossGroup.position.z;
+          this.camera.lookAt(
+            normalLookX + (bossLookX - normalLookX) * spotWeight,
+            normalLookY + (bossLookY - normalLookY) * spotWeight,
+            -30 + (bossLookZ - (-30)) * spotWeight * 0.65
+          );
+        } else {
+          this.camera.lookAt(this.carGroup.position.x * (0.2 + pf * 0.12) + lookCurveX, 1.8 - pf * 0.35, -30);
+        }
       }
 
       // 5. Update 3-Lane Quiz Gates & Collision Check (gliding along the curved highway!)
