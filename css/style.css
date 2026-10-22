@@ -4733,8 +4733,12 @@ body.boss-phase-hud-active #hud-center-panel.hud-center-panel {
 }
 
 /* Boss Clear Step 1: Center Reward Status Popup */
+#exit-confirm-modal {
+  z-index: 1500 !important;
+}
+
 #boss-reward-modal {
-  z-index: 88 !important;
+  z-index: 1400 !important;
   cursor: pointer !important;
 }
 
