@@ -1704,6 +1704,15 @@
         if (typeof window.UIManager.hideObbyHUD === 'function') {
           window.UIManager.hideObbyHUD();
         }
+        if (typeof window.UIManager.hideExitConfirmModal === 'function') {
+          window.UIManager.hideExitConfirmModal();
+        }
+        if (typeof window.UIManager.hideBossRewardModal === 'function') {
+          window.UIManager.hideBossRewardModal();
+        }
+        if (typeof window.UIManager.hideNextStageModal === 'function') {
+          window.UIManager.hideNextStageModal();
+        }
         window.UIManager.renderDashboard(saveState, state.selectedDashboardStage);
         window.UIManager.setStartScreenVisible(true);
       }
@@ -2403,6 +2412,65 @@
       const btnGameoverDash = document.getElementById('btn-gameover-dashboard');
       if (btnGameoverDash) {
         btnGameoverDash.addEventListener('click', function () {
+          self.returnToDashboard();
+        });
+      }
+
+      // Top-Right Close Button next to Life Panel (#btn-top-close-game) & Confirm Exit Modal (#exit-confirm-modal)
+      const btnTopCloseGame = document.getElementById('btn-top-close-game');
+      if (btnTopCloseGame) {
+        btnTopCloseGame.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          self.openExitConfirmModal();
+        });
+      }
+
+      const btnExitConfirmYes = document.getElementById('btn-exit-confirm-yes');
+      if (btnExitConfirmYes) {
+        btnExitConfirmYes.addEventListener('click', function () {
+          if (window.UIManager && typeof window.UIManager.hideExitConfirmModal === 'function') {
+            window.UIManager.hideExitConfirmModal();
+          }
+          self.returnToDashboard();
+        });
+      }
+
+      const btnExitConfirmNo = document.getElementById('btn-exit-confirm-no');
+      if (btnExitConfirmNo) {
+        btnExitConfirmNo.addEventListener('click', function () {
+          self.cancelExitConfirmModal();
+        });
+      }
+
+      // Boss Clear Step 1: Center Reward Status Popup (#boss-reward-modal) -> click anywhere to open Step 2 (#next-stage-modal)
+      const bossRewardModal = document.getElementById('boss-reward-modal');
+      if (bossRewardModal) {
+        bossRewardModal.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          self.onBossRewardModalClick();
+        });
+      }
+
+      // Boss Clear Step 2: Next Stage Confirmation Popup (#next-stage-modal)
+      const btnNextStageYes = document.getElementById('btn-next-stage-yes');
+      if (btnNextStageYes) {
+        btnNextStageYes.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          self.confirmNextStageStart();
+        });
+      }
+
+      const btnNextStageNo = document.getElementById('btn-next-stage-no');
+      if (btnNextStageNo) {
+        btnNextStageNo.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          if (window.UIManager && typeof window.UIManager.hideNextStageModal === 'function') {
+            window.UIManager.hideNextStageModal();
+          }
           self.returnToDashboard();
         });
       }
