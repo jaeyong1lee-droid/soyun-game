@@ -406,6 +406,7 @@
       state.isGameOver = false;
       state.isObbyMode = false;
       state.obbyWavesCleared = 0;
+      state.stageWrongQuestions = [];
 
       if (window.UIManager) {
         window.UIManager.setStartScreenVisible(false);
@@ -821,6 +822,30 @@
         state.combo = 0;
         state.hp = Math.max(0, state.hp - 1);
 
+        // Record this failed question in state.stageWrongQuestions (answers stay hidden until [👀 답 보기] is clicked!)
+        const wrongChosenText = (Array.isArray(q.choices) && q.choices[lane] !== undefined)
+          ? q.choices[lane]
+          : (q.isSpeech ? '발음 미통과' : '오답');
+        if (!Array.isArray(state.stageWrongQuestions)) {
+          state.stageWrongQuestions = [];
+        }
+        const qKey = q.id || q.prompt;
+        const existingIdx = state.stageWrongQuestions.findIndex(function (item) {
+          return (item.id || item.prompt) === qKey;
+        });
+        const wrongEntry = {
+          id: qKey,
+          prompt: q.prompt,
+          category: q.category || 'math',
+          answerText: q.answerText,
+          wrongChoice: wrongChosenText
+        };
+        if (existingIdx >= 0) {
+          state.stageWrongQuestions[existingIdx] = wrongEntry;
+        } else {
+          state.stageWrongQuestions.push(wrongEntry);
+        }
+
         if (window.SoundEngine) {
           window.SoundEngine.playWrong();
         }
@@ -831,13 +856,13 @@
           }
           window.UIManager.showFeedbackToast(
             false,
-            `💪 아차! 오답으로 보너스 점수 -1점! 정답은 [ ${q.answerText} ] 이었어! 잠시 후 복습할 때 꼭 부숴버리자!`
+            `💪 아차! 오답으로 보너스 점수 -1점! 이따 문제 리스트에서 정답을 맞혀보고 [👀 답 보기]로 확인해 보자!`
           );
           if (typeof window.UIManager.pushRobloxChat === 'function') {
             const pet = getActivePet();
             window.UIManager.pushRobloxChat(
               pet.cheerTag || '유니콘펫',
-              `괜찮아 소윤아! 정답은 [${q.answerText}] 이었어! 이따 복습 게이트에서 꼭 격파하자!`,
+              `괜찮아 소윤아! 틀린 문제는 이따 오답 리스트에서 다시 풀고 [👀 답 보기]로 확인할 수 있어!`,
               'pet'
             );
           }
@@ -973,7 +998,7 @@
           );
         }
         if (typeof window.UIManager.showBossRewardModal === 'function') {
-          window.UIManager.showBossRewardModal(clearedStage, afterSave);
+          window.UIManager.showBossRewardModal(clearedStage, afterSave, state.stageWrongQuestions);
         }
       }
 
@@ -1059,6 +1084,7 @@
       if (window.UIManager && typeof window.UIManager.hideNextStageModal === 'function') {
         window.UIManager.hideNextStageModal();
       }
+      state.stageWrongQuestions = [];
       if (window.Engine3D) {
         window.Engine3D.setPaused(false);
       }
@@ -1127,7 +1153,11 @@
       }
 
       if (window.UIManager) {
-        window.UIManager.showGameOverModal(window.SaveManager ? window.SaveManager.getState() : saveState, state.stage);
+        window.UIManager.showGameOverModal(
+          window.SaveManager ? window.SaveManager.getState() : saveState,
+          state.stage,
+          state.stageWrongQuestions
+        );
       }
     },
 
@@ -1725,6 +1755,7 @@
       state.isGameOver = false;
       state.isObbyMode = false;
       state.obbyWavesCleared = 0;
+      state.stageWrongQuestions = [];
 
       if (window.Engine3D) {
         window.Engine3D.clearActiveGates();
