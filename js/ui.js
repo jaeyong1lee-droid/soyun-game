@@ -1738,13 +1738,187 @@
     },
 
     /**
-     * Shows the Sky-Ascending World Tree Map Popup (#next-stage-modal)
-     * Used BOTH:
-     *  1) Before Game Start (options.mode === 'start')
-     *  2) When advancing to Next Stage after Boss Clear (options.mode === 'next_stage')
-     * @param {number} targetStage
-     * @param {Object} [stageConfig]
-     * @param {Object} [options] { mode: 'start' | 'next_stage', maxStageReached: number, clearedStage: number }
+     * Generates a rich 3D-style miniature Floating Island SVG Illustration for the Treasure Adventure Map
+     * ("트리맵지도는 글자를 최대한 빼고 이런식으로 만들란 말이야" + 빙하/정글/사막/공룡시대/하늘/바닷속/용암/상상의나라!)
+     */
+    _buildIslandIllustrationSvg: function (biome, stageNum) {
+      const b = biome || 'river_nature';
+      let topScene = '';
+      let surfaceColor = '#4ade80';
+      let cliffColor = '#854d0e';
+      let cliffDark = '#5c3409';
+
+      if (b === 'river_nature') {
+        // 1. Waterfall, Pine Trees, Gold Treasure Chest & Deer Island
+        surfaceColor = '#4ade80';
+        cliffColor = '#92400e';
+        cliffDark = '#5c2804';
+        topScene = `
+          <!-- Waterfall cascading down island cliff -->
+          <path d="M58 48 Q62 72 56 92 L74 92 Q78 70 72 48 Z" fill="#38bdf8" opacity="0.92"/>
+          <circle cx="60" cy="91" r="6" fill="#e0f2fe"/>
+          <circle cx="70" cy="92" r="5" fill="#bae6fd"/>
+          <!-- Pine Trees -->
+          <polygon points="34,14 20,44 48,44" fill="#15803d"/>
+          <polygon points="34,6 23,30 45,30" fill="#22c55e"/>
+          <polygon points="98,18 86,44 110,44" fill="#166534"/>
+          <!-- Gold Coins Treasure Chest -->
+          <rect x="64" y="30" width="24" height="16" rx="3" fill="#b45309" stroke="#fde047" stroke-width="2"/>
+          <circle cx="72" cy="28" r="4" fill="#fde047"/>
+          <circle cx="80" cy="27" r="4" fill="#facc15"/>
+          <text x="44" y="42" font-size="18">🦌</text>
+        `;
+      } else if (b === 'jungle_safari') {
+        // 2. Tropical Jungle Palms, Vines, Golden Trophy & Lion Island ("정글 사자")
+        surfaceColor = '#65a30d';
+        cliffColor = '#713f12';
+        cliffDark = '#422006';
+        topScene = `
+          <!-- Jungle Palm Tree -->
+          <path d="M36 46 Q32 26 40 14" stroke="#78350f" stroke-width="6" fill="none" stroke-linecap="round"/>
+          <ellipse cx="28" cy="14" rx="14" ry="5" transform="rotate(-20 28 14)" fill="#16a34a"/>
+          <ellipse cx="50" cy="14" rx="14" ry="5" transform="rotate(20 50 14)" fill="#22c55e"/>
+          <ellipse cx="40" cy="10" rx="13" ry="4" fill="#4ade80"/>
+          <!-- Golden Trophy Chest -->
+          <rect x="82" y="28" width="22" height="16" rx="3" fill="#92400e" stroke="#facc15" stroke-width="2"/>
+          <polygon points="87,18 99,18 96,28 90,28" fill="#fde047"/>
+          <!-- Lion & Monkey -->
+          <text x="50" y="44" font-size="24">🦁</text>
+          <text x="20" y="42" font-size="15">🐒</text>
+        `;
+      } else if (b === 'desert_pyramid') {
+        // 3. Golden Desert Pyramid, Oasis Palm, Cactus & Two-Hump Camel ("사막 낙타")
+        surfaceColor = '#fbbf24';
+        cliffColor = '#b45309';
+        cliffDark = '#78350f';
+        topScene = `
+          <!-- Giant Golden Pyramid -->
+          <polygon points="62,8 34,46 62,46" fill="#fde047"/>
+          <polygon points="62,8 90,46 62,46" fill="#d97706"/>
+          <!-- Saguaro Cactus -->
+          <rect x="24" y="22" width="6" height="24" rx="3" fill="#15803d"/>
+          <rect x="19" y="28" width="6" height="4" rx="2" fill="#15803d"/>
+          <rect x="29" y="25" width="6" height="4" rx="2" fill="#15803d"/>
+          <!-- Camel & Desert Fox -->
+          <text x="64" y="45" font-size="23">🐪</text>
+          <text x="92" y="46" font-size="15">🦊</text>
+        `;
+      } else if (b === 'glacier_ice' || b === 'snow_aurora') {
+        // 4. Crystal Glacier Icebergs, Royal Crown Chest, Penguin & Polar Bear ("빙하")
+        surfaceColor = '#e0f2fe';
+        cliffColor = '#0284c7';
+        cliffDark = '#0369a1';
+        topScene = `
+          <!-- Faceted Blue Iceberg Spires -->
+          <polygon points="38,6 22,46 50,46" fill="#bae6fd"/>
+          <polygon points="38,6 50,46 58,46" fill="#38bdf8"/>
+          <polygon points="92,14 80,46 104,46" fill="#7dd3fc"/>
+          <!-- Penguin & Polar Bear -->
+          <text x="50" y="44" font-size="22">🐧</text>
+          <text x="74" y="44" font-size="19">🐻‍❄️</text>
+        `;
+      } else if (b === 'dino_jurassic') {
+        // 5. Prehistoric Smoking Volcano, Cycad Fern & T-Rex Dinosaur ("공룡시대")
+        surfaceColor = '#4d7c0f';
+        cliffColor = '#44403c';
+        cliffDark = '#292524';
+        topScene = `
+          <!-- Smoking Prehistoric Volcano -->
+          <polygon points="22,46 34,14 48,14 60,46" fill="#44403c"/>
+          <ellipse cx="41" cy="14" rx="7" ry="3" fill="#ff5722"/>
+          <circle cx="44" cy="7" r="5" fill="#78716c" opacity="0.8"/>
+          <!-- T-Rex & Brachiosaurus -->
+          <text x="54" y="44" font-size="24">🦖</text>
+          <text x="84" y="43" font-size="20">🦕</text>
+        `;
+      } else if (b === 'sky_heaven') {
+        // 6. Cloud Castle, 7-Color Rainbow Arch & Winged Unicorn Pegasus
+        surfaceColor = '#ffffff';
+        cliffColor = '#7dd3fc';
+        cliffDark = '#0284c7';
+        topScene = `
+          <!-- Rainbow Arch -->
+          <path d="M26 44 A38 34 0 0 1 102 44" fill="none" stroke="#ff2a85" stroke-width="4"/>
+          <path d="M30 44 A34 30 0 0 1 98 44" fill="none" stroke="#ffe600" stroke-width="4"/>
+          <path d="M34 44 A30 26 0 0 1 94 44" fill="none" stroke="#00e5ff" stroke-width="4"/>
+          <!-- Golden Cloud Spire & Unicorn -->
+          <polygon points="64,10 52,32 76,32" fill="#fde047"/>
+          <text x="52" y="45" font-size="23">🦄</text>
+        `;
+      } else if (b === 'underwater_ocean') {
+        // 7. Underwater Coral Reef, Pearl Chest, Sea Turtle & Dolphin
+        surfaceColor = '#06b6d4';
+        cliffColor = '#0e7490';
+        cliffDark = '#164e63';
+        topScene = `
+          <!-- Glowing Coral Branches -->
+          <path d="M32 45 L26 22 M32 36 L40 24" stroke="#fb7185" stroke-width="5" stroke-linecap="round"/>
+          <path d="M96 45 L102 24 M96 36 L88 26" stroke="#facc15" stroke-width="5" stroke-linecap="round"/>
+          <!-- Sea Turtle & Dolphin -->
+          <text x="44" y="43" font-size="22">🐢</text>
+          <text x="70" y="38" font-size="21">🐬</text>
+        `;
+      } else if (b === 'molten_lava') {
+        // 8. Molten Lava Volcano Canyon, Magma River & Fire Dragon
+        surfaceColor = '#450a0a';
+        cliffColor = '#7f1d1d';
+        cliffDark = '#2b0504';
+        topScene = `
+          <!-- Erupting Magma Crag & Lava Stream -->
+          <polygon points="24,46 42,10 58,46" fill="#1c1917"/>
+          <path d="M42 12 Q46 30 40 48" stroke="#ff5722" stroke-width="6" fill="none"/>
+          <!-- Magic Orb Chest & Fire Dragon -->
+          <circle cx="88" cy="28" r="9" fill="#a855f7" stroke="#fde047" stroke-width="2"/>
+          <text x="52" y="44" font-size="24">🐉</text>
+        `;
+      } else if (b === 'wonderland_magic') {
+        // 9. Candy Wonderland Polka-Dot Mushroom, Lollipop & Magic Bunny
+        surfaceColor = '#f472b6';
+        cliffColor = '#9d174d';
+        cliffDark = '#500724';
+        topScene = `
+          <!-- Giant Magic Mushroom -->
+          <rect x="34" y="26" width="10" height="20" rx="3" fill="#fffbeb"/>
+          <path d="M20 28 Q39 4 58 28 Z" fill="#ff2a85"/>
+          <circle cx="33" cy="19" r="3.5" fill="#ffffff"/>
+          <circle cx="45" cy="21" r="3" fill="#ffffff"/>
+          <!-- Swirl Lollipop & Bunny -->
+          <line x1="92" y1="24" x2="92" y2="46" stroke="#ffffff" stroke-width="3"/>
+          <circle cx="92" cy="20" r="9" fill="#00f5d4" stroke="#ff2a85" stroke-width="3"/>
+          <text x="56" y="45" font-size="22">🐇</text>
+        `;
+      } else {
+        // 10. Cherry Blossom & Golden 10,000원 Boss Fortress Island
+        surfaceColor = '#fde047';
+        cliffColor = '#b45309';
+        cliffDark = '#78350f';
+        topScene = `
+          <!-- Sakura Tree & Golden Boss Fortress -->
+          <circle cx="34" cy="24" r="14" fill="#ffb3c6"/>
+          <rect x="54" y="18" width="34" height="26" rx="4" fill="#78350f" stroke="#fde047" stroke-width="2.5"/>
+          <text x="59" y="39" font-size="21">👑</text>
+          <text x="24" y="45" font-size="18">🐼</text>
+        `;
+      }
+
+      return `
+        <svg viewBox="0 0 128 96" aria-hidden="true">
+          <!-- Soft Shadow under Floating Island -->
+          <ellipse cx="64" cy="88" rx="44" ry="6" fill="rgba(68, 36, 12, 0.28)"/>
+          <!-- 3D Tapered Floating Rock Cliff Base -->
+          <polygon points="18,46 110,46 92,76 64,84 36,76" fill="${cliffColor}"/>
+          <polygon points="64,46 110,46 92,76 64,84" fill="${cliffDark}"/>
+          <!-- Lush Biome Surface Rim -->
+          <ellipse cx="64" cy="46" rx="48" ry="12" fill="${surfaceColor}" stroke="#422006" stroke-width="2"/>
+          ${topScene}
+        </svg>
+      `;
+    },
+
+    /**
+     * Shows the Visual Illustrated Treasure-Island World Adventure Map (#next-stage-modal)
+     * Minimal text ("트리맵지도는 글자를 최대한 빼고 이런식으로 만들란 말이야")
+     * Used BOTH before Game Start (mode === 'start') AND after Boss Clear (mode === 'next_stage')!
      */
     showNextStageModal: function (targetStage, stageConfig, options) {
       const modal = byId('next-stage-modal');
@@ -1758,152 +1932,139 @@
         stg,
         parseInt(opts.maxStageReached !== undefined ? opts.maxStageReached : (saveState.maxStageReached || saveState.currentStage || 1), 10) || 1
       );
-      const clearedStage = opts.clearedStage ? parseInt(opts.clearedStage, 10) : (mode === 'next_stage' ? Math.max(1, stg - 1) : 0);
 
       const curWorld = this._getWorldInfo(stg);
-      const prevWorld = clearedStage >= 1 ? this._getWorldInfo(clearedStage) : null;
 
-      // 1. Update Header & Altitude Badge
-      const modePill = byId('sky-treemap-mode-pill');
-      if (modePill) {
-        modePill.textContent = mode === 'start'
-          ? '🗺️ SKY WORLD TREE MAP · 출발 전 위치 확인'
-          : `⬆️ STAGE ${clearedStage} 정복 완료 · 하늘 위로 상승!`;
-      }
+      // Hide #start-screen when opening the Tree Map so #start-screen never blocks or overlaps the map!
+      this.setStartScreenVisible(false);
 
-      const altBadge = byId('sky-treemap-altitude-badge');
-      if (altBadge) {
-        altBadge.textContent = `☁️ 현재 고도: 상공 ${(stg * 1000).toLocaleString()}m (${stg}단계)`;
-      }
-
-      const titleEl = byId('next-stage-title');
-      if (titleEl) {
-        titleEl.textContent = mode === 'start'
-          ? `🗺️ 하늘로 올라가는 소윤이의 단계별 월드 트리맵`
-          : `🚀 ${stg}단계 [${curWorld.country}](으)로 올라갈까요?`;
-      }
-
-      const subEl = byId('sky-treemap-subtitle');
-      if (subEl) {
-        if (mode === 'start') {
-          subEl.innerHTML = `현재 위치: <strong>${stg}단계 · ${escapeHtml(curWorld.icon + ' ' + curWorld.country)}</strong> — 한 단계씩 클리어하며 하늘 꼭대기까지 올라가요!`;
-        } else if (prevWorld) {
-          subEl.innerHTML = `<strong>${clearedStage}단계(${escapeHtml(prevWorld.country)})</strong> 정복 성공! ⬆️ 하늘 위 <strong>${stg}단계(${escapeHtml(curWorld.country)})</strong>에 도착했어요!`;
-        } else {
-          subEl.textContent = '보스를 물리치고 하늘 위 다음 나라로 한 단계 더 올라왔어요!';
-        }
-      }
-
-      // 2. Render Vertical Sky-Climbing Tree Map Summary (Top = Highest Sky Stage -> Bottom = Stage 1 Ground)
+      // Render 10 Floating Biome Islands along a Winding Treasure-Map Trail (Bottom = Stage 1 -> Top = Stage 10)
       const listEl = byId('sky-treemap-list');
       if (listEl) {
-        // Show stages from 1 up to at least 10 (or up to next multiple of 10 above current/maxReached)
-        const topStage = Math.max(10, Math.ceil(Math.max(stg + 2, maxReached + 1) / 10) * 10);
-        const startStage = Math.max(1, topStage - 9);
-        const rowsHtml = [];
+        const tierBlock = Math.floor((stg - 1) / 10);
+        const startStage = tierBlock * 10 + 1;
+        const topStage = startStage + 9;
 
-        for (let s = topStage; s >= startStage; s--) {
+        // Zig-zag coordinates (x% across parchment, y px from top of 880px map) from Stage 1 (bottom) to Stage 10 (top)
+        const stops = [
+          { x: 26, y: 805 }, // 1: River Waterfall
+          { x: 74, y: 725 }, // 2: Lion Jungle
+          { x: 28, y: 640 }, // 3: Camel Pyramid Desert
+          { x: 74, y: 555 }, // 4: Penguin/Polar Bear Glacier
+          { x: 26, y: 470 }, // 5: T-Rex Dinosaur Era
+          { x: 74, y: 385 }, // 6: Sky Rainbow Pegasus
+          { x: 28, y: 300 }, // 7: Underwater Coral Sea
+          { x: 74, y: 215 }, // 8: Molten Lava Volcano
+          { x: 30, y: 132 }, // 9: Candy Wonderland
+          { x: 68, y: 56 }   // 10: Sakura & Golden Boss Fortress
+        ];
+
+        // Build smooth winding SVG cubic bezier path + intermediate stepping-stone pearls
+        let pathD = '';
+        const midDotsSvg = [];
+        for (let i = 0; i < stops.length; i++) {
+          const pt = stops[i];
+          const px = pt.x * 5; // mapped to 500x880 SVG viewBox
+          const py = pt.y;
+          if (i === 0) {
+            pathD += `M ${px} ${py}`;
+          } else {
+            const prev = stops[i - 1];
+            const prevX = prev.x * 5;
+            const prevY = prev.y;
+            const cy1 = prevY - (prevY - py) * 0.48;
+            const cy2 = prevY - (prevY - py) * 0.52;
+            pathD += ` C ${prevX} ${cy1}, ${px} ${cy2}, ${px} ${py}`;
+
+            // 2 small decorative stepping-stone spheres along the dashed curve between islands
+            [0.35, 0.68].forEach(function (t) {
+              const mx = prevX + (px - prevX) * t;
+              const my = prevY + (py - prevY) * t;
+              const isPassed = (startStage + i - 1) < stg;
+              midDotsSvg.push(
+                `<circle cx="${mx.toFixed(1)}" cy="${my.toFixed(1)}" r="6.5" fill="${isPassed ? '#fde047' : '#e2e8f0'}" stroke="#5c3615" stroke-width="2"/>`
+              );
+            });
+          }
+        }
+
+        const bgSvgHtml = `
+          <svg class="treasure-map-svg-bg" viewBox="0 0 500 880" preserveAspectRatio="none" aria-hidden="true">
+            <!-- Compass Rose watermark in corner -->
+            <g transform="translate(65, 75)" opacity="0.24">
+              <circle cx="0" cy="0" r="34" fill="none" stroke="#5c3615" stroke-width="2.5"/>
+              <polygon points="0,-42 8,-8 42,0 8,8 0,42 -8,8 -42,0 -8,-8" fill="#784419"/>
+            </g>
+            <!-- Winding Dashed Adventure Trail -->
+            <path d="${pathD}" fill="none" stroke="rgba(255, 248, 220, 0.7)" stroke-width="11" stroke-linecap="round"/>
+            <path d="${pathD}" fill="none" stroke="#6b3e16" stroke-width="5.5" stroke-dasharray="11 10" stroke-linecap="round"/>
+            ${midDotsSvg.join('')}
+          </svg>
+        `;
+
+        const islandNodesHtml = [];
+        for (let i = 0; i < 10; i++) {
+          const s = startStage + i;
+          const pt = stops[i];
           const wInfo = this._getWorldInfo(s);
           const isCurrent = (s === stg);
           const isCleared = (s < stg) || (s < maxReached && !isCurrent);
           const isUnlocked = (s <= maxReached);
-          const isSelectable = (mode === 'start' && isUnlocked);
 
           let stateClass = 'is-locked';
-          let statusPillHtml = `<span class="sky-tree-status-pill status-locked">☁️ 상공 ${(s * 1000).toLocaleString()}m 목표</span>`;
+          if (isCurrent) stateClass = 'is-current';
+          else if (isCleared) stateClass = 'is-cleared';
+          else if (isUnlocked) stateClass = 'is-unlocked';
 
-          if (isCurrent) {
-            stateClass = 'is-current';
-            statusPillHtml = `<span class="sky-tree-status-pill status-current">📍 현재 위치! (${(s * 1000).toLocaleString()}m)</span>`;
-          } else if (s < stg) {
-            stateClass = 'is-cleared';
-            statusPillHtml = `<span class="sky-tree-status-pill status-cleared">✅ 정복 완료! ⭐</span>`;
-          } else if (isUnlocked) {
-            stateClass = 'is-unlocked';
-            statusPillHtml = `<span class="sky-tree-status-pill status-unlocked">🔓 도달 완료 (${(s * 1000).toLocaleString()}m)</span>`;
-          }
-
-          const jackpotClass = wInfo.isJackpot ? 'is-jackpot' : '';
-          const selectClass = isSelectable ? 'is-selectable' : '';
-          const dotLabel = isCurrent ? '👑' : (s < stg ? '⭐' : `${s}F`);
-
-          const soyunHereHtml = isCurrent
-            ? `<div class="sky-soyun-here-banner">
-                 <span>👑 이소윤 슈퍼카트 현재 위치! (${s}단계 · 상공 ${(s * 1000).toLocaleString()}m)</span>
-               </div>`
+          const orbLabel = isCurrent ? '👑' : (isCleared ? '⭐' : String(s));
+          const soyunPinHtml = isCurrent
+            ? `<div class="island-soyun-pin">👑 START!</div>`
             : '';
 
-          rowsHtml.push(`
+          islandNodesHtml.push(`
             <div
               id="${isCurrent ? 'treemap-node-current' : `treemap-node-${s}`}"
-              class="sky-tree-node ${stateClass} ${jackpotClass} ${selectClass}"
+              class="island-map-node ${stateClass}"
+              style="left: ${pt.x}%; top: ${pt.y}px;"
               data-treemap-stage="${s}"
               data-unlocked="${isUnlocked ? 'true' : 'false'}"
+              title="STAGE ${s} ${escapeHtml(wInfo.country)}"
             >
-              <div class="sky-tree-dot" title="${s}단계">
-                <span>${dotLabel}</span>
+              ${soyunPinHtml}
+              <div class="island-svg-wrap">
+                ${this._buildIslandIllustrationSvg(wInfo.biome, s)}
               </div>
-              <div class="sky-tree-card" style="background: ${wInfo.bg};">
-                <div class="sky-tree-card-top">
-                  <strong class="sky-tree-stage-country">${s}단계 — ${escapeHtml(wInfo.icon)} ${escapeHtml(wInfo.country)}</strong>
-                  ${statusPillHtml}
-                </div>
-                <div class="sky-tree-summary-text">${escapeHtml(wInfo.summary)}</div>
-                ${soyunHereHtml}
+              <div class="island-step-orb">
+                <span>${orbLabel}</span>
               </div>
+              <div class="island-mini-tag">${escapeHtml(wInfo.icon)} ${s}</div>
             </div>
           `);
-
-          // If we just climbed from (s - 1) to s, show a glowing upward rocket transition banner between them!
-          if (isCurrent && s > startStage) {
-            const climbText = mode === 'next_stage'
-              ? `🚀 ⬆️ ${s - 1}단계 클리어! 하늘 위로 1,000m 상승 완료!! ⬆️`
-              : `⬆️ ${s - 1}단계에서 하늘 길 따라 ${s}단계로 상승! ⬆️`;
-            rowsHtml.push(`
-              <div class="sky-climb-transition-row">
-                <span>${climbText}</span>
-              </div>
-            `);
-          }
         }
 
-        listEl.innerHTML = rowsHtml.join('');
+        listEl.innerHTML = bgSvgHtml + islandNodesHtml.join('');
       }
 
-      // 3. Update Bottom Destination Preview Box & Action Buttons
+      // Update hidden compatibility nodes & bottom CTA buttons (Minimal text!)
       const badgeEl = byId('next-stage-badge');
-      if (badgeEl) {
-        badgeEl.textContent = `📍 출발 위치: ${stg}단계 (${(stg * 1000).toLocaleString()}m)`;
-      }
+      if (badgeEl) badgeEl.textContent = `STAGE ${stg}`;
       const nameEl = byId('next-stage-name');
-      if (nameEl) {
-        nameEl.textContent = `${curWorld.icon} ${curWorld.country}`;
-      }
-      const noteEl = byId('next-stage-bonus-note');
-      if (noteEl) {
-        noteEl.textContent = mode === 'next_stage'
-          ? `❤️ 체력 +2 회복 · ⏸️ 일시정지 2회 충전 · ${curWorld.summary}`
-          : `🌟 배경 요약: ${curWorld.summary}`;
-      }
+      if (nameEl) nameEl.textContent = `${curWorld.icon} ${curWorld.country}`;
 
       const yesBtn = byId('btn-next-stage-yes');
       if (yesBtn) {
-        yesBtn.textContent = mode === 'start'
-          ? `🚀 ${stg}단계 [${curWorld.country}] 레이스 출발!`
-          : `🚀 네! ${stg}단계 [${curWorld.country}] 출발하기!`;
+        yesBtn.textContent = `🚀 STAGE ${stg} ${curWorld.icon} START!`;
       }
       const noBtn = byId('btn-next-stage-no');
       if (noBtn) {
-        noBtn.textContent = mode === 'start'
-          ? '🏠 대시보드로 돌아가기'
-          : '🏠 메인 화면으로 나가기';
+        noBtn.textContent = '✕';
       }
 
       modal.setAttribute('data-treemap-mode', mode);
       modal.setAttribute('data-target-stage', String(stg));
       modal.classList.remove('hidden');
 
-      // 4. Smooth Sky-Ascending Scroll Animation: start from ground (bottom) and glide UP to Soyun's current node!
+      // Smoothly scroll the parchment map to center on Soyun's current floating island!
       const scrollBox = byId('sky-treemap-scroll');
       if (scrollBox) {
         scrollBox.scrollTop = scrollBox.scrollHeight;
@@ -1912,11 +2073,11 @@
           if (curNode && scrollBox) {
             const targetTop = Math.max(
               0,
-              curNode.offsetTop - scrollBox.clientHeight / 2 + curNode.clientHeight / 2
+              curNode.offsetTop - scrollBox.clientHeight / 2
             );
             scrollBox.scrollTo({ top: targetTop, behavior: 'smooth' });
           }
-        }, 90);
+        }, 60);
       }
     },
 
