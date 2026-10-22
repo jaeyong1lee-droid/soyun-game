@@ -1053,14 +1053,508 @@
     },
 
     /**
+     * Smooth S-Curve horizontal offset at worldZ (0 at player passZ = 8 so 3-lane collision is exact,
+     * winding left and right ahead of the player for dynamic curved driving!)
+     */
+    _getRoadCurveX: function (worldZ) {
+      const dist = Math.max(0, 8 - worldZ);
+      if (dist <= 0.01) return 0;
+      const env = Math.min(1, Math.pow(dist / 52, 1.32));
+      const phase = this.roadCurvePhase || 0;
+      return env * (
+        Math.sin(phase - dist * 0.022) * 8.2 +
+        Math.cos(phase * 0.62 - dist * 0.011) * 3.6
+      );
+    },
+
+    /**
+     * Approximate dX/dZ slope of the curving road at worldZ
+     */
+    _getRoadCurveSlope: function (worldZ) {
+      return (this._getRoadCurveX(worldZ - 1.5) - this._getRoadCurveX(worldZ + 1.5)) / 3.0;
+    },
+
+    /**
+     * Deform the main highway, side rivers/streams, and neon edge rails along the live S-curve
+     */
+    _updateRoadCurveGeometry: function () {
+      if (this.roadMesh && this.roadMesh.geometry) {
+        const pos = this.roadMesh.geometry.attributes.position;
+        const baseVxArr = this.roadMesh.userData.baseVx;
+        if (baseVxArr && baseVxArr.length === pos.count) {
+          for (let v = 0; v < pos.count; v++) {
+            const bx = baseVxArr[v];
+            const vy = pos.getY(v);
+            const worldZ = -85 - vy;
+            const wf = 1 + Math.max(0, (8 - worldZ) * 0.0175);
+            const curveX = this._getRoadCurveX(worldZ);
+            pos.setX(v, bx * wf + curveX);
+          }
+          pos.needsUpdate = true;
+        }
+      }
+
+      if (Array.isArray(this.edgeRailMeshes)) {
+        for (let r = 0; r < this.edgeRailMeshes.length; r++) {
+          const rail = this.edgeRailMeshes[r];
+          if (!rail || !rail.geometry) continue;
+          const pos = rail.geometry.attributes.position;
+          const baseVxArr = rail.userData.baseVx;
+          const sideEdge = rail.userData.sideEdge || -7.2;
+          if (baseVxArr && baseVxArr.length === pos.count) {
+            for (let v = 0; v < pos.count; v++) {
+              const vy = pos.getY(v);
+              const worldZ = -85 - vy;
+              const wf = 1 + Math.max(0, (8 - worldZ) * 0.0175);
+              const curveX = this._getRoadCurveX(worldZ);
+              pos.setX(v, sideEdge * wf + baseVxArr[v] + curveX);
+            }
+            pos.needsUpdate = true;
+          }
+        }
+      }
+
+      if (Array.isArray(this.stageRiverMeshes)) {
+        for (let m = 0; m < this.stageRiverMeshes.length; m++) {
+          const river = this.stageRiverMeshes[m];
+          if (!river || !river.geometry) continue;
+          const pos = river.geometry.attributes.position;
+          const baseVxArr = river.userData.baseVx;
+          const sideOffset = river.userData.sideOffset || -20;
+          if (baseVxArr && baseVxArr.length === pos.count) {
+            for (let v = 0; v < pos.count; v++) {
+              const vy = pos.getY(v);
+              const worldZ = -85 - vy;
+              const wf = 1 + Math.max(0, (8 - worldZ) * 0.012);
+              const curveX = this._getRoadCurveX(worldZ);
+              const wave = Math.sin((this.elapsedTime || 0) * 3.2 + worldZ * 0.08) * 0.45;
+              pos.setX(v, sideOffset * wf + baseVxArr[v] + curveX + wave);
+            }
+            pos.needsUpdate = true;
+          }
+        }
+      }
+    },
+
+    /**
+     * Paint bespoke 1024x512 Skybox Canvas for each Stage Biome:
+     * river_nature, sky_heaven, underwater_ocean, molten_lava, wonderland_magic, cherry_lake, snow_aurora, neon_fantasy
+     */
+    _paintBiomeSkyboxTexture: function (theme) {
+      const THREE = global.THREE;
+      if (!THREE) return null;
+      if (!this.biomeSkyCanvas) {
+        this.biomeSkyCanvas = document.createElement('canvas');
+        this.biomeSkyCanvas.width = 1024;
+        this.biomeSkyCanvas.height = 512;
+        this.biomeSkyTexture = new THREE.CanvasTexture(this.biomeSkyCanvas);
+      }
+      const ctx = this.biomeSkyCanvas.getContext('2d');
+      const w = 1024;
+      const h = 512;
+      const biome = (theme && theme.biome) ? theme.biome : 'river_nature';
+
+      ctx.clearRect(0, 0, w, h);
+
+      // 1. Base Sky Gradient
+      const grad = ctx.createLinearGradient(0, 0, 0, h);
+      grad.addColorStop(0, (theme && theme.skyTop) || '#0d47a1');
+      grad.addColorStop(0.45, (theme && theme.skyUpper) || '#29b6f6');
+      grad.addColorStop(0.8, (theme && theme.skyLower) || '#81d4fa');
+      grad.addColorStop(1, (theme && theme.skyBottom) || '#e0f7fa');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, w, h);
+
+      if (biome === 'river_nature') {
+        // 🏞️ STAGE 1: Emerald River, Snow-Capped Alps Mountains & Lush Green Forest
+        // Warm Golden Sun & Sunbeams
+        const sunGrad = ctx.createRadialGradient(w * 0.5, h * 0.34, 12, w * 0.5, h * 0.34, 155);
+        sunGrad.addColorStop(0, '#ffffff');
+        sunGrad.addColorStop(0.3, '#fff59d');
+        sunGrad.addColorStop(0.7, 'rgba(255, 238, 88, 0.35)');
+        sunGrad.addColorStop(1, 'rgba(255, 238, 88, 0)');
+        ctx.fillStyle = sunGrad;
+        ctx.beginPath();
+        ctx.arc(w * 0.5, h * 0.34, 155, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Fluffy White Clouds across the blue sky
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.88)';
+        [
+          { x: 150, y: 110, s: 1.0 },
+          { x: 370, y: 85, s: 0.85 },
+          { x: 690, y: 105, s: 1.1 },
+          { x: 890, y: 130, s: 0.9 }
+        ].forEach((c) => {
+          ctx.beginPath();
+          ctx.arc(c.x, c.y, 34 * c.s, 0, Math.PI * 2);
+          ctx.arc(c.x + 28 * c.s, c.y - 10 * c.s, 40 * c.s, 0, Math.PI * 2);
+          ctx.arc(c.x + 60 * c.s, c.y, 32 * c.s, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        // Distant Snow-Capped Alpine Mountain Range
+        const alps = [
+          { x1: -30, xp: 120, x2: 270, yp: 210, col: '#2c5e4f' },
+          { x1: 180, xp: 340, x2: 500, yp: 175, col: '#235347' },
+          { x1: 410, xp: 590, x2: 770, yp: 155, col: '#1b4332' },
+          { x1: 660, xp: 830, x2: 1000, yp: 185, col: '#2c5e4f' },
+          { x1: 860, xp: 990, x2: 1080, yp: 220, col: '#235347' }
+        ];
+        alps.forEach((m) => {
+          ctx.fillStyle = m.col;
+          ctx.beginPath();
+          ctx.moveTo(m.x1, h);
+          ctx.lineTo(m.xp, m.yp);
+          ctx.lineTo(m.x2, h);
+          ctx.closePath();
+          ctx.fill();
+
+          // White Snow Cap on Mountain Peak
+          const capRatio = 0.34;
+          const lx = m.xp + (m.x1 - m.xp) * capRatio;
+          const rx = m.xp + (m.x2 - m.xp) * capRatio;
+          const cy = m.yp + (h - m.yp) * capRatio;
+          ctx.fillStyle = '#f4fbff';
+          ctx.beginPath();
+          ctx.moveTo(m.xp, m.yp);
+          ctx.lineTo(rx, cy);
+          ctx.lineTo(m.xp + 12, cy - 10);
+          ctx.lineTo(m.xp - 10, cy + 6);
+          ctx.lineTo(lx, cy);
+          ctx.closePath();
+          ctx.fill();
+        });
+
+        // Lush Green Rolling Forest Hills & Pine Silhouette
+        ctx.fillStyle = '#1b5e20';
+        ctx.beginPath();
+        ctx.moveTo(0, h);
+        ctx.quadraticCurveTo(260, 380, 512, 425);
+        ctx.quadraticCurveTo(780, 385, w, 430);
+        ctx.lineTo(w, h);
+        ctx.closePath();
+        ctx.fill();
+
+        // Sparkling Emerald River Winding from Horizon
+        const rivGrad = ctx.createLinearGradient(0, 415, 0, h);
+        rivGrad.addColorStop(0, '#80ffdb');
+        rivGrad.addColorStop(0.5, '#00e5ff');
+        rivGrad.addColorStop(1, '#0096c7');
+        ctx.fillStyle = rivGrad;
+        ctx.fillRect(0, 445, w, h - 445);
+      } else if (biome === 'sky_heaven') {
+        // ☁️ STAGE 2: Sky Kingdom Above the Clouds & Giant Double Rainbow
+        // Giant Vivid 7-Color Rainbow Arch across the sky!
+        const rainbowColors = ['#ff1744', '#ff9100', '#ffea00', '#00e676', '#00e5ff', '#2979ff', '#d500f9'];
+        ctx.lineWidth = 10;
+        rainbowColors.forEach((rc, idx) => {
+          ctx.strokeStyle = rc;
+          ctx.globalAlpha = 0.72;
+          ctx.beginPath();
+          ctx.arc(w / 2, h + 30, 410 - idx * 10, Math.PI * 1.08, Math.PI * 1.92);
+          ctx.stroke();
+        });
+        ctx.globalAlpha = 1;
+
+        // Floating Golden Sky Islands & Cloud Castles in distance
+        [
+          { x: 220, y: 245, w: 130 },
+          { x: 512, y: 195, w: 170 },
+          { x: 805, y: 240, w: 135 }
+        ].forEach((isl) => {
+          // Golden Castle Spires
+          ctx.fillStyle = '#fff8e1';
+          ctx.fillRect(isl.x - 28, isl.y - 52, 56, 52);
+          ctx.fillStyle = '#ffd54f';
+          ctx.beginPath();
+          ctx.moveTo(isl.x - 36, isl.y - 52);
+          ctx.lineTo(isl.x, isl.y - 95);
+          ctx.lineTo(isl.x + 36, isl.y - 52);
+          ctx.closePath();
+          ctx.fill();
+
+          // Fluffy Cloud Base under Island
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.arc(isl.x - 42, isl.y, 32, 0, Math.PI * 2);
+          ctx.arc(isl.x, isl.y + 4, 42, 0, Math.PI * 2);
+          ctx.arc(isl.x + 42, isl.y, 32, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        // Billowing Sea of Sunlit White & Golden Clouds at Horizon
+        for (let cx = -20; cx <= w + 40; cx += 68) {
+          ctx.fillStyle = 'rgba(255, 248, 225, 0.95)';
+          ctx.beginPath();
+          ctx.arc(cx, h - 38, 48, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.arc(cx + 22, h - 22, 44, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      } else if (biome === 'underwater_ocean') {
+        // 🐠 STAGE 3: Deep Underwater Coral Reef, Sunlight Rays, Whales & Atlantis
+        // Piercing Underwater Caustic Sunlight Beams from Ocean Surface
+        for (let b = 0; b < 9; b++) {
+          const bx = 80 + b * 110;
+          const beamGrad = ctx.createLinearGradient(bx, 0, bx + 40, h * 0.85);
+          beamGrad.addColorStop(0, 'rgba(144, 224, 239, 0.42)');
+          beamGrad.addColorStop(1, 'rgba(0, 180, 216, 0)');
+          ctx.fillStyle = beamGrad;
+          ctx.beginPath();
+          ctx.moveTo(bx - 22, 0);
+          ctx.lineTo(bx + 22, 0);
+          ctx.lineTo(bx + 85, h * 0.85);
+          ctx.lineTo(bx - 45, h * 0.85);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        // Atlantis Glowing Sea Palace Domes on the Horizon
+        ctx.fillStyle = '#004e7c';
+        ctx.beginPath();
+        ctx.arc(w / 2, h - 45, 95, Math.PI, 0);
+        ctx.arc(w / 2 - 120, h - 45, 58, Math.PI, 0);
+        ctx.arc(w / 2 + 120, h - 45, 58, Math.PI, 0);
+        ctx.fill();
+
+        // Glowing Bioluminescent Windows & Coral Reef Silhouettes
+        ctx.fillStyle = '#72efdd';
+        for (let wx = w / 2 - 70; wx <= w / 2 + 70; wx += 28) {
+          ctx.beginPath();
+          ctx.arc(wx, h - 78, 6, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Swimming Whale & Dolphin Silhouettes in the Sea Sky
+        ctx.fillStyle = 'rgba(2, 62, 138, 0.75)';
+        ctx.beginPath();
+        ctx.ellipse(240, 170, 68, 22, -0.12, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(172, 175);
+        ctx.lineTo(142, 154);
+        ctx.lineTo(148, 192);
+        ctx.closePath();
+        ctx.fill();
+
+        // Rising Underwater Bubbles
+        ctx.strokeStyle = 'rgba(202, 240, 248, 0.78)';
+        ctx.lineWidth = 2;
+        for (let i = 0; i < 95; i++) {
+          const bx = (i * 97) % w;
+          const by = (i * 53) % (h - 30);
+          const br = 3 + (i % 5) * 2.5;
+          ctx.beginPath();
+          ctx.arc(bx, by, br, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+      } else if (biome === 'molten_lava') {
+        // 🌋 STAGE 4: Inside a Fiery Molten Lava Volcano & Magma Canyon
+        const coreGrad = ctx.createRadialGradient(w / 2, 320, 15, w / 2, 320, 220);
+        coreGrad.addColorStop(0, '#ffffff');
+        coreGrad.addColorStop(0.28, '#ffea00');
+        coreGrad.addColorStop(0.65, '#ff3d00');
+        coreGrad.addColorStop(1, 'rgba(180, 0, 0, 0)');
+        ctx.fillStyle = coreGrad;
+        ctx.beginPath();
+        ctx.arc(w / 2, 320, 220, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Jagged Volcano Peaks & Flowing Magma Rivers
+        [
+          { x1: -40, xp: 170, x2: 380, yp: 175 },
+          { x1: 270, xp: 512, x2: 750, yp: 120 },
+          { x1: 650, xp: 860, x2: 1060, yp: 165 }
+        ].forEach((v) => {
+          ctx.fillStyle = '#1b0303';
+          ctx.beginPath();
+          ctx.moveTo(v.x1, h);
+          ctx.lineTo(v.xp - 34, v.yp);
+          ctx.lineTo(v.xp + 34, v.yp);
+          ctx.lineTo(v.x2, h);
+          ctx.closePath();
+          ctx.fill();
+
+          ctx.strokeStyle = '#ff9100';
+          ctx.lineWidth = 12;
+          ctx.beginPath();
+          ctx.moveTo(v.xp, v.yp);
+          ctx.quadraticCurveTo(v.xp + 35, (v.yp + h) * 0.5, v.xp + 70, h);
+          ctx.stroke();
+        });
+
+        // Volcanic Sparks
+        for (let i = 0; i < 130; i++) {
+          ctx.fillStyle = (i % 2 === 0) ? '#ffea00' : '#ff3d00';
+          ctx.beginPath();
+          ctx.arc((i * 83) % w, (i * 47) % 450, (i % 3) + 1.8, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      } else if (biome === 'wonderland_magic') {
+        // 🎠 STAGE 5: Magical Pastel Wonderland, Candy Castles, Giant Crescent Moon & Rainbow Stars
+        // Whimsical Glowing Golden Crescent Moon & Candy Planet
+        ctx.fillStyle = '#fff59d';
+        ctx.beginPath();
+        ctx.arc(760, 145, 58, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = theme.skyUpper || '#7b2cbf';
+        ctx.beginPath();
+        ctx.arc(782, 132, 48, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Ringed Pastel Candy Planet
+        ctx.fillStyle = '#ff80ab';
+        ctx.beginPath();
+        ctx.arc(230, 155, 42, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#80ffdb';
+        ctx.lineWidth = 6;
+        ctx.beginPath();
+        ctx.ellipse(230, 155, 76, 16, -0.25, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Sparkle Stars
+        ctx.fillStyle = '#ffffff';
+        for (let i = 0; i < 110; i++) {
+          ctx.beginPath();
+          ctx.arc((i * 91) % w, (i * 59) % 360, (i % 3) + 1.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Pastel Candy Hills & Fairytale Castle Silhouette at Horizon
+        const hills = [
+          { x: 180, r: 190, c: '#ff70a6' },
+          { x: 512, r: 220, c: '#b5179e' },
+          { x: 840, r: 190, c: '#7209b7' }
+        ];
+        hills.forEach((hl) => {
+          ctx.fillStyle = hl.c;
+          ctx.beginPath();
+          ctx.arc(hl.x, h + 40, hl.r, Math.PI, 0);
+          ctx.fill();
+        });
+      } else if (biome === 'cherry_lake') {
+        // 🌸 STAGE 6: Pink Cherry Blossom Lake & Spring Mt. Fuji Valley
+        // Warm Spring Sun
+        const sunG = ctx.createRadialGradient(w / 2, 260, 10, w / 2, 260, 140);
+        sunG.addColorStop(0, '#ffffff');
+        sunG.addColorStop(0.45, '#ffe5ec');
+        sunG.addColorStop(1, 'rgba(255, 179, 198, 0)');
+        ctx.fillStyle = sunG;
+        ctx.beginPath();
+        ctx.arc(w / 2, 260, 140, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Majestic Spring Mountains & Snow-Capped Center Peak
+        ctx.fillStyle = '#5c5470';
+        ctx.beginPath();
+        ctx.moveTo(140, h);
+        ctx.lineTo(465, 175);
+        ctx.lineTo(558, 175);
+        ctx.lineTo(884, h);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = '#fff0f5';
+        ctx.beginPath();
+        ctx.moveTo(465, 175);
+        ctx.lineTo(558, 175);
+        ctx.lineTo(635, 265);
+        ctx.lineTo(512, 245);
+        ctx.lineTo(390, 265);
+        ctx.closePath();
+        ctx.fill();
+
+        // Sparkling Cherry Blossom Lake Horizon
+        ctx.fillStyle = '#48cae4';
+        ctx.fillRect(0, 445, w, h - 445);
+
+        // Floating Sakura Petals in the Sky
+        ctx.fillStyle = '#ffb3c6';
+        for (let i = 0; i < 120; i++) {
+          const px = (i * 89) % w;
+          const py = (i * 43) % 440;
+          ctx.beginPath();
+          ctx.ellipse(px, py, 5, 3, (i % 6) * 0.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      } else if (biome === 'snow_aurora') {
+        // ❄️ STAGE 7: Arctic Snow Mountains, Glacial River & Glowing Aurora Borealis
+        // Stars
+        ctx.fillStyle = '#ffffff';
+        for (let i = 0; i < 140; i++) {
+          ctx.beginPath();
+          ctx.arc((i * 97) % w, (i * 41) % 340, (i % 2) + 1.2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Sweeping Ribbons of Northern Lights (Aurora Borealis)
+        [
+          { y: 120, c1: 'rgba(100, 255, 218, 0.55)', c2: 'rgba(0, 229, 255, 0)' },
+          { y: 175, c1: 'rgba(185, 246, 202, 0.5)', c2: 'rgba(124, 77, 255, 0)' },
+          { y: 225, c1: 'rgba(0, 229, 255, 0.45)', c2: 'rgba(234, 128, 252, 0)' }
+        ].forEach((au, idx) => {
+          const ag = ctx.createLinearGradient(0, au.y - 50, 0, au.y + 70);
+          ag.addColorStop(0, au.c2);
+          ag.addColorStop(0.5, au.c1);
+          ag.addColorStop(1, au.c2);
+          ctx.strokeStyle = ag;
+          ctx.lineWidth = 48;
+          ctx.beginPath();
+          ctx.moveTo(0, au.y);
+          ctx.bezierCurveTo(w * 0.3, au.y - 55 + idx * 18, w * 0.7, au.y + 55 - idx * 15, w, au.y - 15);
+          ctx.stroke();
+        });
+
+        // White Snowy Alpine Peaks
+        [
+          { x1: -20, xp: 180, x2: 390, yp: 195 },
+          { x1: 280, xp: 520, x2: 760, yp: 155 },
+          { x1: 640, xp: 860, x2: 1060, yp: 185 }
+        ].forEach((m) => {
+          ctx.fillStyle = '#cfe8fc';
+          ctx.beginPath();
+          ctx.moveTo(m.x1, h);
+          ctx.lineTo(m.xp, m.yp);
+          ctx.lineTo(m.x2, h);
+          ctx.closePath();
+          ctx.fill();
+        });
+      } else {
+        // 🌈 STAGE 8: Cyber Neon Synthwave Fantasy World
+        ctx.fillStyle = '#ffffff';
+        for (let i = 0; i < 140; i++) {
+          ctx.beginPath();
+          ctx.arc((i * 97) % w, (i * 53) % 340, (i % 3 === 0) ? 2.2 : 1.2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        const sunGrad = ctx.createLinearGradient(0, h * 0.25, 0, h * 0.88);
+        sunGrad.addColorStop(0, '#fff75e');
+        sunGrad.addColorStop(0.5, '#ff5400');
+        sunGrad.addColorStop(1, '#ff006e');
+        ctx.fillStyle = sunGrad;
+        ctx.beginPath();
+        ctx.arc(w / 2, h * 0.62, 130, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      this.biomeSkyTexture.needsUpdate = true;
+      return this.biomeSkyTexture;
+    },
+
+    /**
      * Build Horizon Skybox Banner, Giant Retro Sun, and 3D Starfield
      */
     _buildSkyAndHorizon: function () {
       const THREE = global.THREE;
 
+      const initialSkyTex = this._paintBiomeSkyboxTexture(this.currentTheme) || this.textures.skybox;
       const skyGeo = new THREE.PlaneGeometry(340, 150);
       const skyMat = new THREE.MeshBasicMaterial({
-        map: this.textures.skybox,
+        map: initialSkyTex,
         fog: false,
         depthWrite: false
       });
@@ -1070,9 +1564,9 @@
 
       const sunGeo = new THREE.CircleGeometry(28, 48);
       const sunMat = new THREE.MeshBasicMaterial({
-        color: 0xff2a85,
+        color: this.currentTheme.secondary,
         transparent: true,
-        opacity: 0.45,
+        opacity: 0.32,
         fog: false
       });
       this.retroSunMesh = new THREE.Mesh(sunGeo, sunMat);
@@ -1100,48 +1594,69 @@
     },
 
     /**
-     * Build 3-Lane Highway, Scrolling Neon Grid, Studded Side Curbs, and Roblox Obby Rainbow Platforms
+     * Build Curving 3-Lane Highway, Flowing Side Rivers/Streams, Studded Curbs, and Multi-Biome 3D Scenery
      */
     _buildHighwayAndScenery: function () {
       const THREE = global.THREE;
       this.roadGroup = new THREE.Group();
       this.scene.add(this.roadGroup);
+      this.roadCurvePhase = 0;
 
-      // 1. Wide Outer Ground Plane
-      const groundGeo = new THREE.PlaneGeometry(280, 260, 28, 28);
+      // 1. Wide Outer Ground Plane (Grass / Cloud Floor / Seafloor / Volcano / Wonderland / Snow)
+      const groundGeo = new THREE.PlaneGeometry(320, 270, 28, 28);
       const groundMat = new THREE.MeshBasicMaterial({
-        color: this.currentTheme.fog,
+        color: this.currentTheme.ground || this.currentTheme.fog,
         side: THREE.DoubleSide
       });
       const groundMesh = new THREE.Mesh(groundGeo, groundMat);
       groundMesh.rotation.x = -Math.PI / 2;
-      groundMesh.position.set(0, -0.12, -85);
+      groundMesh.position.set(0, -0.15, -85);
       this.roadGroup.add(groundMesh);
       this.outerGroundMat = groundMat;
 
-      // 2. Synthwave Wireframe Grid Floor
+      // 2. Flowing 3D Rivers / Sea Streams / Cloud Streams / Magma Rivers along both sides of the curving road!
+      this.stageRiverMeshes = [];
+      this.stageRiverMat = new THREE.MeshBasicMaterial({
+        color: this.currentTheme.river || 0x00d2ff,
+        transparent: true,
+        opacity: 0.88,
+        side: THREE.DoubleSide
+      });
+      [-1, 1].forEach((side) => {
+        const rivGeo = new THREE.PlaneGeometry(16, 260, 1, 56);
+        const pos = rivGeo.attributes.position;
+        const baseVx = new Float32Array(pos.count);
+        for (let v = 0; v < pos.count; v++) {
+          baseVx[v] = pos.getX(v);
+        }
+        const rivMesh = new THREE.Mesh(rivGeo, this.stageRiverMat);
+        rivMesh.rotation.x = -Math.PI / 2;
+        rivMesh.position.set(0, -0.06, -85);
+        rivMesh.userData = {
+          baseVx: baseVx,
+          sideOffset: side * 18.5
+        };
+        this.roadGroup.add(rivMesh);
+        this.stageRiverMeshes.push(rivMesh);
+      });
+
+      // 2b. Subtle Grid Floor
       const gridHelper = new THREE.GridHelper(260, 52, this.currentTheme.primary, this.currentTheme.grid);
-      gridHelper.position.set(0, -0.05, -85);
+      gridHelper.position.set(0, -0.08, -85);
       if (gridHelper.material) {
         gridHelper.material.transparent = true;
-        gridHelper.material.opacity = 0.35;
+        gridHelper.material.opacity = 0.22;
       }
       this.roadGroup.add(gridHelper);
       this.synthGridHelper = gridHelper;
 
-      // 3. Main 3-Lane Asphalt Highway Surface (Widened in distance so road narrows much less!)
-      const roadGeo = new THREE.PlaneGeometry(14.4, 260, 1, 48);
+      // 3. Main 3-Lane Asphalt Highway Surface (Subdivided along Z so it bends smoothly into S-curves!)
+      const roadGeo = new THREE.PlaneGeometry(14.4, 260, 1, 72);
       const roadPos = roadGeo.attributes.position;
+      const roadBaseVx = new Float32Array(roadPos.count);
       for (let v = 0; v < roadPos.count; v++) {
-        const vx = roadPos.getX(v);
-        const vy = roadPos.getY(v);
-        // After rotation.x = -PI/2 and position.z = -85, worldZ = -85 - vy
-        const worldZ = -85 - vy;
-        const wf = 1 + Math.max(0, (8 - worldZ) * 0.0175);
-        roadPos.setX(v, vx * wf);
+        roadBaseVx[v] = roadPos.getX(v);
       }
-      roadPos.needsUpdate = true;
-      roadGeo.computeVertexNormals();
 
       const roadMat = new THREE.MeshStandardMaterial({
         color: this.currentTheme.road,
@@ -1151,21 +1666,33 @@
       const roadMesh = new THREE.Mesh(roadGeo, roadMat);
       roadMesh.rotation.x = -Math.PI / 2;
       roadMesh.position.set(0, 0, -85);
+      roadMesh.userData = { baseVx: roadBaseVx };
       this.roadGroup.add(roadMesh);
+      this.roadMesh = roadMesh;
       this.roadSurfaceMat = roadMat;
 
-      // 4. Continuous Neon Edge Rails following the less-narrowing road edges
-      const railGeo = new THREE.BoxGeometry(0.24, 0.18, 265);
-      this.edgeRailMat = new THREE.MeshBasicMaterial({ color: this.currentTheme.primary });
-      const midWf = 1 + Math.max(0, (8 - (-85)) * 0.0175);
-      const railAngle = Math.atan(7.2 * 0.0175);
-      const leftRail = new THREE.Mesh(railGeo, this.edgeRailMat);
-      leftRail.position.set(-7.2 * midWf, 0.09, -85);
-      leftRail.rotation.y = railAngle;
-      const rightRail = new THREE.Mesh(railGeo, this.edgeRailMat);
-      rightRail.position.set(7.2 * midWf, 0.09, -85);
-      rightRail.rotation.y = -railAngle;
-      this.roadGroup.add(leftRail, rightRail);
+      // 4. Continuous Curving Neon Edge Rails following the S-curve road edges
+      this.edgeRailMeshes = [];
+      this.edgeRailMat = new THREE.MeshBasicMaterial({
+        color: this.currentTheme.primary,
+        side: THREE.DoubleSide
+      });
+      [-7.2, 7.2].forEach((sideEdge) => {
+        const railGeo = new THREE.PlaneGeometry(0.36, 260, 1, 72);
+        const rPos = railGeo.attributes.position;
+        const rBaseVx = new Float32Array(rPos.count);
+        for (let v = 0; v < rPos.count; v++) {
+          rBaseVx[v] = rPos.getX(v);
+        }
+        const railMesh = new THREE.Mesh(railGeo, this.edgeRailMat);
+        railMesh.rotation.x = -Math.PI / 2;
+        railMesh.position.set(0, 0.05, -85);
+        railMesh.userData = { baseVx: rBaseVx, sideEdge: sideEdge };
+        this.roadGroup.add(railMesh);
+        this.edgeRailMeshes.push(railMesh);
+      });
+
+      this._updateRoadCurveGeometry();
 
       // 5. Scrolling Lane Divider Dashes
       this.laneDashMeshes = [];
@@ -1180,11 +1707,11 @@
       for (let i = 0; i < numRows; i++) {
         const zPos = 24 - i * spacing;
         const wf = 1 + Math.max(0, (8 - zPos) * 0.0175);
+        const curveX = this._getRoadCurveX(zPos);
         [-2.25, 2.25].forEach((xPos) => {
           const dash = new THREE.Mesh(dashGeo, this.dashMaterial);
           dash.rotation.x = -Math.PI / 2;
-          dash.rotation.z = -Math.atan(xPos * 0.0175);
-          dash.position.set(xPos * wf, 0.02, zPos);
+          dash.position.set(xPos * wf + curveX, 0.02, zPos);
           dash.userData = { baseX: xPos };
           this.roadGroup.add(dash);
           this.laneDashMeshes.push(dash);
@@ -1200,16 +1727,15 @@
       for (let i = 0; i < 32; i++) {
         const zPos = 24 - i * 7.5;
         const wf = 1 + Math.max(0, (8 - zPos) * 0.0175);
+        const curveX = this._getRoadCurveX(zPos);
         const mat = (i % 2 === 0) ? this.curbMatA : this.curbMatB;
         [-7.55, 7.55].forEach((cx) => {
           const curbGroup = new THREE.Group();
-          curbGroup.position.set(cx * wf, 0.16, zPos);
-          curbGroup.rotation.y = -Math.atan(cx * 0.0175);
+          curbGroup.position.set(cx * wf + curveX, 0.16, zPos);
           curbGroup.userData = { baseX: cx };
           const brick = new THREE.Mesh(curbGeo, mat);
           curbGroup.add(brick);
 
-          // Add 3 Roblox cylindrical studs along each curb brick
           if (this.sharedStudGeo) {
             [-1.1, 0, 1.1].forEach((sz) => {
               const stud = new THREE.Mesh(this.sharedStudGeo, mat);
@@ -1223,9 +1749,11 @@
         });
       }
 
-      // 7. Roadside Scrolling Scenery + Floating Roblox Obby Rainbow Platforms with Studs!
+      // 7. Roadside Scrolling Multi-Biome Scenery + Floating Roblox Obby Platforms + Snow-Capped Mountains!
       this.sceneryItems = [];
       this.obbyPlatforms = [];
+      this.biomePropVariants = [];
+      this.mountainSnowCaps = [];
       this.mountainMat = new THREE.MeshStandardMaterial({
         color: this.currentTheme.mountain,
         roughness: 0.7,
@@ -1236,7 +1764,10 @@
         color: this.currentTheme.mountainEdge,
         wireframe: true,
         transparent: true,
-        opacity: 0.55
+        opacity: 0.42
+      });
+      this.mountainSnowCapMat = new THREE.MeshBasicMaterial({
+        color: 0xf4fbff
       });
 
       for (let i = 0; i < 18; i++) {
@@ -1244,12 +1775,14 @@
         [-1, 1].forEach((side) => {
           // Floating Roblox Obby Rainbow Brick Platform right beside the highway!
           const obbyPlat = this._createObbyPlatform(i, side);
+          const platBaseX = side * (10.5 + (i % 3) * 1.9);
           obbyPlat.position.set(
-            side * (10.2 + (i % 3) * 1.9),
+            platBaseX,
             1.4 + (i % 4) * 0.85,
             zPos
           );
           obbyPlat.userData = {
+            baseX: platBaseX,
             baseY: obbyPlat.position.y,
             phase: i * 0.7 + (side > 0 ? 1.5 : 0)
           };
@@ -1257,21 +1790,30 @@
           this.sceneryItems.push(obbyPlat);
           this.obbyPlatforms.push(obbyPlat);
 
-          // Cyber Palm / Neon Pylon further out
-          const prop = (i % 2 === 0) ? this._createCyberPalm() : this._createNeonPylon(i);
-          prop.position.set(side * (16.5 + (i % 3) * 2.2), 0, zPos - 4);
-          this.roadGroup.add(prop);
-          this.sceneryItems.push(prop);
+          // Multi-Biome Roadside Prop Container (switches between Nature Trees, Sky Clouds, Underwater Coral/Jellyfish, Lava Crystals, Wonderland Mushrooms, Cherry Trees, Snow Pines, and Cyber Palms!)
+          const propContainer = this._createMultiBiomePropContainer(i, side);
+          const propBaseX = side * (16.2 + (i % 3) * 2.4);
+          propContainer.position.set(propBaseX, 0, zPos - 4);
+          propContainer.userData = {
+            baseX: propBaseX,
+            phase: i * 0.5 + (side > 0 ? 1.1 : 0)
+          };
+          this.roadGroup.add(propContainer);
+          this.sceneryItems.push(propContainer);
 
-          // Low-poly synthwave mountain peaks
+          // Low-poly mountain peaks with Snow Caps along the outer valley
           if (i % 2 === 0) {
             const mtn = this._createLowPolyMountain(i, side);
-            mtn.position.set(side * (30 + (i % 4) * 7), 0, zPos - 3);
+            const mtnBaseX = side * (31 + (i % 4) * 7);
+            mtn.position.set(mtnBaseX, 0, zPos - 3);
+            mtn.userData = { baseX: mtnBaseX };
             this.roadGroup.add(mtn);
             this.sceneryItems.push(mtn);
           }
         });
       }
+
+      this._applyBiomePropsVisibility(this.currentTheme.biome || 'river_nature');
 
       // 8. Boss Hell & Erupting Lava Environment Group (Visible during Boss Fights!)
       this.bossLavaGroup = new THREE.Group();
@@ -1302,7 +1844,6 @@
         this.bossLavaGroup.add(coreStream);
       });
 
-      // Erupting 3D Lava Geyser Columns & Hellfire Spires along both sides of the road
       const geyserOuterGeo = new THREE.ConeGeometry(1.8, 12, 7);
       const geyserInnerGeo = new THREE.ConeGeometry(1.0, 15, 7);
       const geyserOuterMat = new THREE.MeshBasicMaterial({
@@ -1335,6 +1876,214 @@
           this.bossLavaGroup.add(geyserGroup);
           this.bossLavaGeysers.push(geyserGroup);
         });
+      }
+    },
+
+    /**
+     * Build a multi-biome prop container that holds 3D scenery meshes for each biome so switching stages is instant!
+     */
+    _createMultiBiomePropContainer: function (idx, side) {
+      const THREE = global.THREE;
+      const container = new THREE.Group();
+
+      // 1. Nature Pine & Lush Forest Tree (river_nature, snow_aurora)
+      const natureGroup = new THREE.Group();
+      const trunkMat = new THREE.MeshStandardMaterial({ color: 0x5d4037, roughness: 0.8 });
+      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.45, 2.6, 6), trunkMat);
+      trunk.position.y = 1.3;
+      natureGroup.add(trunk);
+      const pineColors = [0x2e7d32, 0x388e3c, 0x43a047];
+      for (let tier = 0; tier < 3; tier++) {
+        const cone = new THREE.Mesh(
+          new THREE.ConeGeometry(2.1 - tier * 0.42, 2.8 - tier * 0.3, 7),
+          new THREE.MeshStandardMaterial({
+            color: pineColors[tier],
+            roughness: 0.6,
+            flatShading: true
+          })
+        );
+        cone.position.y = 3.0 + tier * 1.55;
+        natureGroup.add(cone);
+      }
+      container.add(natureGroup);
+
+      // 2. Sky Kingdom Fluffy Cloud & Rainbow Ring (sky_heaven)
+      const skyGroup = new THREE.Group();
+      const cloudMat = new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        emissive: 0x80d8ff,
+        emissiveIntensity: 0.25,
+        roughness: 0.3
+      });
+      [
+        { x: 0, y: 3.2, z: 0, r: 1.55 },
+        { x: -1.1, y: 2.9, z: 0.3, r: 1.15 },
+        { x: 1.1, y: 2.95, z: -0.2, r: 1.2 }
+      ].forEach((p) => {
+        const puff = new THREE.Mesh(new THREE.DodecahedronGeometry(p.r, 1), cloudMat);
+        puff.position.set(p.x, p.y, p.z);
+        skyGroup.add(puff);
+      });
+      if (idx % 2 === 0) {
+        const rainbowArch = new THREE.Mesh(
+          new THREE.TorusGeometry(2.2, 0.22, 8, 20, Math.PI),
+          new THREE.MeshBasicMaterial({ color: (idx % 4 === 0) ? 0xff4081 : 0xffea00 })
+        );
+        rainbowArch.position.y = 3.4;
+        skyGroup.add(rainbowArch);
+      }
+      container.add(skyGroup);
+
+      // 3. Underwater Coral Reef, Seaweed Kelp & Glowing Jellyfish (underwater_ocean)
+      const oceanGroup = new THREE.Group();
+      const coralColor = (idx % 3 === 0) ? 0xff4d6d : (idx % 3 === 1 ? 0x00f5d4 : 0xffbe0b);
+      const coralMat = new THREE.MeshStandardMaterial({
+        color: coralColor,
+        emissive: coralColor,
+        emissiveIntensity: 0.45,
+        roughness: 0.35
+      });
+      // Branching Coral / Kelp
+      for (let b = -1; b <= 1; b++) {
+        const branch = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.32, 3.6 + Math.abs(b) * 0.8, 6), coralMat);
+        branch.position.set(b * 0.65, 1.8, 0);
+        branch.rotation.z = -b * 0.28;
+        oceanGroup.add(branch);
+      }
+      // Floating Translucent Jellyfish above the coral!
+      const jellyDome = new THREE.Mesh(
+        new THREE.SphereGeometry(1.15, 12, 10, 0, Math.PI * 2, 0, Math.PI * 0.65),
+        new THREE.MeshBasicMaterial({
+          color: (idx % 2 === 0) ? 0x72efdd : 0xff70a6,
+          transparent: true,
+          opacity: 0.82,
+          side: THREE.DoubleSide
+        })
+      );
+      jellyDome.position.y = 5.4;
+      oceanGroup.add(jellyDome);
+      container.add(oceanGroup);
+
+      // 4. Molten Lava Volcano Pillar & Fire Crystal (molten_lava)
+      const lavaGroup = new THREE.Group();
+      const spire = new THREE.Mesh(
+        new THREE.ConeGeometry(1.45, 6.2, 6),
+        new THREE.MeshStandardMaterial({
+          color: 0x2b0504,
+          emissive: 0xff3d00,
+          emissiveIntensity: 0.55,
+          flatShading: true
+        })
+      );
+      spire.position.y = 3.1;
+      const magmaTip = new THREE.Mesh(
+        new THREE.OctahedronGeometry(0.95, 0),
+        new THREE.MeshBasicMaterial({ color: 0xffea00 })
+      );
+      magmaTip.position.y = 6.5;
+      lavaGroup.add(spire, magmaTip);
+      container.add(lavaGroup);
+
+      // 5. Wonderland Giant Magic Mushroom & Candy Lollipop (wonderland_magic)
+      const wonderGroup = new THREE.Group();
+      const stem = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.42, 0.58, 3.4, 8),
+        new THREE.MeshStandardMaterial({ color: 0xfff8e1, roughness: 0.4 })
+      );
+      stem.position.y = 1.7;
+      wonderGroup.add(stem);
+      if (idx % 2 === 0) {
+        // Giant Polka-Dot Magic Mushroom Cap
+        const capMat = new THREE.MeshStandardMaterial({
+          color: (side > 0) ? 0xff2a85 : 0x7209b7,
+          emissive: 0xff007f,
+          emissiveIntensity: 0.3,
+          roughness: 0.3
+        });
+        const cap = new THREE.Mesh(
+          new THREE.ConeGeometry(2.2, 2.0, 12),
+          capMat
+        );
+        cap.position.y = 4.1;
+        wonderGroup.add(cap);
+      } else {
+        // Giant Swirl Candy Lollipop
+        const candy = new THREE.Mesh(
+          new THREE.CylinderGeometry(1.65, 1.65, 0.42, 16),
+          new THREE.MeshBasicMaterial({ color: (side > 0) ? 0xff70a6 : 0x00f5d4 })
+        );
+        candy.rotation.x = Math.PI / 2;
+        candy.position.y = 4.4;
+        wonderGroup.add(candy);
+      }
+      container.add(wonderGroup);
+
+      // 6. Blooming Pink Cherry Blossom Tree (cherry_lake)
+      const cherryGroup = new THREE.Group();
+      const cTrunk = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.44, 2.8, 6), trunkMat);
+      cTrunk.position.y = 1.4;
+      cherryGroup.add(cTrunk);
+      const blossomMat = new THREE.MeshStandardMaterial({
+        color: (idx % 2 === 0) ? 0xffb3c6 : 0xff8fab,
+        emissive: 0xff758f,
+        emissiveIntensity: 0.25,
+        roughness: 0.5,
+        flatShading: true
+      });
+      [
+        { x: 0, y: 3.9, z: 0, r: 1.75 },
+        { x: -0.95, y: 3.3, z: 0.4, r: 1.25 },
+        { x: 0.95, y: 3.4, z: -0.3, r: 1.25 }
+      ].forEach((b) => {
+        const crown = new THREE.Mesh(new THREE.DodecahedronGeometry(b.r, 1), blossomMat);
+        crown.position.set(b.x, b.y, b.z);
+        cherryGroup.add(crown);
+      });
+      container.add(cherryGroup);
+
+      // 7. Cyber Synthwave Palm / Neon Crystal (neon_fantasy)
+      const neonGroup = (idx % 2 === 0) ? this._createCyberPalm() : this._createNeonPylon(idx);
+      container.add(neonGroup);
+
+      this.biomePropVariants.push({
+        natureGroup: natureGroup,
+        skyGroup: skyGroup,
+        oceanGroup: oceanGroup,
+        lavaGroup: lavaGroup,
+        wonderGroup: wonderGroup,
+        cherryGroup: cherryGroup,
+        neonGroup: neonGroup
+      });
+
+      return container;
+    },
+
+    /**
+     * Toggle visibility of roadside 3D props & mountain snow caps to match the active stage biome
+     */
+    _applyBiomePropsVisibility: function (biome) {
+      if (Array.isArray(this.biomePropVariants)) {
+        for (let i = 0; i < this.biomePropVariants.length; i++) {
+          const v = this.biomePropVariants[i];
+          v.natureGroup.visible = (biome === 'river_nature' || biome === 'snow_aurora');
+          v.skyGroup.visible = (biome === 'sky_heaven');
+          v.oceanGroup.visible = (biome === 'underwater_ocean');
+          v.lavaGroup.visible = (biome === 'molten_lava');
+          v.wonderGroup.visible = (biome === 'wonderland_magic');
+          v.cherryGroup.visible = (biome === 'cherry_lake');
+          v.neonGroup.visible = (biome === 'neon_fantasy');
+        }
+      }
+      if (Array.isArray(this.mountainSnowCaps)) {
+        const showCaps = (
+          biome === 'river_nature' ||
+          biome === 'snow_aurora' ||
+          biome === 'cherry_lake' ||
+          biome === 'sky_heaven'
+        );
+        for (let c = 0; c < this.mountainSnowCaps.length; c++) {
+          this.mountainSnowCaps[c].visible = showCaps;
+        }
       }
     },
 
@@ -1444,7 +2193,7 @@
       const group = new THREE.Group();
       const radius = 9 + (idx % 3) * 4;
       const height = 11 + ((idx * 7) % 14);
-      const coneGeo = new THREE.ConeGeometry(radius, height, 5);
+      const coneGeo = new THREE.ConeGeometry(radius, height, 6);
       const mesh = new THREE.Mesh(coneGeo, this.mountainMat);
       mesh.position.y = height / 2 - 0.2;
       mesh.rotation.y = side * idx * 0.7;
@@ -1454,7 +2203,16 @@
       wire.rotation.y = mesh.rotation.y;
       wire.scale.set(1.01, 1.01, 1.01);
 
-      group.add(mesh, wire);
+      // Snow Cap Cone on top of the mountain peak!
+      const capGeo = new THREE.ConeGeometry(radius * 0.39, height * 0.38, 6);
+      const snowCap = new THREE.Mesh(capGeo, this.mountainSnowCapMat);
+      snowCap.position.y = height * 0.81 - 0.15;
+      snowCap.rotation.y = mesh.rotation.y;
+      if (this.mountainSnowCaps) {
+        this.mountainSnowCaps.push(snowCap);
+      }
+
+      group.add(mesh, wire, snowCap);
       return group;
     },
 
