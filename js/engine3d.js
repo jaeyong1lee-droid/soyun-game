@@ -1991,10 +1991,12 @@
         });
       }
 
-      // 7. Roadside Scrolling Multi-Biome Scenery + Floating Roblox Obby Platforms + Snow-Capped Mountains!
+      // 7. Roadside Scrolling Multi-Biome Scenery + Roaming 3D Animals + Floating Obby Platforms + Mountains!
       this.sceneryItems = [];
       this.obbyPlatforms = [];
       this.biomePropVariants = [];
+      this.roamingAnimals = [];
+      this.biomeAnimalVariants = [];
       this.mountainSnowCaps = [];
       this.mountainMat = new THREE.MeshStandardMaterial({
         color: this.currentTheme.mountain,
@@ -2015,12 +2017,12 @@
       for (let i = 0; i < 18; i++) {
         const zPos = 20 - i * 12;
         [-1, 1].forEach((side) => {
-          // Floating Roblox Obby Rainbow Brick Platform right beside the highway!
+          // Floating Roblox Obby Rainbow Brick Platform beside the highway
           const obbyPlat = this._createObbyPlatform(i, side);
-          const platBaseX = side * (10.5 + (i % 3) * 1.9);
+          const platBaseX = side * (13.4 + (i % 3) * 1.9);
           obbyPlat.position.set(
             platBaseX,
-            1.4 + (i % 4) * 0.85,
+            2.4 + (i % 4) * 0.85,
             zPos
           );
           obbyPlat.userData = {
@@ -2032,9 +2034,24 @@
           this.sceneryItems.push(obbyPlat);
           this.obbyPlatforms.push(obbyPlat);
 
-          // Multi-Biome Roadside Prop Container (switches between Nature Trees, Sky Clouds, Underwater Coral/Jellyfish, Lava Crystals, Wonderland Mushrooms, Cherry Trees, Snow Pines, and Cyber Palms!)
+          // Roaming 3D Biome Animals right beside the road (Lions in Jungle, Camels + Foxes in Desert, Penguins + Polar Bears in Glacier, Dinosaurs in Jurassic, Deer/Pegasus/Turtles/Pandas!)
+          if (i < 14) {
+            const animalCluster = this._createMultiBiomeAnimalContainer(i, side);
+            const animalBaseX = side * (10.4 + (i % 2) * 1.6);
+            animalCluster.position.set(animalBaseX, 0, zPos - 2);
+            animalCluster.userData = {
+              baseX: animalBaseX,
+              side: side,
+              phase: i * 0.85 + (side > 0 ? 1.7 : 0),
+              walkSpeed: 1.4 + (i % 3) * 0.35
+            };
+            this.roadGroup.add(animalCluster);
+            this.roamingAnimals.push(animalCluster);
+          }
+
+          // Multi-Biome Roadside Prop Container (Nature Trees, Jungle Palms, Desert Cacti/Pyramids, Glacier Icebergs, Dino Cycads, Sky Clouds, Coral/Jellyfish, Lava Spires, Mushrooms, Cherry Trees!)
           const propContainer = this._createMultiBiomePropContainer(i, side);
-          const propBaseX = side * (16.2 + (i % 3) * 2.4);
+          const propBaseX = side * (16.8 + (i % 3) * 2.4);
           propContainer.position.set(propBaseX, 0, zPos - 4);
           propContainer.userData = {
             baseX: propBaseX,
