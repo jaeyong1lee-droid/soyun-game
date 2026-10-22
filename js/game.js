@@ -729,21 +729,37 @@
         }
 
         if (state.isBossPhase) {
-          // Boss Battle Phase: Launch 3D Super Bomb at Boss & reduce Boss HP
+          // Boss Battle Phase: Launch Multi-Weapon Attack (Ballistic Missile / Water Gun / Mega Laser / Round Bomb / Meteor) at Boss & reduce Boss HP
           state.bossCurrentHp = Math.max(0, state.bossCurrentHp - 1);
           const hpRatio = state.bossCurrentHp / Math.max(1, state.bossMaxHp);
 
-          if (window.SoundEngine) {
-            window.SoundEngine.playLaserShot();
-            window.SoundEngine.playBossHit();
-          }
           if (window.Engine3D) {
             window.Engine3D.damageBoss(hpRatio);
+          }
+
+          const atkInfo = (window.Engine3D && window.Engine3D.lastBossAttackInfo)
+            ? window.Engine3D.lastBossAttackInfo
+            : {
+                type: 'round_bomb',
+                icon: '💣💥',
+                badgeTitle: '💣 특대형 동그란 폭탄 보스 명중!! BOOM!!',
+                badgeSub: '🔥 초대형 화염 폭탄 대폭발!!',
+                toastTitle: '💣💥 특대형 동그란 슈퍼 폭탄 투하 & 보스 명중!! BOOM!!',
+                tvMsg: '💣 BOOM!! 이소윤 선수의 특대형 동그란 슈퍼 폭탄이 보스에게 정확히 박혔습니다!!'
+              };
+
+          if (window.SoundEngine) {
+            window.SoundEngine.playLaserShot(atkInfo.type);
+            window.SoundEngine.playBossHit(atkInfo.type);
           }
           if (window.UIManager) {
             window.UIManager.updateBossHUD(state.bossCurrentHp, state.bossMaxHp);
             if (typeof window.UIManager.triggerImpactEffect === 'function') {
-              window.UIManager.triggerImpactEffect('boss', { points: pointsEarned, combo: state.combo });
+              window.UIManager.triggerImpactEffect('boss', {
+                points: pointsEarned,
+                combo: state.combo,
+                attackInfo: atkInfo
+              });
             }
           }
 
@@ -754,12 +770,12 @@
             if (window.UIManager) {
               window.UIManager.showFeedbackToast(
                 true,
-                `💣🚀 초대형 폭탄 발사 & 보스 명중!! BOOM!! (+${pointsEarned} R$ · 보스 HP ${state.bossCurrentHp}/${state.bossMaxHp})`
+                `${atkInfo.toastTitle} (+${pointsEarned} R$ · 보스 HP ${state.bossCurrentHp}/${state.bossMaxHp})`
               );
               if (typeof window.UIManager.pushRobloxChat === 'function') {
                 window.UIManager.pushRobloxChat(
                   '로블록스TV',
-                  `💣 BOOM!! 이소윤 선수의 특대형 폭탄이 날아가 보스에게 정확히 박혔습니다!!`,
+                  atkInfo.tvMsg,
                   'tv'
                 );
               }
@@ -1454,7 +1470,7 @@
     },
 
     /**
-     * Adjusts speed multiplier up or down by delta (e.g. -0.2 or +0.2)
+     * Adjusts speed multiplier up or down by delta (e.g. -0.1 or +0.1)
      * @param {number} delta
      */
     adjustSpeed: function (delta) {
@@ -1462,6 +1478,19 @@
         window.SoundEngine.playClick();
       }
       const nextMult = Math.round(((state.speedMultiplier || 1.0) + (Number(delta) || 0)) * 10) / 10;
+      return this.setSpeedMultiplier(nextMult);
+    },
+
+    /**
+     * Steps the left-side cute speed arrows strictly within x 1.0 ~ x 1.6!
+     * @param {number} delta (+0.1 or -0.1)
+     */
+    stepLeftSpeedArrow: function (delta) {
+      if (window.SoundEngine) {
+        window.SoundEngine.playClick();
+      }
+      const base = Math.max(1.0, Math.min(1.6, Number(state.speedMultiplier) || 1.0));
+      const nextMult = Math.max(1.0, Math.min(1.6, Math.round((base + (Number(delta) || 0)) * 10) / 10));
       return this.setSpeedMultiplier(nextMult);
     },
 
@@ -2491,6 +2520,24 @@
       if (btnPause) {
         btnPause.addEventListener('click', function () {
           self.togglePause();
+        });
+      }
+
+      // Left-Side Cute Mini Speed Up/Down Arrows (x 1.0 ~ x 1.6)
+      const btnSpeedUp = document.getElementById('btn-speed-up');
+      if (btnSpeedUp) {
+        btnSpeedUp.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          self.stepLeftSpeedArrow(0.1);
+        });
+      }
+      const btnSpeedDown = document.getElementById('btn-speed-down');
+      if (btnSpeedDown) {
+        btnSpeedDown.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          self.stepLeftSpeedArrow(-0.1);
         });
       }
 
