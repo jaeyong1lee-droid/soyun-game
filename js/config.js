@@ -488,6 +488,7 @@
 
       return {
         stage: s,
+        biome: tpl.biome || 'dino_jurassic',
         title: baseTitle,
         subtitle: baseSubtitle,
         questionsToBoss: Math.min(24, 15 + Math.floor((s - 1) * 0.6)),
@@ -507,7 +508,7 @@
     },
 
     /**
-     * Returns World Country / Kingdom Summary info for the Sky-Ascending Stage Tree Map ("1단계는 어느나라 - 2단계는 어느나라")
+     * Returns World Country / Kingdom Summary info for the Stage Adventure Map
      * @param {number} stageNumber
      */
     getStageWorldInfo: function (stageNumber) {
@@ -515,68 +516,94 @@
       const isJackpot = (s % 10 === 0);
       const worlds = [
         {
+          biome: 'river_nature',
           icon: '🏞️',
-          country: '에메랄드 대자연의 나라',
-          summary: '알프스 만년설 산맥 · 에메랄드 강변 · 푸른 소나무 숲',
-          zone: '대자연 지구 (1,000m)',
+          country: '에메랄드 강변 숲',
+          summary: '알프스 만년설 · 에메랄드 폭포 · 사슴과 산토끼',
+          zone: '대자연 숲 (1,000m)',
           color: '#00e676',
           bg: 'linear-gradient(135deg, rgba(13,71,161,0.55) 0%, rgba(27,94,32,0.75) 100%)'
         },
         {
+          biome: 'jungle_safari',
+          icon: '🦁',
+          country: '황금 사자 정글',
+          summary: '아마존 야자수 밀림 · 갈기 사자 & 원숭이 사파리',
+          zone: '정글 사파리 (2,000m)',
+          color: '#84cc16',
+          bg: 'linear-gradient(135deg, rgba(20,83,45,0.8) 0%, rgba(132,204,22,0.55) 100%)'
+        },
+        {
+          biome: 'desert_pyramid',
+          icon: '🐪',
+          country: '황금 사막 오아시스',
+          summary: '피라미드 모래언덕 · 쌍봉 낙타 & 사막여우',
+          zone: '황금 사막 (3,000m)',
+          color: '#fbbf24',
+          bg: 'linear-gradient(135deg, rgba(124,45,18,0.8) 0%, rgba(251,191,36,0.55) 100%)'
+        },
+        {
+          biome: 'glacier_ice',
+          icon: '🧊',
+          country: '크리스탈 빙하 대륙',
+          summary: '남극 얼음 빙하 · 뒤뚱 펭귄 & 북극곰',
+          zone: '빙하 대륙 (4,000m)',
+          color: '#38bdf8',
+          bg: 'linear-gradient(135deg, rgba(8,47,73,0.82) 0%, rgba(56,189,248,0.55) 100%)'
+        },
+        {
+          biome: 'dino_jurassic',
+          icon: '🦖',
+          country: '쥬라기 공룡시대',
+          summary: '원시 화산 밀림 · 티라노사우루스 & 브라키오 공룡',
+          zone: '공룡시대 (5,000m)',
+          color: '#22c55e',
+          bg: 'linear-gradient(135deg, rgba(63,46,24,0.82) 0%, rgba(34,197,94,0.55) 100%)'
+        },
+        {
+          biome: 'sky_heaven',
           icon: '☁️',
           country: '천공의 구름 왕국',
-          summary: '하늘 위 뭉게구름 바다 · 쌍무지개 다리 · 황금 구름 신전',
-          zone: '구름 하늘층 (2,000m)',
+          summary: '하늘 위 쌍무지개 다리 · 날개 유니콘 페가수스',
+          zone: '구름 하늘층 (6,000m)',
           color: '#00e5ff',
           bg: 'linear-gradient(135deg, rgba(2,119,189,0.6) 0%, rgba(0,229,255,0.45) 100%)'
         },
         {
+          biome: 'underwater_ocean',
           icon: '🐠',
-          country: '신비한 바닷속 해저왕국',
-          summary: '아틀란티스 산호초 · 둥실 해파리 · 바닷속 물방울 길',
-          zone: '신비의 해저층 (3,000m)',
+          country: '신비한 바닷속 왕국',
+          summary: '아틀란티스 산호초 · 바다거북 & 돌고래',
+          zone: '신비의 해저층 (7,000m)',
           color: '#00f5d4',
           bg: 'linear-gradient(135deg, rgba(0,29,61,0.75) 0%, rgba(0,180,216,0.55) 100%)'
         },
         {
+          biome: 'molten_lava',
           icon: '🌋',
-          country: '불타는 화산 용암의 나라',
-          summary: '끓어오르는 마그마 협곡 · 폭발 화산섬 · 불꽃 크리스탈',
-          zone: '마그마 화산층 (4,000m)',
+          country: '불타는 화산 용암지대',
+          summary: '마그마 용암 협곡 · 불꽃 아기 드래곤',
+          zone: '마그마 화산층 (8,000m)',
           color: '#ff6d00',
           bg: 'linear-gradient(135deg, rgba(60,9,0,0.8) 0%, rgba(255,61,0,0.55) 100%)'
         },
         {
+          biome: 'wonderland_magic',
           icon: '🎠',
           country: '상상의 마법 동화나라',
-          summary: '캔디 원더랜드 · 거대 마법버섯 · 롤리팝 사탕성',
-          zone: '동화 마법층 (5,000m)',
+          summary: '캔디 원더랜드 · 마법 버섯 & 동화 토끼',
+          zone: '동화 마법층 (9,000m)',
           color: '#ff70a6',
           bg: 'linear-gradient(135deg, rgba(60,9,108,0.75) 0%, rgba(255,112,166,0.55) 100%)'
         },
         {
+          biome: 'cherry_lake',
           icon: '🌸',
-          country: '분홍빛 벚꽃 호수의 나라',
-          summary: '봄날의 산악 계곡 · 거울 호수 · 흩날리는 분홍 벚꽃길',
-          zone: '하늘 정원층 (6,000m)',
+          country: '벚꽃 호수 & 황금 신전',
+          summary: '흩날리는 벚꽃 호수 · 귀여운 판다 & 만원 보스',
+          zone: '천공 정상 (10,000m)',
           color: '#ff8fab',
           bg: 'linear-gradient(135deg, rgba(59,28,50,0.75) 0%, rgba(255,143,171,0.55) 100%)'
-        },
-        {
-          icon: '❄️',
-          country: '오로라 얼음 설산의 나라',
-          summary: '알래스카 눈 덮인 설산 · 빙하 강물 · 밤하늘 오로라',
-          zone: '성층권 오로라 (7,000m)',
-          color: '#64ffda',
-          bg: 'linear-gradient(135deg, rgba(2,17,36,0.8) 0%, rgba(0,150,199,0.55) 100%)'
-        },
-        {
-          icon: '🌈',
-          country: '사이버 은하수 환상의 나라',
-          summary: '네온 별빛 은하수 · 레트로 태양 · 사이버 미래도시',
-          zone: '은하수 환상층 (8,000m)',
-          color: '#e040fb',
-          bg: 'linear-gradient(135deg, rgba(25,5,53,0.8) 0%, rgba(255,0,127,0.5) 100%)'
         }
       ];
 
@@ -584,12 +611,13 @@
       if (isJackpot) {
         return {
           stage: s,
+          biome: base.biome,
           icon: '👑',
-          country: `황금 천공 제국 · 만원 보스 왕국 (${base.country})`,
-          shortCountry: `👑 황금 천공 만원 보스 왕국`,
-          summary: `💴 ${s}단계 보스 격파 시 [10,000원 만원 상금] 보너스 달성! (${base.summary})`,
+          country: `황금 보스 신전 (${base.country})`,
+          shortCountry: `👑 ${base.country}`,
+          summary: `💴 ${s}단계 보스 격파 시 [10,000원 상금]! (${base.summary})`,
           altitudeMeters: s * 1000,
-          altitudeLabel: `☁️ 상공 ${(s * 1000).toLocaleString()}m · 💴 만원 보스 정상!`,
+          altitudeLabel: `☁️ ${(s * 1000).toLocaleString()}m · 💴 만원 보스`,
           color: '#ffd700',
           bg: 'linear-gradient(135deg, rgba(80,45,0,0.88) 0%, rgba(217,119,6,0.72) 100%)',
           isJackpot: true
@@ -598,12 +626,13 @@
 
       return {
         stage: s,
+        biome: base.biome,
         icon: base.icon,
         country: base.country,
         shortCountry: `${base.icon} ${base.country}`,
         summary: base.summary,
         altitudeMeters: s * 1000,
-        altitudeLabel: `☁️ 상공 ${(s * 1000).toLocaleString()}m`,
+        altitudeLabel: `☁️ ${(s * 1000).toLocaleString()}m`,
         color: base.color,
         bg: base.bg,
         isJackpot: false
