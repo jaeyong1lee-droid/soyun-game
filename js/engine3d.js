@@ -6109,16 +6109,21 @@
           this.bossRecoilRoll += (0 - this.bossRecoilRoll) * Math.min(1, dt * 7.5);
 
           // Elastic Squash-and-Stretch Deformation when Boss takes a hit!
+          const baseBossScale = 0.88;
           if (this.bossSquashTimer > 0) {
             this.bossSquashTimer = Math.max(0, this.bossSquashTimer - dt);
             const sqWave = Math.sin(this.bossSquashTimer * 26) * (this.bossSquashTimer * 0.72);
             this.bossGroup.scale.set(
-              Math.max(0.65, 1 + sqWave),
-              Math.max(0.65, 1 - sqWave * 0.85),
-              Math.max(0.65, 1 + sqWave)
+              baseBossScale * Math.max(0.65, 1 + sqWave),
+              baseBossScale * Math.max(0.65, 1 - sqWave * 0.85),
+              baseBossScale * Math.max(0.65, 1 + sqWave)
             );
           } else {
-            this.bossGroup.scale.set(1, 1, 1);
+            this.bossGroup.scale.set(baseBossScale, baseBossScale, baseBossScale);
+          }
+
+          if (this.bossImpactLight && this.bossImpactLight.intensity > 0) {
+            this.bossImpactLight.intensity = Math.max(0, this.bossImpactLight.intensity - dt * 12);
           }
 
           // Process queued multi-stage chain detonations on Boss shoulders & hammer!
@@ -6140,15 +6145,17 @@
             }
           }
 
-          // Dynamic lunging, weaving across all 3 lanes, and energetic bobbing!
-          const lungeOffset = Math.sin(this.elapsedTime * 3.1) * 2.8;
-          const targetBossZ = cfg.BOSS_Z + lungeOffset + this.bossRecoilZ;
+          // Roam actively around the open lower-middle 3D road (z = -15.5 ~ -27.5, x = -6.8 ~ +6.8, y = 1.25 ~ 1.8)
+          // so the Boss is NEVER hidden behind the top question signboard (#question-banner)!
+          const roamZ = -21.2 + Math.sin(this.elapsedTime * 1.85) * 4.5 + Math.cos(this.elapsedTime * 3.7) * 1.6;
+          const targetBossZ = roamZ + this.bossRecoilZ;
+          const roamX = Math.sin(this.elapsedTime * 2.35) * 4.8 + Math.cos(this.elapsedTime * 3.85) * 2.1;
           this.bossGroup.position.z += (targetBossZ - this.bossGroup.position.z) * Math.min(1, dt * 8.5);
-          this.bossGroup.position.x = Math.sin(this.elapsedTime * 1.95) * 5.4;
-          this.bossGroup.position.y = 2.8 + Math.sin(this.elapsedTime * 4.2) * 0.68 + this.bossRecoilY;
-          this.bossGroup.rotation.z = Math.cos(this.elapsedTime * 1.95) * -0.15 + this.bossRecoilRoll;
+          this.bossGroup.position.x = roamX;
+          this.bossGroup.position.y = 1.25 + Math.abs(Math.sin(this.elapsedTime * 3.8)) * 0.52 + this.bossRecoilY;
+          this.bossGroup.rotation.z = Math.cos(this.elapsedTime * 2.35) * -0.16 + this.bossRecoilRoll;
           this.bossGroup.rotation.x = this.bossRecoilPitch + Math.sin(this.elapsedTime * 3.1) * 0.08;
-          this.bossGroup.rotation.y = this.bossRecoilYaw;
+          this.bossGroup.rotation.y = this.bossRecoilYaw + Math.sin(this.elapsedTime * 1.85) * 0.22;
 
           // Swing the giant Roblox Ban-Hammer rapidly — or flail wildly when hit!
           if (this.bossHitTimer > 0) {
