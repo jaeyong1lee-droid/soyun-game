@@ -1615,10 +1615,12 @@
 
     /**
      * Boss Clear Step 1: Shows the Center Reward Status Popup (#boss-reward-modal) with full gauges
+     * AND the list of failed questions from this stage with answers hidden until [👀 답 보기] is clicked!
      * @param {number} clearedStage
      * @param {Object} [saveState]
+     * @param {Array} [stageWrongQuestions]
      */
-    showBossRewardModal: function (clearedStage, saveState) {
+    showBossRewardModal: function (clearedStage, saveState, stageWrongQuestions) {
       const modal = byId('boss-reward-modal');
       if (!modal) return;
 
@@ -1690,6 +1692,18 @@
         const elJPct = byId('boss-pop-jackpot-pct');
         if (elJPct) elJPct.textContent = `${jp.percent}%`;
       }
+
+      // Render failed questions from this stage (or pending wrongAnswerQueue) with answers hidden until [👀 답 보기] is clicked!
+      const wrongQueue = Array.isArray(state.wrongAnswerQueue) ? state.wrongAnswerQueue : [];
+      const failedList = (Array.isArray(stageWrongQuestions) && stageWrongQuestions.length > 0)
+        ? stageWrongQuestions
+        : wrongQueue;
+      this._renderHiddenAnswerList(
+        byId('boss-clear-wrong-list'),
+        byId('btn-boss-reveal-all'),
+        failedList,
+        '🎉 이번 단계는 틀린 문제가 하나도 없어요! 100% 완벽 올클리어!'
+      );
 
       modal.classList.remove('hidden');
     },
