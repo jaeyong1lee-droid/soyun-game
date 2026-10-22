@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&family=Press+Start+2P&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
-  <link rel="stylesheet" href="css/style.css?v=20261022_15" />
+  <link rel="stylesheet" href="css/style.css?v=20261022_16" />
 </head>
 <body>
   <!-- 3D WebGL Viewport Container -->
@@ -647,19 +647,132 @@
     </div>
   </div>
 
+  <!-- =====================================================================
+       MODAL 6: Confirm Exit Game Modal (#exit-confirm-modal)
+       Shown when user clicks the top-right [✕ 닫기] button next to the Life Panel
+       ===================================================================== -->
+  <div id="exit-confirm-modal" class="modal-backdrop hidden">
+    <div class="modal-card confirm-popup-card" role="dialog" aria-modal="true" aria-labelledby="exit-confirm-title">
+      <div class="arcade-title-pill">EXIT CONFIRMATION</div>
+      <h2 id="exit-confirm-title" class="retry-title">🚪 게임을 닫고 메인 화면으로 나갈까요?</h2>
+      <p class="retry-reassurance">
+        이소윤 선수의 누적 로벅스(R$)와 보너스 상금 게이지는 안전하게 저장됩니다!<br />
+        <strong>(다시 시작하면 현재 단계는 처음부터 다시 도전합니다)</strong>
+      </p>
+      <div class="confirm-popup-actions">
+        <button id="btn-exit-confirm-yes" class="btn-primary-cta btn-confirm-yes" type="button">
+          🏠 네, 메인 화면으로 나가기
+        </button>
+        <button id="btn-exit-confirm-no" class="btn-secondary-action btn-confirm-no" type="button">
+          ▶️ 아니오, 계속 달리기
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       MODAL 7: Boss Clear Step 1 — Center Reward Status Popup (#boss-reward-modal)
+       Clicking anywhere on this popup closes it and opens Step 2 (#next-stage-modal)
+       ===================================================================== -->
+  <div id="boss-reward-modal" class="modal-backdrop hidden">
+    <div id="boss-reward-card" class="modal-card boss-reward-popup-card" role="dialog" aria-modal="true" aria-labelledby="boss-reward-title">
+      <div class="boss-reward-badge">🏆 BOSS CLEAR! REWARD GAUGE +10 🏆</div>
+      <h2 id="boss-reward-title" class="boss-reward-title">🎉 STAGE 1 보스 격파 완료!</h2>
+      <p id="boss-reward-subtitle" class="boss-reward-subtitle">
+        보스 격파 보너스로 <strong>상금 게이지 +10점</strong>이 올라갔어요! 현재 이소윤 선수의 보상 현황입니다.
+      </p>
+
+      <!-- Full 3-Gauge Reward Status Box inside Center Popup -->
+      <div class="boss-reward-gauges-list">
+        <!-- Gauge 1: 보너스 1 -->
+        <div class="boss-popup-gauge-card">
+          <div class="boss-popup-gauge-top">
+            <span id="boss-pop-pocket-name" class="boss-pop-gauge-name">💵 용돈 5,000원</span>
+            <span id="boss-pop-pocket-badge" class="boss-pop-achieved-pill">달성 0개</span>
+          </div>
+          <div class="boss-popup-gauge-track">
+            <div id="boss-pop-pocket-fill" class="boss-popup-gauge-fill fill-pocket" style="width: 0%;"></div>
+          </div>
+          <div class="boss-popup-gauge-meta">
+            <span id="boss-pop-pocket-score">0 / 100점</span>
+            <strong id="boss-pop-pocket-pct">0%</strong>
+          </div>
+        </div>
+
+        <!-- Gauge 2: 보너스 2 -->
+        <div class="boss-popup-gauge-card">
+          <div class="boss-popup-gauge-top">
+            <span id="boss-pop-ashley-name" class="boss-pop-gauge-name">🍓 애슐리 외식</span>
+            <span id="boss-pop-ashley-badge" class="boss-pop-achieved-pill">달성 0개</span>
+          </div>
+          <div class="boss-popup-gauge-track">
+            <div id="boss-pop-ashley-fill" class="boss-popup-gauge-fill fill-ashley" style="width: 0%;"></div>
+          </div>
+          <div class="boss-popup-gauge-meta">
+            <span id="boss-pop-ashley-score">0 / 1,000점</span>
+            <strong id="boss-pop-ashley-pct">0%</strong>
+          </div>
+        </div>
+
+        <!-- Gauge 3: 10단계 보스 보너스 -->
+        <div class="boss-popup-gauge-card">
+          <div class="boss-popup-gauge-top">
+            <span id="boss-pop-jackpot-name" class="boss-pop-gauge-name">💴 10판 보스 만원 상금</span>
+            <span id="boss-pop-jackpot-badge" class="boss-pop-achieved-pill">달성 0개</span>
+          </div>
+          <div class="boss-popup-gauge-track">
+            <div id="boss-pop-jackpot-fill" class="boss-popup-gauge-fill fill-jackpot" style="width: 0%;"></div>
+          </div>
+          <div class="boss-popup-gauge-meta">
+            <span id="boss-pop-jackpot-score">0 / 10단계</span>
+            <strong id="boss-pop-jackpot-pct">0%</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="boss-reward-click-hint">
+        👆 이 창을 터치(클릭)하면 다음 STAGE 진행 창이 열립니다!
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       MODAL 8: Boss Clear Step 2 — Next Stage Confirmation Popup (#next-stage-modal)
+       Shown immediately when the user clicks #boss-reward-modal
+       ===================================================================== -->
+  <div id="next-stage-modal" class="modal-backdrop hidden">
+    <div class="modal-card confirm-popup-card next-stage-popup-card" role="dialog" aria-modal="true" aria-labelledby="next-stage-title">
+      <div class="arcade-title-pill">NEXT STAGE READY!</div>
+      <h2 id="next-stage-title" class="retry-title">🚀 다음 STAGE로 갈까요?</h2>
+      <div id="next-stage-preview-box" class="next-stage-preview-box">
+        <span id="next-stage-badge" class="next-stage-badge">🏁 STAGE 2</span>
+        <strong id="next-stage-name" class="next-stage-name">🍕 피자 팩토리 타워 (Pizza Obby Tower)</strong>
+        <span class="next-stage-bonus-note">❤️ 체력 +2 회복 · ⏸️ 일시정지 2회 충전 완료!</span>
+      </div>
+      <div class="confirm-popup-actions">
+        <button id="btn-next-stage-yes" class="btn-primary-cta btn-confirm-yes" type="button">
+          🚀 네! 다음 STAGE 바로 출발하기!
+        </button>
+        <button id="btn-next-stage-no" class="btn-secondary-action btn-confirm-no" type="button">
+          🏠 메인 화면으로 나가기
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Three.js r128 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <!-- Nano Banana Generated Retro 3D Assets Bundle (CORS-free on file:// & http://) -->
-  <script src="js/assets_data.js?v=20261022_15"></script>
+  <script src="js/assets_data.js?v=20261022_16"></script>
   <!-- Shared Game Modules -->
-  <script src="js/config.js?v=20261022_15"></script>
-  <script src="js/storage.js?v=20261022_15"></script>
-  <script src="js/questionEngine.js?v=20261022_15"></script>
-  <script src="js/sound.js?v=20261022_15"></script>
-  <script src="js/engine3d.js?v=20261022_15"></script>
+  <script src="js/config.js?v=20261022_16"></script>
+  <script src="js/storage.js?v=20261022_16"></script>
+  <script src="js/questionEngine.js?v=20261022_16"></script>
+  <script src="js/sound.js?v=20261022_16"></script>
+  <script src="js/engine3d.js?v=20261022_16"></script>
   <!-- UI & Game Controller -->
-  <script src="js/ui.js?v=20261022_15"></script>
-  <script src="js/game.js?v=20261022_15"></script>
+  <script src="js/ui.js?v=20261022_16"></script>
+  <script src="js/game.js?v=20261022_16"></script>
 
   <!-- Google Chrome / Mobile PWA Service Worker & One-Click App Install Handler -->
   <script>
@@ -669,7 +782,7 @@
 
       if ('serviceWorker' in navigator && window.location.protocol !== 'file:') {
         window.addEventListener('load', function () {
-          navigator.serviceWorker.register('sw.js?v=20261022_15', { updateViaCache: 'none' }).then(function (reg) {
+          navigator.serviceWorker.register('sw.js?v=20261022_16', { updateViaCache: 'none' }).then(function (reg) {
             reg.update();
           }).catch(function () {});
         });

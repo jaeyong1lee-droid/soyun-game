@@ -4419,23 +4419,60 @@ body.start-screen-active #hud-reward-gauges-box {
    🔒 Scrollable Parent Modal & 3-Row Bonus Card Layout
    ========================================================================== */
 
-/* 1. Make #hud-left-panel (생명창) a clean compact top bar across all screens */
+/* 1. Make #hud-left-panel (생명창) a clean compact top bar with room on the right for [✕ 닫기] */
 #hud-left-panel.hud-panel-left {
   position: fixed !important;
   top: max(6px, env(safe-area-inset-top, 6px)) !important;
   left: 8px !important;
-  right: 8px !important;
+  right: 76px !important;
   width: auto !important;
-  max-width: 720px !important;
-  margin: 0 auto !important;
+  max-width: 650px !important;
+  margin: 0 !important;
   display: flex !important;
   flex-direction: row !important;
   align-items: center !important;
   justify-content: space-between !important;
-  gap: 10px !important;
-  padding: 6px 12px !important;
+  gap: 8px !important;
+  padding: 6px 10px !important;
   border-radius: 14px !important;
   z-index: 46 !important;
+}
+
+/* Top-Right Close Button (#btn-top-close-game) right next to #hud-left-panel */
+#btn-top-close-game.btn-top-close-game {
+  position: fixed !important;
+  top: max(6px, env(safe-area-inset-top, 6px)) !important;
+  right: 8px !important;
+  width: 64px !important;
+  height: 42px !important;
+  padding: 0 6px !important;
+  border-radius: 13px !important;
+  border: 2px solid rgba(255, 92, 138, 0.85) !important;
+  background: linear-gradient(135deg, rgba(44, 12, 34, 0.94), rgba(20, 8, 28, 0.94)) !important;
+  color: #ffffff !important;
+  font-family: var(--font-kr) !important;
+  font-size: 13px !important;
+  font-weight: 900 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 2px !important;
+  cursor: pointer !important;
+  pointer-events: auto !important;
+  z-index: 54 !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55), 0 0 12px rgba(255, 42, 133, 0.35) !important;
+  white-space: nowrap !important;
+}
+
+#btn-top-close-game.btn-top-close-game:hover,
+#btn-top-close-game.btn-top-close-game:active {
+  border-color: #ff2a85 !important;
+  background: linear-gradient(135deg, #ff2a85, #b8004c) !important;
+  transform: scale(0.97) !important;
+}
+
+body.start-screen-active #btn-top-close-game {
+  display: none !important;
 }
 
 #hud-left-panel.hud-panel-left .hud-player-badge,
