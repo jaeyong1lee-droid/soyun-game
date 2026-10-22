@@ -1591,35 +1591,208 @@
     },
 
     /**
-     * Boss Clear Step 2: Shows the Next Stage Confirmation Popup (#next-stage-modal)
-     * @param {number} nextStage
-     * @param {Object} [nextStageConfig]
+     * Helper to get World Country / Kingdom Summary info for any stage
      */
-    showNextStageModal: function (nextStage, nextStageConfig) {
+    _getWorldInfo: function (stageNum) {
+      if (window.GameConfig && typeof window.GameConfig.getStageWorldInfo === 'function') {
+        return window.GameConfig.getStageWorldInfo(stageNum);
+      }
+      const s = Math.max(1, parseInt(stageNum, 10) || 1);
+      return {
+        stage: s,
+        icon: '🏞️',
+        country: `STAGE ${s} 월드`,
+        shortCountry: `🏞️ STAGE ${s} 월드`,
+        summary: '3D 로블록스 오비 레이스 월드',
+        altitudeMeters: s * 1000,
+        altitudeLabel: `☁️ 상공 ${(s * 1000).toLocaleString()}m`,
+        color: '#00f5ff',
+        bg: 'linear-gradient(135deg, rgba(13,71,161,0.6), rgba(27,94,32,0.7))',
+        isJackpot: (s % 10 === 0)
+      };
+    },
+
+    /**
+     * Shows the Sky-Ascending World Tree Map Popup (#next-stage-modal)
+     * Used BOTH:
+     *  1) Before Game Start (options.mode === 'start')
+     *  2) When advancing to Next Stage after Boss Clear (options.mode === 'next_stage')
+     * @param {number} targetStage
+     * @param {Object} [stageConfig]
+     * @param {Object} [options] { mode: 'start' | 'next_stage', maxStageReached: number, clearedStage: number }
+     */
+    showNextStageModal: function (targetStage, stageConfig, options) {
       const modal = byId('next-stage-modal');
       if (!modal) return;
 
-      const stg = Math.max(1, parseInt(nextStage, 10) || 2);
-      const cfg = nextStageConfig || ((window.GameConfig && window.GameConfig.getStageConfig) ? window.GameConfig.getStageConfig(stg) : { title: `STAGE ${stg}` });
+      const opts = options || {};
+      const mode = opts.mode === 'start' ? 'start' : 'next_stage';
+      const saveState = window.SaveManager ? window.SaveManager.getState() : {};
+      const stg = Math.max(1, parseInt(targetStage, 10) || 1);
+      const maxReached = Math.max(
+        stg,
+        parseInt(opts.maxStageReached !== undefined ? opts.maxStageReached : (saveState.maxStageReached || saveState.currentStage || 1), 10) || 1
+      );
+      const clearedStage = opts.clearedStage ? parseInt(opts.clearedStage, 10) : (mode === 'next_stage' ? Math.max(1, stg - 1) : 0);
+
+      const curWorld = this._getWorldInfo(stg);
+      const prevWorld = clearedStage >= 1 ? this._getWorldInfo(clearedStage) : null;
+
+      // 1. Update Header & Altitude Badge
+      const modePill = byId('sky-treemap-mode-pill');
+      if (modePill) {
+        modePill.textContent = mode === 'start'
+          ? '🗺️ SKY WORLD TREE MAP · 출발 전 위치 확인'
+          : `⬆️ STAGE ${clearedStage} 정복 완료 · 하늘 위로 상승!`;
+      }
+
+      const altBadge = byId('sky-treemap-altitude-badge');
+      if (altBadge) {
+        altBadge.textContent = `☁️ 현재 고도: 상공 ${(stg * 1000).toLocaleString()}m (${stg}단계)`;
+      }
 
       const titleEl = byId('next-stage-title');
       if (titleEl) {
-        titleEl.textContent = `🚀 STAGE ${stg}(으)로 이동할까요?`;
+        titleEl.textContent = mode === 'start'
+          ? `🗺️ 하늘로 올라가는 소윤이의 단계별 월드 트리맵`
+          : `🚀 ${stg}단계 [${curWorld.country}](으)로 올라갈까요?`;
       }
+
+      const subEl = byId('sky-treemap-subtitle');
+      if (subEl) {
+        if (mode === 'start') {
+          subEl.innerHTML = `현재 위치: <strong>${stg}단계 · ${escapeHtml(curWorld.icon + ' ' + curWorld.country)}</strong> — 한 단계씩 클리어하며 하늘 꼭대기까지 올라가요!`;
+        } else if (prevWorld) {
+          subEl.innerHTML = `<strong>${clearedStage}단계(${escapeHtml(prevWorld.country)})</strong> 정복 성공! ⬆️ 하늘 위 <strong>${stg}단계(${escapeHtml(curWorld.country)})</strong>에 도착했어요!`;
+        } else {
+          subEl.textContent = '보스를 물리치고 하늘 위 다음 나라로 한 단계 더 올라왔어요!';
+        }
+      }
+
+      // 2. Render Vertical Sky-Climbing Tree Map Summary (Top = Highest Sky Stage -> Bottom = Stage 1 Ground)
+      const listEl = byId('sky-treemap-list');
+      if (listEl) {
+        // Show stages from 1 up to at least 10 (or up to next multiple of 10 above current/maxReached)
+        const topStage = Math.max(10, Math.ceil(Math.max(stg + 2, maxReached + 1) / 10) * 10);
+        const startStage = Math.max(1, topStage - 9);
+        const rowsHtml = [];
+
+        for (let s = topStage; s >= startStage; s--) {
+          const wInfo = this._getWorldInfo(s);
+          const isCurrent = (s === stg);
+          const isCleared = (s < stg) || (s < maxReached && !isCurrent);
+          const isUnlocked = (s <= maxReached);
+          const isSelectable = (mode === 'start' && isUnlocked);
+
+          let stateClass = 'is-locked';
+          let statusPillHtml = `<span class="sky-tree-status-pill status-locked">☁️ 상공 ${(s * 1000).toLocaleString()}m 목표</span>`;
+
+          if (isCurrent) {
+            stateClass = 'is-current';
+            statusPillHtml = `<span class="sky-tree-status-pill status-current">📍 현재 위치! (${(s * 1000).toLocaleString()}m)</span>`;
+          } else if (s < stg) {
+            stateClass = 'is-cleared';
+            statusPillHtml = `<span class="sky-tree-status-pill status-cleared">✅ 정복 완료! ⭐</span>`;
+          } else if (isUnlocked) {
+            stateClass = 'is-unlocked';
+            statusPillHtml = `<span class="sky-tree-status-pill status-unlocked">🔓 도달 완료 (${(s * 1000).toLocaleString()}m)</span>`;
+          }
+
+          const jackpotClass = wInfo.isJackpot ? 'is-jackpot' : '';
+          const selectClass = isSelectable ? 'is-selectable' : '';
+          const dotLabel = isCurrent ? '👑' : (s < stg ? '⭐' : `${s}F`);
+
+          const soyunHereHtml = isCurrent
+            ? `<div class="sky-soyun-here-banner">
+                 <span>👑 이소윤 슈퍼카트 현재 위치! (${s}단계 · 상공 ${(s * 1000).toLocaleString()}m)</span>
+               </div>`
+            : '';
+
+          rowsHtml.push(`
+            <div
+              id="${isCurrent ? 'treemap-node-current' : `treemap-node-${s}`}"
+              class="sky-tree-node ${stateClass} ${jackpotClass} ${selectClass}"
+              data-treemap-stage="${s}"
+              data-unlocked="${isUnlocked ? 'true' : 'false'}"
+            >
+              <div class="sky-tree-dot" title="${s}단계">
+                <span>${dotLabel}</span>
+              </div>
+              <div class="sky-tree-card" style="background: ${wInfo.bg};">
+                <div class="sky-tree-card-top">
+                  <strong class="sky-tree-stage-country">${s}단계 — ${escapeHtml(wInfo.icon)} ${escapeHtml(wInfo.country)}</strong>
+                  ${statusPillHtml}
+                </div>
+                <div class="sky-tree-summary-text">${escapeHtml(wInfo.summary)}</div>
+                ${soyunHereHtml}
+              </div>
+            </div>
+          `);
+
+          // If we just climbed from (s - 1) to s, show a glowing upward rocket transition banner between them!
+          if (isCurrent && s > startStage) {
+            const climbText = mode === 'next_stage'
+              ? `🚀 ⬆️ ${s - 1}단계 클리어! 하늘 위로 1,000m 상승 완료!! ⬆️`
+              : `⬆️ ${s - 1}단계에서 하늘 길 따라 ${s}단계로 상승! ⬆️`;
+            rowsHtml.push(`
+              <div class="sky-climb-transition-row">
+                <span>${climbText}</span>
+              </div>
+            `);
+          }
+        }
+
+        listEl.innerHTML = rowsHtml.join('');
+      }
+
+      // 3. Update Bottom Destination Preview Box & Action Buttons
       const badgeEl = byId('next-stage-badge');
       if (badgeEl) {
-        badgeEl.textContent = `🏁 STAGE ${stg}`;
+        badgeEl.textContent = `📍 출발 위치: ${stg}단계 (${(stg * 1000).toLocaleString()}m)`;
       }
       const nameEl = byId('next-stage-name');
       if (nameEl) {
-        nameEl.textContent = cfg.title || `STAGE ${stg}`;
+        nameEl.textContent = `${curWorld.icon} ${curWorld.country}`;
       }
-      const yesBtn = byId('btn-next-stage-yes');
-      if (yesBtn) {
-        yesBtn.textContent = `🚀 네! STAGE ${stg} 출발하기!`;
+      const noteEl = byId('next-stage-bonus-note');
+      if (noteEl) {
+        noteEl.textContent = mode === 'next_stage'
+          ? `❤️ 체력 +2 회복 · ⏸️ 일시정지 2회 충전 · ${curWorld.summary}`
+          : `🌟 배경 요약: ${curWorld.summary}`;
       }
 
+      const yesBtn = byId('btn-next-stage-yes');
+      if (yesBtn) {
+        yesBtn.textContent = mode === 'start'
+          ? `🚀 ${stg}단계 [${curWorld.country}] 레이스 출발!`
+          : `🚀 네! ${stg}단계 [${curWorld.country}] 출발하기!`;
+      }
+      const noBtn = byId('btn-next-stage-no');
+      if (noBtn) {
+        noBtn.textContent = mode === 'start'
+          ? '🏠 대시보드로 돌아가기'
+          : '🏠 메인 화면으로 나가기';
+      }
+
+      modal.setAttribute('data-treemap-mode', mode);
+      modal.setAttribute('data-target-stage', String(stg));
       modal.classList.remove('hidden');
+
+      // 4. Smooth Sky-Ascending Scroll Animation: start from ground (bottom) and glide UP to Soyun's current node!
+      const scrollBox = byId('sky-treemap-scroll');
+      if (scrollBox) {
+        scrollBox.scrollTop = scrollBox.scrollHeight;
+        setTimeout(function () {
+          const curNode = byId('treemap-node-current');
+          if (curNode && scrollBox) {
+            const targetTop = Math.max(
+              0,
+              curNode.offsetTop - scrollBox.clientHeight / 2 + curNode.clientHeight / 2
+            );
+            scrollBox.scrollTo({ top: targetTop, behavior: 'smooth' });
+          }
+        }, 90);
+      }
     },
 
     hideNextStageModal: function () {
