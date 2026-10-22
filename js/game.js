@@ -567,7 +567,7 @@
         window.UIManager.showBossHUD(state.stageConfig, state.bossCurrentHp, state.bossMaxHp);
         const toastMsg = isJackpotBoss
           ? `💴🚨 [만원 상금 보스 출현!] 속도 1.5배 폭주! ${state.stage}판 보스를 물리치면 [상금 10,000원] + 상금 게이지 +10 획득!!`
-          : `👾 경고! ${state.stageConfig.bossName} 출현! (속도 1.5배 다이나믹 배틀!) 문제를 풀어 초대형 폭탄(💣)을 보스에게 발사하자!`;
+          : `👾 경고! ${state.stageConfig.bossName} 출현! (속도 1.5배 배틀!) 문제를 풀어 폭탄(💣)·탄도미사일(🚀)·레이저(⚡)·물총(🔫)을 발사하자!`;
         window.UIManager.showFeedbackToast(true, toastMsg);
         if (typeof window.UIManager.pushRobloxChat === 'function') {
           window.UIManager.pushRobloxChat(
