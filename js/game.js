@@ -199,11 +199,11 @@
   }
 
   function getEffectiveSpeed() {
-    const obbyFactor = state.isObbyMode ? 2.0 : 1.0;
+    const obbyFactor = state.isObbyMode ? 1.2 : 1.0;
     const bossFactor = (!state.isObbyMode && state.isBossPhase)
       ? ((window.GameConfig && window.GameConfig.BOSS_SPEED_MULTIPLIER) ? window.GameConfig.BOSS_SPEED_MULTIPLIER : 1.5)
       : 1.0;
-    const cap = state.isObbyMode ? 320 : (state.isBossPhase ? 260 : 200);
+    const cap = state.isObbyMode ? 280 : (state.isBossPhase ? 260 : 225);
     return Math.max(14, Math.min(cap, Math.round((state.speed || 36) * (state.speedMultiplier || 1.0) * obbyFactor * bossFactor)));
   }
 
