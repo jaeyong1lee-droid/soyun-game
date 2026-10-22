@@ -1283,7 +1283,7 @@ body.is-time-paused::before {
 }
 
 .question-prompt {
-  font-size: clamp(31px, 3.7vw, 45px) !important;
+  font-size: clamp(32.55px, 3.89vw, 47.25px) !important;
   font-weight: 900;
   color: #ffffff;
   letter-spacing: -0.02em;
