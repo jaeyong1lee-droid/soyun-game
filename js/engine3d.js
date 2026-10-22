@@ -2304,8 +2304,120 @@
       const neonGroup = (idx % 2 === 0) ? this._createCyberPalm() : this._createNeonPylon(idx);
       container.add(neonGroup);
 
+      // 8. Jungle Tropical Palm Tree, Broad Leaves & Hanging Vine (jungle_safari)
+      const jungleGroup = new THREE.Group();
+      const jTrunkMat = new THREE.MeshStandardMaterial({ color: 0x713f12, roughness: 0.85 });
+      const jTrunk = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.5, 5.4, 7), jTrunkMat);
+      jTrunk.position.y = 2.7;
+      jTrunk.rotation.z = side * -0.1;
+      jungleGroup.add(jTrunk);
+      const jLeafMat = new THREE.MeshStandardMaterial({
+        color: (idx % 2 === 0) ? 0x16a34a : 0x65a30d,
+        roughness: 0.5,
+        flatShading: true
+      });
+      for (let f = 0; f < 6; f++) {
+        const ang = (f / 6) * Math.PI * 2;
+        const frond = new THREE.Mesh(new THREE.ConeGeometry(0.85, 3.6, 5), jLeafMat);
+        frond.position.set(Math.cos(ang) * 1.25, 5.2, Math.sin(ang) * 1.25);
+        frond.rotation.z = -Math.cos(ang) * 1.15;
+        frond.rotation.x = Math.sin(ang) * 1.15;
+        jungleGroup.add(frond);
+      }
+      // Lush Jungle Bush at base
+      const bush = new THREE.Mesh(new THREE.DodecahedronGeometry(1.35, 1), jLeafMat);
+      bush.position.set(-side * 0.8, 0.9, 0.5);
+      jungleGroup.add(bush);
+      container.add(jungleGroup);
+
+      // 9. Golden Desert Saguaro Cactus & Ancient Sandstone Mini-Pyramid (desert_pyramid)
+      const desertGroup = new THREE.Group();
+      if (idx % 3 === 0) {
+        // Golden Sandstone Pyramid Ruin
+        const pyr = new THREE.Mesh(
+          new THREE.ConeGeometry(2.9, 4.6, 4),
+          new THREE.MeshStandardMaterial({
+            color: 0xf59e0b,
+            emissive: 0x78350f,
+            emissiveIntensity: 0.25,
+            roughness: 0.6,
+            flatShading: true
+          })
+        );
+        pyr.position.y = 2.3;
+        pyr.rotation.y = Math.PI / 4;
+        desertGroup.add(pyr);
+      } else {
+        // Saguaro Cactus with 2 side arms
+        const cactusMat = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.65 });
+        const mainStem = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.48, 4.8, 8), cactusMat);
+        mainStem.position.y = 2.4;
+        const armL = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.3, 1.8, 7), cactusMat);
+        armL.position.set(-0.75, 3.1, 0);
+        armL.rotation.z = 0.45;
+        const armR = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.3, 1.6, 7), cactusMat);
+        armR.position.set(0.75, 2.6, 0);
+        armR.rotation.z = -0.45;
+        desertGroup.add(mainStem, armL, armR);
+      }
+      container.add(desertGroup);
+
+      // 10. Crystal Blue Glacier Iceberg & Ice SpireCluster (glacier_ice)
+      const glacierGroup = new THREE.Group();
+      const iceMat = new THREE.MeshStandardMaterial({
+        color: 0x7dd3fc,
+        emissive: 0x0284c7,
+        emissiveIntensity: 0.45,
+        roughness: 0.15,
+        metalness: 0.25,
+        flatShading: true
+      });
+      const mainIce = new THREE.Mesh(new THREE.ConeGeometry(1.9, 6.2, 5), iceMat);
+      mainIce.position.y = 3.1;
+      const subIce = new THREE.Mesh(new THREE.ConeGeometry(1.25, 4.0, 5), iceMat);
+      subIce.position.set(-side * 1.1, 2.0, 0.6);
+      subIce.rotation.z = side * 0.18;
+      glacierGroup.add(mainIce, subIce);
+      container.add(glacierGroup);
+
+      // 11. Prehistoric Jurassic Cycad Fern Tree & Spotted Dino Egg Nest (dino_jurassic)
+      const dinoGroup = new THREE.Group();
+      const cycadTrunk = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.45, 0.68, 3.8, 7),
+        new THREE.MeshStandardMaterial({ color: 0x451a03, roughness: 0.9 })
+      );
+      cycadTrunk.position.y = 1.9;
+      dinoGroup.add(cycadTrunk);
+      const fernMat = new THREE.MeshStandardMaterial({
+        color: 0x4d7c0f,
+        roughness: 0.55,
+        flatShading: true
+      });
+      for (let f = 0; f < 7; f++) {
+        const ang = (f / 7) * Math.PI * 2;
+        const fern = new THREE.Mesh(new THREE.ConeGeometry(0.72, 3.4, 4), fernMat);
+        fern.position.set(Math.cos(ang) * 1.1, 3.8, Math.sin(ang) * 1.1);
+        fern.rotation.z = -Math.cos(ang) * 1.2;
+        fern.rotation.x = Math.sin(ang) * 1.2;
+        dinoGroup.add(fern);
+      }
+      if (idx % 2 === 0) {
+        const dinoEgg = new THREE.Mesh(
+          new THREE.SphereGeometry(0.65, 10, 10),
+          new THREE.MeshStandardMaterial({ color: 0xfef08a, emissive: 0x84cc16, emissiveIntensity: 0.2 })
+        );
+        dinoEgg.scale.set(0.85, 1.25, 0.85);
+        dinoEgg.position.set(-side * 1.1, 0.75, 0.6);
+        dinoGroup.add(dinoEgg);
+      }
+      container.add(dinoGroup);
+
       this.biomePropVariants.push({
         natureGroup: natureGroup,
+        jungleGroup: jungleGroup,
+        desertGroup: desertGroup,
+        glacierGroup: glacierGroup,
+        dinoGroup: dinoGroup,
         skyGroup: skyGroup,
         oceanGroup: oceanGroup,
         lavaGroup: lavaGroup,
@@ -2318,13 +2430,487 @@
     },
 
     /**
-     * Toggle visibility of roadside 3D props & mountain snow caps to match the active stage biome
+     * Helper to build a 4-legged blocky animal base with animated legs, head, and tail
+     */
+    _buildQuadrupedMesh: function (opts) {
+      const THREE = global.THREE;
+      const root = new THREE.Group();
+      const s = opts.scale || 1.25;
+      const bodyMat = new THREE.MeshStandardMaterial({ color: opts.bodyColor || 0xf59e0b, roughness: 0.5 });
+      const accentMat = new THREE.MeshStandardMaterial({ color: opts.accentColor || 0x78350f, roughness: 0.55 });
+      const darkMat = new THREE.MeshBasicMaterial({ color: 0x111827 });
+      const whiteMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+
+      const legH = (opts.legHeight || 0.9) * s;
+      const bodyW = (opts.bodyW || 1.05) * s;
+      const bodyH = (opts.bodyH || 0.85) * s;
+      const bodyL = (opts.bodyL || 1.85) * s;
+
+      // Body
+      const body = new THREE.Mesh(new THREE.BoxGeometry(bodyW, bodyH, bodyL), bodyMat);
+      body.position.y = legH + bodyH * 0.5;
+      root.add(body);
+
+      // 4 Animated Legs
+      const legGeo = new THREE.BoxGeometry(0.26 * s, legH, 0.26 * s);
+      const legs = [];
+      [
+        { x: -bodyW * 0.34, z: -bodyL * 0.34 },
+        { x: bodyW * 0.34, z: -bodyL * 0.34 },
+        { x: -bodyW * 0.34, z: bodyL * 0.34 },
+        { x: bodyW * 0.34, z: bodyL * 0.34 }
+      ].forEach((lp) => {
+        const leg = new THREE.Mesh(legGeo, bodyMat);
+        leg.position.set(lp.x, legH * 0.5, lp.z);
+        root.add(leg);
+        legs.push(leg);
+      });
+
+      // Head Group
+      const headGroup = new THREE.Group();
+      const neckH = (opts.neckHeight || 0.35) * s;
+      if (opts.neckHeight && opts.neckHeight > 0.4) {
+        const neck = new THREE.Mesh(
+          new THREE.BoxGeometry(0.38 * s, neckH, 0.42 * s),
+          bodyMat
+        );
+        neck.position.set(0, legH + bodyH + neckH * 0.4, -bodyL * 0.42);
+        neck.rotation.x = 0.22;
+        root.add(neck);
+      }
+
+      headGroup.position.set(0, legH + bodyH + neckH * 0.72, -bodyL * 0.52);
+
+      // Optional Lion Mane ("정글 지날갈때 옆에 사자가 나오고")
+      if (opts.hasLionMane) {
+        const maneOuter = new THREE.Mesh(
+          new THREE.BoxGeometry(1.48 * s, 1.48 * s, 0.78 * s),
+          accentMat
+        );
+        maneOuter.position.set(0, 0.05 * s, 0.08 * s);
+        headGroup.add(maneOuter);
+      }
+
+      const headBox = new THREE.Mesh(
+        new THREE.BoxGeometry(0.82 * s, 0.76 * s, 0.82 * s),
+        opts.headMat || bodyMat
+      );
+      headGroup.add(headBox);
+
+      // Snout & Nose
+      const snout = new THREE.Mesh(
+        new THREE.BoxGeometry(0.48 * s, 0.36 * s, 0.38 * s),
+        new THREE.MeshStandardMaterial({ color: opts.snoutColor || 0xfef3c7, roughness: 0.5 })
+      );
+      snout.position.set(0, -0.1 * s, -0.48 * s);
+      const nose = new THREE.Mesh(new THREE.BoxGeometry(0.2 * s, 0.14 * s, 0.12 * s), darkMat);
+      nose.position.set(0, -0.02 * s, -0.68 * s);
+      headGroup.add(snout, nose);
+
+      // Eyes
+      [-0.22 * s, 0.22 * s].forEach((ex) => {
+        const eye = new THREE.Mesh(new THREE.BoxGeometry(0.12 * s, 0.14 * s, 0.08 * s), darkMat);
+        eye.position.set(ex, 0.12 * s, -0.42 * s);
+        const pupil = new THREE.Mesh(new THREE.BoxGeometry(0.05 * s, 0.05 * s, 0.09 * s), whiteMat);
+        pupil.position.set(ex + 0.02 * s, 0.14 * s, -0.43 * s);
+        headGroup.add(eye, pupil);
+      });
+
+      // Ears / Horns / Antlers
+      const earH = (opts.earHeight || 0.28) * s;
+      [-0.28 * s, 0.28 * s].forEach((ex) => {
+        const ear = new THREE.Mesh(new THREE.BoxGeometry(0.22 * s, earH, 0.18 * s), opts.earUseAccent ? accentMat : bodyMat);
+        ear.position.set(ex, 0.38 * s + earH * 0.4, -0.05 * s);
+        headGroup.add(ear);
+      });
+
+      if (opts.hasUnicornHorn) {
+        const horn = new THREE.Mesh(
+          new THREE.ConeGeometry(0.14 * s, 0.75 * s, 6),
+          new THREE.MeshBasicMaterial({ color: 0xffd700 })
+        );
+        horn.position.set(0, 0.65 * s, -0.25 * s);
+        horn.rotation.x = 0.35;
+        headGroup.add(horn);
+      }
+
+      root.add(headGroup);
+
+      // Optional Two Camel Humps ("사막은 낙타")
+      if (opts.camelHumps === 2) {
+        [-0.36 * s, 0.38 * s].forEach((hz) => {
+          const hump = new THREE.Mesh(
+            new THREE.BoxGeometry(0.76 * s, 0.68 * s, 0.66 * s),
+            accentMat
+          );
+          hump.position.set(0, legH + bodyH + 0.28 * s, hz);
+          root.add(hump);
+        });
+      }
+
+      // Optional Wings (Pegasus / Fire Dragon)
+      if (opts.hasWings) {
+        const wingMat = new THREE.MeshStandardMaterial({ color: opts.wingColor || 0xffffff, roughness: 0.3 });
+        [-1, 1].forEach((ws) => {
+          const wing = new THREE.Mesh(new THREE.BoxGeometry(1.15 * s, 0.14 * s, 0.72 * s), wingMat);
+          wing.position.set(ws * (bodyW * 0.65), legH + bodyH * 0.85, -0.1 * s);
+          wing.rotation.z = ws * 0.35;
+          root.add(wing);
+        });
+      }
+
+      // Tail
+      const tail = new THREE.Mesh(
+        new THREE.BoxGeometry(0.18 * s, 0.18 * s, 0.75 * s),
+        accentMat
+      );
+      tail.position.set(0, legH + bodyH * 0.75, bodyL * 0.56);
+      tail.rotation.x = -0.45;
+      root.add(tail);
+
+      root.userData = {
+        legs: legs,
+        headGroup: headGroup,
+        tail: tail
+      };
+      return root;
+    },
+
+    /**
+     * Build a multi-biome 3D Roaming Animal Cluster right beside the highway!
+     * Includes primary animals (Lion in Jungle, Two-Hump Camel in Desert, Penguin/Polar Bear in Glacier, T-Rex/Brachiosaurus in Dino Era, etc.)
+     * PLUS companion animals roaming around them ("정글 지날갈때 옆에 사자가 나오고, 사막은 낙타 주변에 동물들도 좀 돌아다니게 해")!
+     */
+    _createMultiBiomeAnimalContainer: function (idx, side) {
+      const THREE = global.THREE;
+      const cluster = new THREE.Group();
+
+      // 1. JUNGLE SAFARI: 🦁 Golden Lion with Mane + Companion 🐒 Monkey / 🦓 Zebra
+      const jungleAnimals = new THREE.Group();
+      const lion = this._buildQuadrupedMesh({
+        scale: 1.32,
+        bodyColor: 0xf59e0b,
+        accentColor: 0x78350f,
+        snoutColor: 0xfef08a,
+        hasLionMane: true,
+        legHeight: 0.92
+      });
+      jungleAnimals.add(lion);
+
+      // Companion animal roaming near the Lion (Monkey or Zebra cub)
+      const jungleCompanion = this._buildQuadrupedMesh({
+        scale: 0.78,
+        bodyColor: (idx % 2 === 0) ? 0x92400e : 0xfef08a,
+        accentColor: 0x1c1917,
+        snoutColor: 0xfde68a,
+        earHeight: 0.34,
+        earUseAccent: true,
+        legHeight: 0.75
+      });
+      jungleCompanion.position.set(side * 2.1, 0, 1.6);
+      jungleAnimals.add(jungleCompanion);
+      cluster.add(jungleAnimals);
+
+      // 2. DESERT PYRAMID: 🐪 Two-Hump Camel + Surrounding 🦊 Fennec Fox & 🐐 Oasis Gazelle ("사막은 낙타 주변에 동물들도 좀 돌아다니게 해")
+      const desertAnimals = new THREE.Group();
+      const camel = this._buildQuadrupedMesh({
+        scale: 1.38,
+        bodyColor: 0xd97706,
+        accentColor: 0x92400e,
+        snoutColor: 0xfde68a,
+        camelHumps: 2,
+        neckHeight: 1.05,
+        legHeight: 1.22,
+        bodyL: 2.05
+      });
+      desertAnimals.add(camel);
+
+      // Surrounding Animal 1: Cute Fennec Fox with giant ears trotting next to the Camel
+      const desertFox = this._buildQuadrupedMesh({
+        scale: 0.76,
+        bodyColor: 0xfb923c,
+        accentColor: 0xffffff,
+        snoutColor: 0xffffff,
+        earHeight: 0.58,
+        earUseAccent: false,
+        legHeight: 0.65
+      });
+      desertFox.position.set(side * 2.2, 0, -1.4);
+      desertAnimals.add(desertFox);
+
+      // Surrounding Animal 2: Oasis Gazelle / Desert Hare hopping on the other side of the Camel
+      const desertGazelle = this._buildQuadrupedMesh({
+        scale: 0.84,
+        bodyColor: 0xfbbf24,
+        accentColor: 0x78350f,
+        snoutColor: 0xfef3c7,
+        neckHeight: 0.68,
+        earHeight: 0.46,
+        earUseAccent: true,
+        legHeight: 0.95
+      });
+      desertGazelle.position.set(-side * 1.65, 0, 2.1);
+      desertAnimals.add(desertGazelle);
+      cluster.add(desertAnimals);
+
+      // 3. GLACIER ICE: 🐧 Waddling Emperor Penguin + 🐻‍❄️ Snowy Polar Bear
+      const glacierAnimals = new THREE.Group();
+      const polarBear = this._buildQuadrupedMesh({
+        scale: 1.35,
+        bodyColor: 0xf8fafc,
+        accentColor: 0xcbd5e1,
+        snoutColor: 0xe2e8f0,
+        bodyW: 1.25,
+        bodyH: 1.05,
+        legHeight: 0.88
+      });
+      glacierAnimals.add(polarBear);
+
+      // Waddling Emperor Penguin companion right beside the Polar Bear!
+      const penguin = new THREE.Group();
+      const pDark = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.4 });
+      const pWhite = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 });
+      const pOrange = new THREE.MeshBasicMaterial({ color: 0xf97316 });
+      const pGold = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
+      const pBody = new THREE.Mesh(new THREE.BoxGeometry(0.95, 1.55, 0.82), pDark);
+      pBody.position.y = 0.95;
+      const pBelly = new THREE.Mesh(new THREE.BoxGeometry(0.72, 1.25, 0.14), pWhite);
+      pBelly.position.set(0, 0.88, -0.4);
+      const pChest = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.34, 0.16), pGold);
+      pChest.position.set(0, 1.38, -0.41);
+      const pHead = new THREE.Mesh(new THREE.BoxGeometry(0.78, 0.68, 0.76), pDark);
+      pHead.position.y = 2.02;
+      const pBeak = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.45, 4), pOrange);
+      pBeak.rotation.x = -Math.PI / 2;
+      pBeak.position.set(0, 1.98, -0.56);
+      [-0.42, 0.42].forEach((fx) => {
+        const foot = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.16, 0.52), pOrange);
+        foot.position.set(fx * 0.7, 0.08, -0.15);
+        const wing = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.95, 0.36), pDark);
+        wing.position.set(fx * 1.3, 0.98, 0);
+        wing.rotation.z = fx * -0.25;
+        penguin.add(foot, wing);
+      });
+      penguin.add(pBody, pBelly, pChest, pHead, pBeak);
+      penguin.position.set(side * 2.1, 0, -1.3);
+      glacierAnimals.add(penguin);
+      cluster.add(glacierAnimals);
+
+      // 4. DINO JURASSIC: 🦖 Giant T-Rex + 🦕 Tall Long-Neck Brachiosaurus
+      const dinoAnimals = new THREE.Group();
+      const trex = new THREE.Group();
+      const dinoGreen = new THREE.MeshStandardMaterial({ color: 0x16a34a, roughness: 0.55 });
+      const dinoBelly = new THREE.MeshStandardMaterial({ color: 0x84cc16, roughness: 0.55 });
+      const dinoTeeth = new THREE.MeshBasicMaterial({ color: 0xffffff });
+      const dinoEye = new THREE.MeshBasicMaterial({ color: 0xffea00 });
+
+      const tBody = new THREE.Mesh(new THREE.BoxGeometry(1.45, 1.55, 2.25), dinoGreen);
+      tBody.position.set(0, 1.95, 0);
+      tBody.rotation.x = -0.25;
+      const tHead = new THREE.Mesh(new THREE.BoxGeometry(1.25, 1.1, 1.65), dinoGreen);
+      tHead.position.set(0, 3.05, -1.15);
+      const tJaw = new THREE.Mesh(new THREE.BoxGeometry(1.15, 0.24, 1.35), dinoTeeth);
+      tJaw.position.set(0, 2.52, -1.2);
+      [-0.58, 0.58].forEach((ex) => {
+        const eye = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.2, 0.2), dinoEye);
+        eye.position.set(ex, 3.25, -1.45);
+        trex.add(eye);
+      });
+      const tLegs = [];
+      [-0.55, 0.55].forEach((lx) => {
+        const leg = new THREE.Mesh(new THREE.BoxGeometry(0.48, 1.5, 0.58), dinoGreen);
+        leg.position.set(lx, 0.75, 0.2);
+        trex.add(leg);
+        tLegs.push(leg);
+        const arm = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.24, 0.55), dinoBelly);
+        arm.position.set(lx * 1.2, 2.1, -0.95);
+        trex.add(arm);
+      });
+      const tTail = new THREE.Mesh(new THREE.ConeGeometry(0.55, 2.6, 5), dinoGreen);
+      tTail.rotation.x = Math.PI * 0.42;
+      tTail.position.set(0, 1.65, 1.95);
+      trex.add(tBody, tHead, tJaw, tTail);
+      trex.userData = { legs: tLegs, headGroup: tHead, tail: tTail };
+      dinoAnimals.add(trex);
+
+      // Long-Neck Brachiosaurus companion next to T-Rex
+      const brachio = this._buildQuadrupedMesh({
+        scale: 1.15,
+        bodyColor: 0x0d9488,
+        accentColor: 0x14b8a6,
+        snoutColor: 0x99f6e4,
+        neckHeight: 2.25,
+        legHeight: 1.15
+      });
+      brachio.position.set(side * 2.5, 0, 1.8);
+      dinoAnimals.add(brachio);
+      cluster.add(dinoAnimals);
+
+      // 5. RIVER NATURE: 🦌 Forest Deer + 🐰 Hopping White Bunny
+      const natureAnimals = new THREE.Group();
+      const deer = this._buildQuadrupedMesh({
+        scale: 1.2,
+        bodyColor: 0xb45309,
+        accentColor: 0xfef08a,
+        snoutColor: 0xfef3c7,
+        neckHeight: 0.72,
+        earHeight: 0.55,
+        earUseAccent: true,
+        legHeight: 1.05
+      });
+      const bunny = this._buildQuadrupedMesh({
+        scale: 0.68,
+        bodyColor: 0xffffff,
+        accentColor: 0xf472b6,
+        snoutColor: 0xfbcfe8,
+        earHeight: 0.65,
+        earUseAccent: true,
+        legHeight: 0.55
+      });
+      bunny.position.set(side * 1.9, 0, -1.2);
+      natureAnimals.add(deer, bunny);
+      cluster.add(natureAnimals);
+
+      // 6. SKY HEAVEN: 🦄 Winged Pegasus Unicorn
+      const skyAnimals = new THREE.Group();
+      const pegasus = this._buildQuadrupedMesh({
+        scale: 1.28,
+        bodyColor: 0xffffff,
+        accentColor: 0xf472b6,
+        snoutColor: 0xfef08a,
+        neckHeight: 0.75,
+        hasUnicornHorn: true,
+        hasWings: true,
+        wingColor: 0xe0f2fe,
+        legHeight: 1.0
+      });
+      pegasus.position.y = 0.6;
+      skyAnimals.add(pegasus);
+      cluster.add(skyAnimals);
+
+      // 7. UNDERWATER OCEAN: 🐢 Sea Turtle & 🐬 Dolphin
+      const oceanAnimals = new THREE.Group();
+      const turtle = this._buildQuadrupedMesh({
+        scale: 1.18,
+        bodyColor: 0x10b981,
+        accentColor: 0x047857,
+        snoutColor: 0xa7f3d0,
+        bodyW: 1.45,
+        bodyH: 0.55,
+        legHeight: 0.45
+      });
+      turtle.position.y = 1.2;
+      const dolphin = this._buildQuadrupedMesh({
+        scale: 0.95,
+        bodyColor: 0x38bdf8,
+        accentColor: 0x0284c7,
+        snoutColor: 0xe0f2fe,
+        hasWings: true,
+        wingColor: 0x38bdf8,
+        legHeight: 0.35
+      });
+      dolphin.position.set(side * 2.0, 2.2, -1.2);
+      oceanAnimals.add(turtle, dolphin);
+      cluster.add(oceanAnimals);
+
+      // 8. MOLTEN LAVA: 🐉 Red-Gold Fire Drake
+      const lavaAnimals = new THREE.Group();
+      const fireDrake = this._buildQuadrupedMesh({
+        scale: 1.28,
+        bodyColor: 0xdc2626,
+        accentColor: 0xfacc15,
+        snoutColor: 0xfef08a,
+        neckHeight: 0.8,
+        hasWings: true,
+        wingColor: 0xf97316,
+        earHeight: 0.48,
+        earUseAccent: true,
+        legHeight: 0.9
+      });
+      lavaAnimals.add(fireDrake);
+      cluster.add(lavaAnimals);
+
+      // 9. WONDERLAND MAGIC: 🐇 Pastel Wonderland Bunny & 🐱 Magic Cat
+      const wonderAnimals = new THREE.Group();
+      const magicBunny = this._buildQuadrupedMesh({
+        scale: 1.15,
+        bodyColor: 0xfdf4ff,
+        accentColor: 0xff2a85,
+        snoutColor: 0xfbcfe8,
+        earHeight: 0.72,
+        earUseAccent: true,
+        legHeight: 0.82
+      });
+      const magicCat = this._buildQuadrupedMesh({
+        scale: 0.82,
+        bodyColor: 0xc084fc,
+        accentColor: 0x80ffdb,
+        snoutColor: 0xfef08a,
+        earHeight: 0.38,
+        earUseAccent: true,
+        legHeight: 0.68
+      });
+      magicCat.position.set(side * 1.95, 0, 1.4);
+      wonderAnimals.add(magicBunny, magicCat);
+      cluster.add(wonderAnimals);
+
+      // 10. CHERRY LAKE / NEON: 🐼 Giant Panda & 🦊 Pink Sakura Fox
+      const cherryAnimals = new THREE.Group();
+      const panda = this._buildQuadrupedMesh({
+        scale: 1.28,
+        bodyColor: 0xffffff,
+        accentColor: 0x111827,
+        snoutColor: 0xf8fafc,
+        bodyW: 1.25,
+        bodyH: 1.0,
+        earHeight: 0.32,
+        earUseAccent: true,
+        legHeight: 0.8
+      });
+      const sakuraFox = this._buildQuadrupedMesh({
+        scale: 0.82,
+        bodyColor: 0xff8fab,
+        accentColor: 0xffffff,
+        snoutColor: 0xffe5ec,
+        earHeight: 0.45,
+        earUseAccent: true,
+        legHeight: 0.72
+      });
+      sakuraFox.position.set(side * 2.0, 0, -1.3);
+      cherryAnimals.add(panda, sakuraFox);
+      cluster.add(cherryAnimals);
+
+      this.biomeAnimalVariants.push({
+        cluster: cluster,
+        natureAnimals: natureAnimals,
+        jungleAnimals: jungleAnimals,
+        desertAnimals: desertAnimals,
+        glacierAnimals: glacierAnimals,
+        dinoAnimals: dinoAnimals,
+        skyAnimals: skyAnimals,
+        oceanAnimals: oceanAnimals,
+        lavaAnimals: lavaAnimals,
+        wonderAnimals: wonderAnimals,
+        cherryAnimals: cherryAnimals,
+        primaryWalkers: [lion, camel, polarBear, trex, deer, pegasus, turtle, fireDrake, magicBunny, panda],
+        companions: [jungleCompanion, desertFox, desertGazelle, penguin, brachio, bunny, dolphin, magicCat, sakuraFox]
+      });
+
+      return cluster;
+    },
+
+    /**
+     * Toggle visibility of roadside 3D props, roaming 3D animals & mountain snow caps to match the active stage biome
      */
     _applyBiomePropsVisibility: function (biome) {
       if (Array.isArray(this.biomePropVariants)) {
         for (let i = 0; i < this.biomePropVariants.length; i++) {
           const v = this.biomePropVariants[i];
           v.natureGroup.visible = (biome === 'river_nature' || biome === 'snow_aurora');
+          if (v.jungleGroup) v.jungleGroup.visible = (biome === 'jungle_safari');
+          if (v.desertGroup) v.desertGroup.visible = (biome === 'desert_pyramid');
+          if (v.glacierGroup) v.glacierGroup.visible = (biome === 'glacier_ice');
+          if (v.dinoGroup) v.dinoGroup.visible = (biome === 'dino_jurassic');
           v.skyGroup.visible = (biome === 'sky_heaven');
           v.oceanGroup.visible = (biome === 'underwater_ocean');
           v.lavaGroup.visible = (biome === 'molten_lava');
@@ -2333,9 +2919,25 @@
           v.neonGroup.visible = (biome === 'neon_fantasy');
         }
       }
+      if (Array.isArray(this.biomeAnimalVariants)) {
+        for (let i = 0; i < this.biomeAnimalVariants.length; i++) {
+          const a = this.biomeAnimalVariants[i];
+          a.natureAnimals.visible = (biome === 'river_nature');
+          a.jungleAnimals.visible = (biome === 'jungle_safari');
+          a.desertAnimals.visible = (biome === 'desert_pyramid');
+          a.glacierAnimals.visible = (biome === 'glacier_ice' || biome === 'snow_aurora');
+          a.dinoAnimals.visible = (biome === 'dino_jurassic');
+          a.skyAnimals.visible = (biome === 'sky_heaven');
+          a.oceanAnimals.visible = (biome === 'underwater_ocean');
+          a.lavaAnimals.visible = (biome === 'molten_lava');
+          a.wonderAnimals.visible = (biome === 'wonderland_magic');
+          a.cherryAnimals.visible = (biome === 'cherry_lake' || biome === 'neon_fantasy');
+        }
+      }
       if (Array.isArray(this.mountainSnowCaps)) {
         const showCaps = (
           biome === 'river_nature' ||
+          biome === 'glacier_ice' ||
           biome === 'snow_aurora' ||
           biome === 'cherry_lake' ||
           biome === 'sky_heaven'
