@@ -5490,17 +5490,34 @@
     },
 
     /**
-     * Trigger camera shake, red car flash, and hazard impact particles on wrong answer
+     * Trigger camera shake, red car flash, 3D car hurt spin/wobble, and hazard impact particles on wrong answer or obstacle crash!
      */
-    triggerDamageEffect: function (laneX) {
+    triggerDamageEffect: function (laneX, hazardType) {
+      const THREE = global.THREE;
       const x = typeof laneX === 'number' ? laneX : this.carGroup ? this.carGroup.position.x : 0;
       const z = getCfg().GATE_PASS_Z;
-      this.shakeIntensity = 0.72;
-      this.shakeTimer = 0.45;
-      this.damageFlashTimer = 0.48;
-      this.cameraZoomPunch = -6.0;
-      this._spawnParticleBurst(x, 1.4, z - 0.8, 0xff0044, 48, 1.35);
-      this._spawnParticleBurst(x, 1.8, z - 0.5, 0xffbe0b, 26, 1.0);
+      this.shakeIntensity = 0.96;
+      this.shakeTimer = 0.54;
+      this.damageFlashTimer = 0.88;
+      this.carHurtTimer = 0.88;
+      this.carHurtType = hazardType || 'block';
+      this.cameraZoomPunch = -8.5;
+
+      // Knock the car upward in a painful crash bounce!
+      this.carJumpY = Math.max(this.carJumpY || 0, 1.15);
+      this.carJumpVel = 8.8;
+
+      if (THREE && typeof this._spawnBossCrossHitMarker === 'function') {
+        this._spawnBossCrossHitMarker(
+          new THREE.Vector3(x, 1.75, z - 0.5),
+          hazardType === 'wide_fire' ? 0xff5500 : 0xff0044
+        );
+      }
+
+      this.spawnBrickExplosion(x, 1.5, z - 0.8, 30, false);
+      this._spawnParticleBurst(x, 1.4, z - 0.8, 0xff0044, 58, 1.55);
+      this._spawnParticleBurst(x, 1.8, z - 0.5, 0xff6d00, 44, 1.35);
+      this._spawnParticleBurst(x, 2.1, z - 0.3, 0x222222, 28, 1.1);
       return this;
     },
 
