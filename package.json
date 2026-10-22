@@ -1,0 +1,13 @@
+{
+  "name": "soyun-roblox-obby-racer-3d",
+  "version": "1.0.0",
+  "description": "이소윤의 로블록스 오비 레이서 3D - Neon PostgreSQL & Vercel Edition",
+  "scripts": {
+    "local": "node server.js",
+    "push": "npx vercel deploy --temporary --yes",
+    "auto-push": "node auto-push.js"
+  },
+  "dependencies": {
+    "pg": "^8.11.5"
+  }
+}
