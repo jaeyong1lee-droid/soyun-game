@@ -429,7 +429,7 @@
             ? '💴 10판 만원 상금 보스전! (1.5x)'
             : '🔥 1.5x 다이나믹 보스전!';
         }
-        if (elBossHint) elBossHint.textContent = '정답 시 💣폭탄 발사! (격파시 게이지+10)';
+        if (elBossHint) elBossHint.textContent = '정답 시 💣폭탄·🚀미사일·⚡레이저·🔫물총 발사!';
         if (elProgFill) elProgFill.style.width = '100%';
       } else {
         const clampedSolved = Math.min(qToBoss, solvedInStage);
@@ -443,21 +443,34 @@
         if (elProgFill) elProgFill.style.width = `${Math.round((clampedSolved / qToBoss) * 100)}%`;
       }
 
-      // 3. Speedometer, RPM Bar & Speed Multiplier Badge
+      // 3. Speedometer, RPM Bar, Speed Multiplier Badge & Left Cute Speed Arrows (x 1.0 ~ x 1.6)
       const speedKmh = Math.round(data.speed || 36);
       const elSpeedVal = byId('hud-speed-value');
       if (elSpeedVal) {
         elSpeedVal.textContent = String(speedKmh);
       }
+      const multVal = typeof data.speedMultiplier === 'number' ? data.speedMultiplier : 1.0;
       const elMultBadge = byId('hud-speed-mult-badge');
       if (elMultBadge) {
-        const multVal = typeof data.speedMultiplier === 'number' ? data.speedMultiplier : 1.0;
         if (isBoss) {
           const bossMult = Math.round(multVal * 1.5 * 100) / 100;
           elMultBadge.textContent = `🔥${bossMult}x 보스폭주`;
         } else {
           elMultBadge.textContent = `${multVal.toFixed(1)}x 배속`;
         }
+      }
+      const elLeftSpeedLbl = byId('left-speed-mult-label');
+      if (elLeftSpeedLbl) {
+        const clampedArrowMult = Math.max(1.0, Math.min(1.6, multVal));
+        elLeftSpeedLbl.textContent = `x${clampedArrowMult.toFixed(1)}`;
+      }
+      const btnSpeedUp = byId('btn-speed-up');
+      if (btnSpeedUp) {
+        btnSpeedUp.disabled = multVal >= 1.6 - 0.01;
+      }
+      const btnSpeedDown = byId('btn-speed-down');
+      if (btnSpeedDown) {
+        btnSpeedDown.disabled = multVal <= 1.0 + 0.01;
       }
       const elRpmFill = byId('hud-rpm-fill');
       if (elRpmFill) {
@@ -673,10 +686,38 @@
       const combo = opts.combo || 1;
 
       if (type === 'boss') {
-        // Spawn 2D Flying Bomb projectile visual flying from player car to boss
+        const atkInfo = opts.attackInfo || (window.Engine3D && window.Engine3D.lastBossAttackInfo) || {
+          type: 'round_bomb',
+          icon: '💣💥',
+          badgeTitle: '💣 특대형 동그란 폭탄 보스 명중!! BOOM!!',
+          badgeSub: `🔥 1.5x 보스 타격!! +${pts} R$`
+        };
+
+        // 1) Full-screen weapon-colored impact flash for maximum boss hit feel ("타격감")
+        const flashEl = document.createElement('div');
+        flashEl.className = `impact-boss-screen-flash flash-${atkInfo.type || 'round_bomb'}`;
+        document.body.appendChild(flashEl);
+        window.setTimeout(function () {
+          if (flashEl.parentNode) {
+            flashEl.parentNode.removeChild(flashEl);
+          }
+        }, 380);
+
+        // 2) Rattle & flash the Top Boss HUD Bar (#boss-hud) on hit!
+        const bossHudEl = byId('boss-hud');
+        if (bossHudEl) {
+          bossHudEl.classList.remove('boss-hud-hit-shake');
+          void bossHudEl.offsetWidth;
+          bossHudEl.classList.add('boss-hud-hit-shake');
+          window.setTimeout(function () {
+            bossHudEl.classList.remove('boss-hud-hit-shake');
+          }, 520);
+        }
+
+        // 3) Spawn 2D Flying Weapon Projectile visual streaking from player car to boss
         const bombEl = document.createElement('div');
-        bombEl.className = 'impact-flying-bomb';
-        bombEl.textContent = '💣🚀';
+        bombEl.className = `impact-flying-bomb weapon-${atkInfo.type || 'round_bomb'}`;
+        bombEl.textContent = atkInfo.icon || '💣🚀';
         layer.appendChild(bombEl);
         window.setTimeout(function () {
           if (bombEl.parentNode) {
@@ -684,8 +725,8 @@
           }
         }, 720);
 
-        spawnBadge(`💣 초대형 폭탄 보스 직격!! BOOM!!`, 'impact-boss', 0, -24);
-        spawnBadge(`🔥 1.5x 보스 타격!! +${pts} R$`, 'impact-combo', 0, 28);
+        spawnBadge(atkInfo.badgeTitle || `💣 초대형 폭탄 보스 직격!! BOOM!!`, 'impact-boss', 0, -24);
+        spawnBadge(`${atkInfo.badgeSub || '🔥 1.5x 보스 타격!!'} (+${pts} R$)`, 'impact-combo', 0, 28);
       } else if (type === 'stageClear') {
         spawnBadge(`👑 BOSS KO!! 상금 게이지 +10 상승!`, 'impact-boss', 0, -22);
         spawnBadge(`🎉 보스 클리어 보너스 +${pts} R$!`, 'impact-combo', 0, 26);
