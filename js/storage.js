@@ -60,6 +60,41 @@
   let _cloudLoaded = false;
   let _lastLocalSettingsEditAt = 0;
 
+  const PARENT_CUSTOM_SETTINGS_KEY = 'soyun_parent_custom_settings_v1';
+
+  function loadCustomParentSettings() {
+    try {
+      const raw = window.localStorage.getItem(PARENT_CUSTOM_SETTINGS_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      return (parsed && typeof parsed === 'object') ? parsed : null;
+    } catch (_e) {
+      return null;
+    }
+  }
+
+  function saveCustomParentSettings(stateObj) {
+    if (!stateObj || typeof stateObj !== 'object') return;
+    try {
+      const existing = loadCustomParentSettings() || {};
+      const payload = {
+        bonusNamePocket: stateObj.bonusNamePocket || existing.bonusNamePocket || '용돈 3,000원',
+        bonusNameAshley: stateObj.bonusNameAshley || existing.bonusNameAshley || '애슐리 외식',
+        bonusNameJackpot: stateObj.bonusNameJackpot || existing.bonusNameJackpot || '10판 보스 만원 상금',
+        bonusTargetPocket: stateObj.bonusTargetPocket || existing.bonusTargetPocket || 100,
+        bonusTargetAshley: stateObj.bonusTargetAshley || existing.bonusTargetAshley || 1000,
+        bonusTargetJackpot: stateObj.bonusTargetJackpot || existing.bonusTargetJackpot || 10,
+        paidPocketCount: typeof stateObj.paidPocketCount === 'number' ? stateObj.paidPocketCount : (existing.paidPocketCount || 0),
+        paidAshleyCount: typeof stateObj.paidAshleyCount === 'number' ? stateObj.paidAshleyCount : (existing.paidAshleyCount || 0),
+        paidJackpotCount: typeof stateObj.paidJackpotCount === 'number' ? stateObj.paidJackpotCount : (existing.paidJackpotCount || 0),
+        speedMultiplier: stateObj.speedMultiplier || existing.speedMultiplier || 1.0,
+        subjectMode: stateObj.subjectMode || existing.subjectMode || 'mixed',
+        updatedAt: Date.now()
+      };
+      window.localStorage.setItem(PARENT_CUSTOM_SETTINGS_KEY, JSON.stringify(payload));
+    } catch (_e) {}
+  }
+
   const NEON_HTTP_SQL_URL = 'https://ep-tiny-cake-axmeyi99-pooler.c-4.us-east-2.aws.neon.tech/sql';
   const NEON_CONN_STR = 'postgresql://neondb_owner:npg_EQGY2xSohVX8@ep-tiny-cake-axmeyi99-pooler.c-4.us-east-2.aws.neon.tech/neondb?sslmode=require';
 
@@ -219,10 +254,25 @@
           _state = sanitizeState(parsed);
         } else {
           _state = createDefaultState();
-          try {
-            window.localStorage.setItem(getStorageKey(), JSON.stringify(_state));
-          } catch (_e) {}
         }
+        // Always overlay any locally saved custom parent settings on this device so phone edits never revert!
+        const customSettings = loadCustomParentSettings();
+        if (customSettings) {
+          if (customSettings.bonusNamePocket) _state.bonusNamePocket = customSettings.bonusNamePocket;
+          if (customSettings.bonusNameAshley) _state.bonusNameAshley = customSettings.bonusNameAshley;
+          if (customSettings.bonusNameJackpot) _state.bonusNameJackpot = customSettings.bonusNameJackpot;
+          if (customSettings.bonusTargetPocket) _state.bonusTargetPocket = customSettings.bonusTargetPocket;
+          if (customSettings.bonusTargetAshley) _state.bonusTargetAshley = customSettings.bonusTargetAshley;
+          if (customSettings.bonusTargetJackpot) _state.bonusTargetJackpot = customSettings.bonusTargetJackpot;
+          if (typeof customSettings.paidPocketCount === 'number') _state.paidPocketCount = customSettings.paidPocketCount;
+          if (typeof customSettings.paidAshleyCount === 'number') _state.paidAshleyCount = customSettings.paidAshleyCount;
+          if (typeof customSettings.paidJackpotCount === 'number') _state.paidJackpotCount = customSettings.paidJackpotCount;
+          if (customSettings.speedMultiplier) _state.speedMultiplier = customSettings.speedMultiplier;
+          if (customSettings.subjectMode) _state.subjectMode = customSettings.subjectMode;
+        }
+        try {
+          window.localStorage.setItem(getStorageKey(), JSON.stringify(_state));
+        } catch (_e) {}
       } catch (err) {
         console.warn('[SaveManager] Failed to load state from localStorage, using defaults:', err);
         if (!_state) {
@@ -234,7 +284,7 @@
 
     /**
      * Saves current cumulative state to localStorage immediately.
-     * @param {boolean} [immediateCloudPush=false]
+     * @param {boolean} [immediateCloudPush=false] True ONLY when parent settings were explicitly edited!
      * @returns {Object} Current state
      */
     save: function (immediateCloudPush) {
@@ -248,12 +298,18 @@
       if (_state.currentStage > (_state.maxStageReached || 1)) {
         _state.maxStageReached = _state.currentStage;
       }
+      if (immediateCloudPush) {
+        saveCustomParentSettings(_state);
+      }
       try {
         window.localStorage.setItem(getStorageKey(), JSON.stringify(_state));
       } catch (err) {
         console.warn('[SaveManager] Failed to write state to localStorage:', err);
       }
-      this.scheduleCloudPush(false, Boolean(immediateCloudPush));
+      // Do not push normal gameplay saves before initial cloud sync completes, so a fresh tab never overwrites cloud settings!
+      if (_cloudLoaded || immediateCloudPush) {
+        this.scheduleCloudPush(false, Boolean(immediateCloudPush));
+      }
       return _state;
     },
 
@@ -291,15 +347,20 @@
           if (!data || !data.ok || !data.state) return;
           _cloudLoaded = true;
 
-          // Always redirect legacy temporary (.tmp.now) URLs to the permanent standalone address
-          if (window.location && window.location.hostname.endsWith('.tmp.now')) {
-            window.location.replace('https://jaeyong1lee-droid.github.io/soyun-game/');
-            return;
-          }
+          const customLocal = loadCustomParentSettings();
+          const recentlyEditedLocally = (Date.now() - _lastLocalSettingsEditAt) < 120000;
+          const parentModalEl = typeof document !== 'undefined' ? document.getElementById('parent-modal') : null;
+          const isParentModalOpen = Boolean(parentModalEl && !parentModalEl.classList.contains('hidden'));
+          const isPlayingNow = Boolean(
+            window.GameController &&
+            typeof window.GameController.getState === 'function' &&
+            window.GameController.getState().isPlaying
+          );
+
           if (data.state.buildId) {
             if (!window.__SOYUN_BUILD_ID__) {
               window.__SOYUN_BUILD_ID__ = data.state.buildId;
-            } else if (window.__SOYUN_BUILD_ID__ !== data.state.buildId) {
+            } else if (window.__SOYUN_BUILD_ID__ !== data.state.buildId && !isParentModalOpen && !isPlayingNow && !recentlyEditedLocally) {
               window.__SOYUN_BUILD_ID__ = data.state.buildId;
               window.location.reload();
               return;
@@ -308,23 +369,82 @@
 
           const cloud = sanitizeState(data.state);
           const local = self.getState();
-          const recentlyEditedLocally = (Date.now() - _lastLocalSettingsEditAt) < 12000;
+
+          // Resolve each parent setting so phone customizations NEVER revert back to default '용돈 3,000원'!
+          const resolveBonusName = function (localVal, cloudVal, customVal, defaultVal) {
+            if (recentlyEditedLocally || isParentModalOpen) return localVal || customVal || cloudVal || defaultVal;
+            // If this phone explicitly saved a custom name (e.g. '용돈 5,000원') and cloud has the default '용돈 3,000원', keep the phone's custom name!
+            if (customVal && customVal !== defaultVal && (!cloudVal || cloudVal === defaultVal)) {
+              return customVal;
+            }
+            if (localVal && localVal !== defaultVal && (!cloudVal || cloudVal === defaultVal)) {
+              return localVal;
+            }
+            return cloudVal || customVal || localVal || defaultVal;
+          };
+
+          const resolvedPocketName = resolveBonusName(
+            local.bonusNamePocket,
+            cloud.bonusNamePocket,
+            customLocal && customLocal.bonusNamePocket,
+            '용돈 3,000원'
+          );
+          const resolvedAshleyName = resolveBonusName(
+            local.bonusNameAshley,
+            cloud.bonusNameAshley,
+            customLocal && customLocal.bonusNameAshley,
+            '애슐리 외식'
+          );
+          const resolvedJackpotName = resolveBonusName(
+            local.bonusNameJackpot,
+            cloud.bonusNameJackpot,
+            customLocal && customLocal.bonusNameJackpot,
+            '10판 보스 만원 상금'
+          );
+
+          const keepLocalSettings = recentlyEditedLocally || isParentModalOpen;
+          const resolvedTargetPocket = keepLocalSettings
+            ? local.bonusTargetPocket
+            : ((customLocal && customLocal.bonusTargetPocket && customLocal.bonusTargetPocket !== 100 && cloud.bonusTargetPocket === 100)
+                ? customLocal.bonusTargetPocket
+                : (cloud.bonusTargetPocket || local.bonusTargetPocket || 100));
+          const resolvedTargetAshley = keepLocalSettings
+            ? local.bonusTargetAshley
+            : ((customLocal && customLocal.bonusTargetAshley && customLocal.bonusTargetAshley !== 1000 && cloud.bonusTargetAshley === 1000)
+                ? customLocal.bonusTargetAshley
+                : (cloud.bonusTargetAshley || local.bonusTargetAshley || 1000));
+          const resolvedTargetJackpot = keepLocalSettings
+            ? local.bonusTargetJackpot
+            : ((customLocal && customLocal.bonusTargetJackpot && customLocal.bonusTargetJackpot !== 10 && cloud.bonusTargetJackpot === 10)
+                ? customLocal.bonusTargetJackpot
+                : (cloud.bonusTargetJackpot || local.bonusTargetJackpot || 10));
 
           const hasCloudMoreProgress = (
             cloud.totalSolved > local.totalSolved ||
             cloud.totalScore > local.totalScore ||
             cloud.maxStageReached > local.maxStageReached
           );
-          const hasCloudDifferentSettings = !recentlyEditedLocally && (
-            cloud.bonusNamePocket !== local.bonusNamePocket ||
-            cloud.bonusNameAshley !== local.bonusNameAshley ||
-            cloud.bonusNameJackpot !== local.bonusNameJackpot ||
-            cloud.bonusTargetPocket !== local.bonusTargetPocket ||
-            cloud.bonusTargetAshley !== local.bonusTargetAshley ||
-            cloud.bonusTargetJackpot !== local.bonusTargetJackpot ||
+          const hasCloudDifferentSettings = !keepLocalSettings && (
+            resolvedPocketName !== local.bonusNamePocket ||
+            resolvedAshleyName !== local.bonusNameAshley ||
+            resolvedJackpotName !== local.bonusNameJackpot ||
+            resolvedTargetPocket !== local.bonusTargetPocket ||
+            resolvedTargetAshley !== local.bonusTargetAshley ||
+            resolvedTargetJackpot !== local.bonusTargetJackpot ||
             cloud.paidPocketCount !== local.paidPocketCount ||
             cloud.paidAshleyCount !== local.paidAshleyCount ||
             cloud.paidJackpotCount !== local.paidJackpotCount
+          );
+
+          // Check if local phone has custom settings that the cloud doesn't have yet
+          const needsPushCustomSettingsToCloud = (
+            resolvedPocketName !== cloud.bonusNamePocket ||
+            resolvedAshleyName !== cloud.bonusNameAshley ||
+            resolvedJackpotName !== cloud.bonusNameJackpot ||
+            resolvedTargetPocket !== cloud.bonusTargetPocket ||
+            resolvedTargetAshley !== cloud.bonusTargetAshley ||
+            resolvedTargetJackpot !== cloud.bonusTargetJackpot ||
+            recentlyEditedLocally
           );
 
           if (hasCloudMoreProgress || hasCloudDifferentSettings) {
@@ -335,24 +455,24 @@
               totalScore: Math.max(local.totalScore, cloud.totalScore),
               highScore: Math.max(local.highScore, cloud.highScore),
               maxSpeed: Math.max(local.maxSpeed, cloud.maxSpeed),
-              speedMultiplier: recentlyEditedLocally ? local.speedMultiplier : (cloud.speedMultiplier || local.speedMultiplier || 1.0),
+              speedMultiplier: keepLocalSettings ? local.speedMultiplier : (cloud.speedMultiplier || local.speedMultiplier || 1.0),
               totalSolved: Math.max(local.totalSolved, cloud.totalSolved),
               totalCorrect: Math.max(local.totalCorrect, cloud.totalCorrect),
               totalWrong: Math.max(local.totalWrong, cloud.totalWrong),
               mathCorrect: Math.max(local.mathCorrect, cloud.mathCorrect),
               englishCorrect: Math.max(local.englishCorrect, cloud.englishCorrect),
               bossesDefeated: Math.max(local.bossesDefeated, cloud.bossesDefeated),
-              paidPocketCount: recentlyEditedLocally ? local.paidPocketCount : (cloud.paidPocketCount || 0),
-              paidAshleyCount: recentlyEditedLocally ? local.paidAshleyCount : (cloud.paidAshleyCount || 0),
-              paidJackpotCount: recentlyEditedLocally ? local.paidJackpotCount : (cloud.paidJackpotCount || 0),
-              bonusNamePocket: recentlyEditedLocally ? local.bonusNamePocket : (cloud.bonusNamePocket || local.bonusNamePocket || '용돈 3,000원'),
-              bonusNameAshley: recentlyEditedLocally ? local.bonusNameAshley : (cloud.bonusNameAshley || local.bonusNameAshley || '애슐리 외식'),
-              bonusNameJackpot: recentlyEditedLocally ? local.bonusNameJackpot : (cloud.bonusNameJackpot || local.bonusNameJackpot || '10판 보스 만원 상금'),
-              bonusTargetPocket: recentlyEditedLocally ? local.bonusTargetPocket : (cloud.bonusTargetPocket || local.bonusTargetPocket || 100),
-              bonusTargetAshley: recentlyEditedLocally ? local.bonusTargetAshley : (cloud.bonusTargetAshley || local.bonusTargetAshley || 1000),
-              bonusTargetJackpot: recentlyEditedLocally ? local.bonusTargetJackpot : (cloud.bonusTargetJackpot || local.bonusTargetJackpot || 10),
+              paidPocketCount: keepLocalSettings ? local.paidPocketCount : (cloud.paidPocketCount || local.paidPocketCount || 0),
+              paidAshleyCount: keepLocalSettings ? local.paidAshleyCount : (cloud.paidAshleyCount || local.paidAshleyCount || 0),
+              paidJackpotCount: keepLocalSettings ? local.paidJackpotCount : (cloud.paidJackpotCount || local.paidJackpotCount || 0),
+              bonusNamePocket: resolvedPocketName,
+              bonusNameAshley: resolvedAshleyName,
+              bonusNameJackpot: resolvedJackpotName,
+              bonusTargetPocket: resolvedTargetPocket,
+              bonusTargetAshley: resolvedTargetAshley,
+              bonusTargetJackpot: resolvedTargetJackpot,
               parentPin: '1508',
-              subjectMode: recentlyEditedLocally ? local.subjectMode : (cloud.subjectMode || local.subjectMode || 'mixed'),
+              subjectMode: keepLocalSettings ? local.subjectMode : (cloud.subjectMode || local.subjectMode || 'mixed'),
               wrongAnswerQueue: cloud.totalSolved >= local.totalSolved ? cloud.wrongAnswerQueue : local.wrongAnswerQueue,
               reviewHistory: cloud.totalSolved >= local.totalSolved ? cloud.reviewHistory : local.reviewHistory,
               lastPlayedAt: cloud.lastPlayedAt || local.lastPlayedAt
@@ -363,8 +483,12 @@
             if (window.GameController && typeof window.GameController.syncFromCloud === 'function') {
               window.GameController.syncFromCloud(_state);
             }
-          } else if (local.totalSolved > cloud.totalSolved || local.totalScore > cloud.totalScore || recentlyEditedLocally) {
+          }
+
+          if (needsPushCustomSettingsToCloud) {
             self.scheduleCloudPush(false, true);
+          } else if (local.totalSolved > cloud.totalSolved || local.totalScore > cloud.totalScore) {
+            self.scheduleCloudPush(false, false);
           }
 
           updateCloudStatusBadge('☁️ NEON DB 실시간 클라우드 연동중');
@@ -377,7 +501,7 @@
     /**
      * Pushes current cumulative state to Neon PostgreSQL (/api/progress or direct Neon HTTP SQL)
      * @param {boolean} [forceReset=false]
-     * @param {boolean} [immediate=false]
+     * @param {boolean} [immediate=false] True ONLY when parent settings were explicitly updated!
      */
     scheduleCloudPush: function (forceReset, immediate) {
       if (typeof window.fetch !== 'function') return;
@@ -388,7 +512,9 @@
         _cloudSyncTimer = null;
       }
 
-      const pushViaNeonDirect = function (s, isReset) {
+      const isExplicitSettings = Boolean(immediate);
+
+      const pushViaNeonDirect = function (s, isReset, explicitSettings) {
         if (isReset) {
           return queryNeonDirect(
             `UPDATE soyun_roblox_racer_save SET
@@ -429,27 +555,49 @@
         const wrongQueueJson = JSON.stringify(Array.isArray(s.wrongAnswerQueue) ? s.wrongAnswerQueue.slice(0, 60) : []);
         const reviewHistoryJson = JSON.stringify(Array.isArray(s.reviewHistory) ? s.reviewHistory.slice(0, 120) : []);
 
+        if (explicitSettings) {
+          return queryNeonDirect(
+            `UPDATE soyun_roblox_racer_save SET
+               current_stage = $1, max_stage_reached = GREATEST(max_stage_reached, $2), stage_progress = $3,
+               total_score = GREATEST(total_score, $4), high_score = GREATEST(high_score, $5),
+               max_speed = GREATEST(max_speed, $6), speed_multiplier = $7,
+               total_solved = GREATEST(total_solved, $8), total_correct = GREATEST(total_correct, $9),
+               total_wrong = GREATEST(total_wrong, $10), math_correct = GREATEST(math_correct, $11),
+               english_correct = GREATEST(english_correct, $12), bosses_defeated = GREATEST(bosses_defeated, $13),
+               paid_pocket_count = $14, paid_ashley_count = $15, paid_jackpot_count = $16,
+               bonus_name_pocket = $17, bonus_name_ashley = $18, bonus_name_jackpot = $19,
+               subject_mode = $20, wrong_answer_queue = $21::jsonb, review_history = $22::jsonb,
+               bonus_target_pocket = $23, bonus_target_ashley = $24, bonus_target_jackpot = $25,
+               updated_at = CURRENT_TIMESTAMP
+             WHERE player_id = 'soyun_vip'`,
+            [
+              currentStage, maxStageReached, stageProgress, totalScore, highScore,
+              maxSpeed, speedMultiplier, totalSolved, totalCorrect, totalWrong,
+              mathCorrect, englishCorrect, bossesDefeated, paidPocketCount, paidAshleyCount,
+              paidJackpotCount, bonusNamePocket, bonusNameAshley, bonusNameJackpot,
+              subjectMode, wrongQueueJson, reviewHistoryJson,
+              bonusTargetPocket, bonusTargetAshley, bonusTargetJackpot
+            ]
+          ).then(function () { return { ok: true }; });
+        }
+
+        // Normal gameplay save: NEVER overwrite bonus_name_*, bonus_target_*, paid_*_count, speed_multiplier, or subject_mode in Neon DB!
         return queryNeonDirect(
           `UPDATE soyun_roblox_racer_save SET
              current_stage = $1, max_stage_reached = GREATEST(max_stage_reached, $2), stage_progress = $3,
              total_score = GREATEST(total_score, $4), high_score = GREATEST(high_score, $5),
-             max_speed = GREATEST(max_speed, $6), speed_multiplier = $7,
-             total_solved = GREATEST(total_solved, $8), total_correct = GREATEST(total_correct, $9),
-             total_wrong = GREATEST(total_wrong, $10), math_correct = GREATEST(math_correct, $11),
-             english_correct = GREATEST(english_correct, $12), bosses_defeated = GREATEST(bosses_defeated, $13),
-             paid_pocket_count = $14, paid_ashley_count = $15, paid_jackpot_count = $16,
-             bonus_name_pocket = $17, bonus_name_ashley = $18, bonus_name_jackpot = $19,
-             subject_mode = $20, wrong_answer_queue = $21::jsonb, review_history = $22::jsonb,
-             bonus_target_pocket = $23, bonus_target_ashley = $24, bonus_target_jackpot = $25,
+             max_speed = GREATEST(max_speed, $6),
+             total_solved = GREATEST(total_solved, $7), total_correct = GREATEST(total_correct, $8),
+             total_wrong = GREATEST(total_wrong, $9), math_correct = GREATEST(math_correct, $10),
+             english_correct = GREATEST(english_correct, $11), bosses_defeated = GREATEST(bosses_defeated, $12),
+             wrong_answer_queue = $13::jsonb, review_history = $14::jsonb,
              updated_at = CURRENT_TIMESTAMP
            WHERE player_id = 'soyun_vip'`,
           [
             currentStage, maxStageReached, stageProgress, totalScore, highScore,
-            maxSpeed, speedMultiplier, totalSolved, totalCorrect, totalWrong,
-            mathCorrect, englishCorrect, bossesDefeated, paidPocketCount, paidAshleyCount,
-            paidJackpotCount, bonusNamePocket, bonusNameAshley, bonusNameJackpot,
-            subjectMode, wrongQueueJson, reviewHistoryJson,
-            bonusTargetPocket, bonusTargetAshley, bonusTargetJackpot
+            maxSpeed, totalSolved, totalCorrect, totalWrong,
+            mathCorrect, englishCorrect, bossesDefeated,
+            wrongQueueJson, reviewHistoryJson
           ]
         ).then(function () { return { ok: true }; });
       };
@@ -459,10 +607,11 @@
         const isStaticHost = window.location && (window.location.hostname.includes('github.io') || window.location.pathname.startsWith('/game'));
         const payload = {
           state: s,
-          forceReset: Boolean(forceReset)
+          forceReset: Boolean(forceReset),
+          explicitSettingsUpdate: isExplicitSettings
         };
         const reqPromise = isStaticHost
-          ? pushViaNeonDirect(s, Boolean(forceReset))
+          ? pushViaNeonDirect(s, Boolean(forceReset), isExplicitSettings)
           : window.fetch('/api/progress', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -473,7 +622,7 @@
                 return r.json();
               })
               .catch(function () {
-                return pushViaNeonDirect(s, Boolean(forceReset));
+                return pushViaNeonDirect(s, Boolean(forceReset), isExplicitSettings);
               });
 
         reqPromise
