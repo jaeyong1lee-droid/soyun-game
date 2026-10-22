@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&family=Press+Start+2P&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
-  <link rel="stylesheet" href="css/style.css?v=20261022_25" />
+  <link rel="stylesheet" href="css/style.css?v=20261022_26" />
 </head>
 <body>
   <!-- 3D WebGL Viewport Container -->
@@ -373,30 +373,7 @@
        ===================================================================== -->
   <div id="gameover-modal" class="modal-backdrop hidden">
     <div class="modal-card retry-card" role="dialog" aria-modal="true" aria-labelledby="gameover-title">
-      <div class="retry-badge">⚡ SOYUN'S OBBY CHECKPOINT SAVED ⚡</div>
-      <h2 id="gameover-title" class="retry-title">아차! 에너지 실드가 모두 소진되었어요!</h2>
-      <p id="gameover-reassurance" class="retry-reassurance">
-        괜찮아 소윤아! 걱정하지 마세요 — 소윤이의 누적 로벅스(R$)와 동행 펫, 그리고 현재 월드(<strong id="retry-stage-label">STAGE 1</strong>)는 그대로 안전하게 저장되어 있어요!
-      </p>
-
-      <div class="retry-stats-box">
-        <div class="retry-stat">
-          <span class="retry-stat-label">유지되는 현재 월드</span>
-          <strong id="retry-stat-stage" class="retry-stat-val">STAGE 1</strong>
-        </div>
-        <div class="retry-stat">
-          <span class="retry-stat-label">누적 로벅스</span>
-          <strong id="retry-stat-score" class="retry-stat-val">🟢 R$ 0</strong>
-        </div>
-        <div class="retry-stat">
-          <span class="retry-stat-label">누적 정답률</span>
-          <strong id="retry-stat-acc" class="retry-stat-val">0%</strong>
-        </div>
-        <div class="retry-stat">
-          <span class="retry-stat-label">복습 대기 오답</span>
-          <strong id="retry-stat-review" class="retry-stat-val">0 문제</strong>
-        </div>
-      </div>
+      <h2 id="gameover-title" class="retry-title">⚡ 아차! 에너지 실드가 모두 소진되었어요!</h2>
 
       <!-- Failed Questions Review Box on Stage Fail (Answers Hidden until [👀 답 보기] is clicked!) -->
       <div id="gameover-wrong-section" class="stage-wrong-review-section">
@@ -824,16 +801,16 @@
   <!-- Three.js r128 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <!-- Nano Banana Generated Retro 3D Assets Bundle (CORS-free on file:// & http://) -->
-  <script src="js/assets_data.js?v=20261022_25"></script>
+  <script src="js/assets_data.js?v=20261022_26"></script>
   <!-- Shared Game Modules -->
-  <script src="js/config.js?v=20261022_25"></script>
-  <script src="js/storage.js?v=20261022_25"></script>
-  <script src="js/questionEngine.js?v=20261022_25"></script>
-  <script src="js/sound.js?v=20261022_25"></script>
-  <script src="js/engine3d.js?v=20261022_25"></script>
+  <script src="js/config.js?v=20261022_26"></script>
+  <script src="js/storage.js?v=20261022_26"></script>
+  <script src="js/questionEngine.js?v=20261022_26"></script>
+  <script src="js/sound.js?v=20261022_26"></script>
+  <script src="js/engine3d.js?v=20261022_26"></script>
   <!-- UI & Game Controller -->
-  <script src="js/ui.js?v=20261022_25"></script>
-  <script src="js/game.js?v=20261022_25"></script>
+  <script src="js/ui.js?v=20261022_26"></script>
+  <script src="js/game.js?v=20261022_26"></script>
 
   <!-- Google Chrome / Mobile PWA Service Worker & One-Click App Install Handler -->
   <script>
@@ -843,7 +820,7 @@
 
       if ('serviceWorker' in navigator && window.location.protocol !== 'file:') {
         window.addEventListener('load', function () {
-          navigator.serviceWorker.register('sw.js?v=20261022_25', { updateViaCache: 'none' }).then(function (reg) {
+          navigator.serviceWorker.register('sw.js?v=20261022_26', { updateViaCache: 'none' }).then(function (reg) {
             reg.update();
           }).catch(function () {});
         });
