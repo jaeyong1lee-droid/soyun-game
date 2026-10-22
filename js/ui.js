@@ -947,7 +947,124 @@
      * @param {Object} saveState
      * @param {number} currentStage
      */
-    showGameOverModal: function (saveState, currentStage) {
+    /**
+     * Renders a list of failed/wrong questions with answers HIDDEN by default and a [👀 답 보기] button per item!
+     * @param {HTMLElement} listEl
+     * @param {HTMLElement|null} revealAllBtn
+     * @param {Array} wrongItems
+     * @param {string} emptyMsg
+     */
+    _renderHiddenAnswerList: function (listEl, revealAllBtn, wrongItems, emptyMsg) {
+      if (!listEl) return;
+      const items = Array.isArray(wrongItems) ? wrongItems.filter(Boolean) : [];
+
+      if (items.length === 0) {
+        if (revealAllBtn) {
+          revealAllBtn.style.display = 'none';
+        }
+        listEl.innerHTML = `<div class="stage-wrong-empty">${escapeHtml(emptyMsg || '🎉 이번 판에 틀린 문제가 하나도 없어요! 완벽 클리어!')}</div>`;
+        return;
+      }
+
+      if (revealAllBtn) {
+        revealAllBtn.style.display = 'inline-flex';
+        revealAllBtn.textContent = '👀 전체 답 보기';
+        revealAllBtn.setAttribute('data-all-revealed', 'false');
+        revealAllBtn.onclick = function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          if (window.SoundEngine && typeof window.SoundEngine.playClick === 'function') {
+            window.SoundEngine.playClick();
+          }
+          const isAllRev = revealAllBtn.getAttribute('data-all-revealed') === 'true';
+          const nextRev = !isAllRev;
+          revealAllBtn.setAttribute('data-all-revealed', nextRev ? 'true' : 'false');
+          revealAllBtn.textContent = nextRev ? '🙈 전체 답 숨기기' : '👀 전체 답 보기';
+
+          const cards = listEl.querySelectorAll('.stage-wrong-item');
+          cards.forEach(function (card) {
+            const secretBox = card.querySelector('.stage-wrong-secret-box');
+            const singleBtn = card.querySelector('.btn-reveal-single-ans');
+            const ansText = card.getAttribute('data-correct-ans') || '';
+            if (secretBox && singleBtn) {
+              if (nextRev) {
+                secretBox.className = 'stage-wrong-secret-box is-revealed-ans';
+                secretBox.innerHTML = `✅ 정답: <strong>${escapeHtml(ansText)}</strong>`;
+                singleBtn.textContent = '🙈 답 숨기기';
+                singleBtn.classList.add('is-revealed');
+                card.setAttribute('data-revealed', 'true');
+              } else {
+                secretBox.className = 'stage-wrong-secret-box is-hidden-ans';
+                secretBox.innerHTML = '🔒 정답 숨김 (먼저 생각해 보세요!)';
+                singleBtn.textContent = '👀 답 보기';
+                singleBtn.classList.remove('is-revealed');
+                card.setAttribute('data-revealed', 'false');
+              }
+            }
+          });
+        };
+      }
+
+      listEl.innerHTML = items
+        .map(function (item, idx) {
+          const catBadge = item.category === 'english' ? '🔤 영어' : '🧮 수학';
+          const promptStr = item.prompt || '문제';
+          const ansStr = item.answerText !== undefined && item.answerText !== null
+            ? String(item.answerText)
+            : String(item.correctAnswer || '');
+          const wrongStr = item.wrongChoice !== undefined && item.wrongChoice !== null
+            ? String(item.wrongChoice)
+            : '시간초과/오답';
+
+          return `
+            <div class="stage-wrong-item" data-idx="${idx}" data-correct-ans="${escapeHtml(ansStr)}" data-revealed="false">
+              <div class="stage-wrong-item-top">
+                <span class="stage-wrong-q-text">${idx + 1}. [${catBadge}] ${escapeHtml(promptStr)}</span>
+                <span class="stage-wrong-my-choice">내가 고른 답: ❌ ${escapeHtml(wrongStr)}</span>
+              </div>
+              <div class="stage-wrong-ans-row">
+                <span class="stage-wrong-secret-box is-hidden-ans">🔒 정답 숨김 (먼저 생각해 보세요!)</span>
+                <button type="button" class="btn-reveal-single-ans" data-action="toggle-reveal-ans">
+                  👀 답 보기
+                </button>
+              </div>
+            </div>
+          `;
+        })
+        .join('');
+
+      listEl.onclick = function (e) {
+        e.stopPropagation();
+        const btn = e.target.closest('[data-action="toggle-reveal-ans"]');
+        if (!btn) return;
+        e.preventDefault();
+        if (window.SoundEngine && typeof window.SoundEngine.playClick === 'function') {
+          window.SoundEngine.playClick();
+        }
+        const card = btn.closest('.stage-wrong-item');
+        if (!card) return;
+        const secretBox = card.querySelector('.stage-wrong-secret-box');
+        const ansText = card.getAttribute('data-correct-ans') || '';
+        const isRev = card.getAttribute('data-revealed') === 'true';
+        if (!secretBox) return;
+
+        if (!isRev) {
+          secretBox.className = 'stage-wrong-secret-box is-revealed-ans';
+          secretBox.innerHTML = `✅ 정답: <strong>${escapeHtml(ansText)}</strong>`;
+          btn.textContent = '🙈 답 숨기기';
+          btn.classList.add('is-revealed');
+          card.setAttribute('data-revealed', 'true');
+        } else {
+          secretBox.className = 'stage-wrong-secret-box is-hidden-ans';
+          secretBox.innerHTML = '🔒 정답 숨김 (먼저 생각해 보세요!)';
+          btn.textContent = '👀 답 보기';
+          btn.classList.remove('is-revealed');
+          card.setAttribute('data-revealed', 'false');
+        }
+      };
+    },
+
+    showGameOverModal: function (saveState, currentStage, stageWrongQuestions) {
       const modal = byId('gameover-modal');
       if (!modal) return;
 
@@ -991,6 +1108,17 @@
       if (btnRetry) {
         btnRetry.textContent = `⚡ STAGE ${stageNum} 즉시 재도전 (소윤이 누적 로벅스·오답 기록 유지)`;
       }
+
+      // Render failed questions list with answers hidden until [👀 답 보기] is clicked!
+      const failedList = (Array.isArray(stageWrongQuestions) && stageWrongQuestions.length > 0)
+        ? stageWrongQuestions
+        : wrongQueue;
+      this._renderHiddenAnswerList(
+        byId('gameover-wrong-list'),
+        byId('btn-gameover-reveal-all'),
+        failedList,
+        '이번 판에 틀린 문제가 없습니다! 다시 한 번 힘차게 도전해 볼까요?'
+      );
 
       modal.classList.remove('hidden');
     },
