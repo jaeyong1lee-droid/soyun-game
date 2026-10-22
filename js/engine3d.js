@@ -3065,30 +3065,19 @@
     },
 
     /**
-     * Dynamically transition stage colors, fog, road grid, and sky theme
+     * Dynamically transition stage colors, fog, road grid, river, 3D biome scenery, and bespoke skybox theme
      */
     setStageTheme: function (stageConfig) {
       let theme = STAGE_THEMES[0];
       if (typeof stageConfig === 'number') {
         theme = STAGE_THEMES[(stageConfig - 1) % STAGE_THEMES.length] || STAGE_THEMES[0];
       } else if (stageConfig && typeof stageConfig === 'object') {
-        const idx = (stageConfig.id || stageConfig.stage || 1) - 1;
-        const base = STAGE_THEMES[Math.max(0, idx) % STAGE_THEMES.length] || STAGE_THEMES[0];
-        theme = Object.assign({}, base);
-        if (stageConfig.color || stageConfig.primaryColor || stageConfig.themeColor) {
-          theme.primary = parseColorHex(stageConfig.color || stageConfig.primaryColor || stageConfig.themeColor, base.primary);
-          theme.curbA = theme.primary;
-          theme.mountainEdge = theme.primary;
-        }
-        if (stageConfig.secondaryColor || stageConfig.accentColor || stageConfig.bossColor) {
-          theme.secondary = parseColorHex(stageConfig.secondaryColor || stageConfig.accentColor || stageConfig.bossColor, base.secondary);
-          theme.curbB = theme.secondary;
-        }
-        if (stageConfig.roadColor) {
-          theme.road = parseColorHex(stageConfig.roadColor, base.road);
-        }
-        if (stageConfig.fogColor || stageConfig.skyColor) {
-          theme.fog = parseColorHex(stageConfig.fogColor || stageConfig.skyColor, base.fog);
+        if (stageConfig.biome) {
+          theme = Object.assign({}, stageConfig);
+        } else {
+          const idx = (stageConfig.id || stageConfig.stage || 1) - 1;
+          const base = STAGE_THEMES[Math.max(0, idx) % STAGE_THEMES.length] || STAGE_THEMES[0];
+          theme = Object.assign({}, base);
         }
       }
 
@@ -3097,7 +3086,8 @@
 
       this.scene.background.setHex(theme.fog);
       if (this.scene.fog) this.scene.fog.color.setHex(theme.fog);
-      if (this.outerGroundMat) this.outerGroundMat.color.setHex(theme.fog);
+      if (this.outerGroundMat) this.outerGroundMat.color.setHex(theme.ground || theme.fog);
+      if (this.stageRiverMat) this.stageRiverMat.color.setHex(theme.river || theme.primary);
       if (this.roadSurfaceMat) this.roadSurfaceMat.color.setHex(theme.road);
       if (this.edgeRailMat) this.edgeRailMat.color.setHex(theme.primary);
       if (this.dashMaterial) this.dashMaterial.color.setHex(theme.primary);
@@ -3109,9 +3099,13 @@
       if (this.retroSunMesh && this.retroSunMesh.material) {
         this.retroSunMesh.material.color.setHex(theme.secondary);
       }
+
+      this._applyBiomePropsVisibility(theme.biome || 'river_nature');
+      const biomeSkyTex = this._paintBiomeSkyboxTexture(theme);
+
       if (!this.isBossActive) {
-        if (this.skyBackdropMesh && this.skyBackdropMesh.material && this.textures.skybox) {
-          this.skyBackdropMesh.material.map = this.textures.skybox;
+        if (this.skyBackdropMesh && this.skyBackdropMesh.material && biomeSkyTex) {
+          this.skyBackdropMesh.material.map = biomeSkyTex;
           this.skyBackdropMesh.material.needsUpdate = true;
         }
         if (this.bossLavaGroup) {
@@ -3131,6 +3125,7 @@
         this.scene.background.setHex(hellFog);
         if (this.scene.fog) this.scene.fog.color.setHex(hellFog);
         if (this.outerGroundMat) this.outerGroundMat.color.setHex(0x881100);
+        if (this.stageRiverMat) this.stageRiverMat.color.setHex(0xff3300);
         if (this.roadSurfaceMat) this.roadSurfaceMat.color.setHex(0x1c0404);
         if (this.edgeRailMat) this.edgeRailMat.color.setHex(0xff3300);
         if (this.dashMaterial) this.dashMaterial.color.setHex(0xffaa00);
@@ -3152,10 +3147,6 @@
       } else {
         if (this.bossLavaGroup) {
           this.bossLavaGroup.visible = false;
-        }
-        if (this.skyBackdropMesh && this.skyBackdropMesh.material && this.textures.skybox) {
-          this.skyBackdropMesh.material.map = this.textures.skybox;
-          this.skyBackdropMesh.material.needsUpdate = true;
         }
         this.setStageTheme(this.currentTheme);
       }
