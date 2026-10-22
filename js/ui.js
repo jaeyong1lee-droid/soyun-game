@@ -687,13 +687,10 @@
 
       if (type === 'boss') {
         const atkInfo = opts.attackInfo || (window.Engine3D && window.Engine3D.lastBossAttackInfo) || {
-          type: 'round_bomb',
-          icon: '💣💥',
-          badgeTitle: '💣 특대형 동그란 폭탄 보스 명중!! BOOM!!',
-          badgeSub: `🔥 1.5x 보스 타격!! +${pts} R$`
+          type: 'round_bomb'
         };
 
-        // 1) Full-screen weapon-colored impact flash for maximum boss hit feel ("타격감")
+        // 1) Subtle edge impact flash (no center text/badges so 3D Boss hit is 100% visible!)
         const flashEl = document.createElement('div');
         flashEl.className = `impact-boss-screen-flash flash-${atkInfo.type || 'round_bomb'}`;
         document.body.appendChild(flashEl);
@@ -701,7 +698,7 @@
           if (flashEl.parentNode) {
             flashEl.parentNode.removeChild(flashEl);
           }
-        }, 380);
+        }, 340);
 
         // 2) Rattle & flash the Top Boss HUD Bar (#boss-hud) on hit!
         const bossHudEl = byId('boss-hud');
@@ -713,20 +710,6 @@
             bossHudEl.classList.remove('boss-hud-hit-shake');
           }, 520);
         }
-
-        // 3) Spawn 2D Flying Weapon Projectile visual streaking from player car to boss
-        const bombEl = document.createElement('div');
-        bombEl.className = `impact-flying-bomb weapon-${atkInfo.type || 'round_bomb'}`;
-        bombEl.textContent = atkInfo.icon || '💣🚀';
-        layer.appendChild(bombEl);
-        window.setTimeout(function () {
-          if (bombEl.parentNode) {
-            bombEl.parentNode.removeChild(bombEl);
-          }
-        }, 720);
-
-        spawnBadge(atkInfo.badgeTitle || `💣 초대형 폭탄 보스 직격!! BOOM!!`, 'impact-boss', 0, -24);
-        spawnBadge(`${atkInfo.badgeSub || '🔥 1.5x 보스 타격!!'} (+${pts} R$)`, 'impact-combo', 0, 28);
       } else if (type === 'stageClear') {
         spawnBadge(`👑 BOSS KO!! 상금 게이지 +10 상승!`, 'impact-boss', 0, -22);
         spawnBadge(`🎉 보스 클리어 보너스 +${pts} R$!`, 'impact-combo', 0, 26);
