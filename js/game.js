@@ -2556,40 +2556,27 @@
           if (window.UIManager && typeof window.UIManager.hideNextStageModal === 'function') {
             window.UIManager.hideNextStageModal();
           }
-          if (mode === 'start') {
-            if (window.UIManager && typeof window.UIManager.setStartScreenVisible === 'function') {
-              window.UIManager.setStartScreenVisible(true);
-            }
-          } else {
+          if (mode !== 'start') {
             self.returnToDashboard();
           }
         });
       }
 
-      // Clicking an island or stepping-stone orb on the Treasure Map immediately starts that stage!
+      // Clicking an unlocked stage node on the Sky Tree Map in 'start' mode selects that stage
       const skyTreeList = document.getElementById('sky-treemap-list');
       if (skyTreeList) {
         skyTreeList.addEventListener('click', function (e) {
           const modal = document.getElementById('next-stage-modal');
-          if (!modal) return;
-          const mode = modal.getAttribute('data-treemap-mode') || 'start';
+          if (!modal || modal.getAttribute('data-treemap-mode') !== 'start') return;
           const node = e.target.closest('[data-treemap-stage]');
-          if (!node) return;
+          if (!node || node.getAttribute('data-unlocked') !== 'true') return;
           const stg = parseInt(node.getAttribute('data-treemap-stage'), 10);
-          if (isNaN(stg) || stg < 1) return;
-
-          if (mode === 'next_stage') {
-            const targetAttr = parseInt(modal.getAttribute('data-target-stage'), 10) || state.stage;
-            if (stg === targetAttr || node.getAttribute('data-unlocked') === 'true') {
-              self.confirmNextStageStart();
+          if (!isNaN(stg) && stg >= 1) {
+            self.openPreStartTreeMap(stg);
+            if (window.UIManager && window.SaveManager) {
+              window.UIManager.renderDashboard(window.SaveManager.getState(), stg);
             }
-            return;
           }
-
-          if (node.getAttribute('data-unlocked') !== 'true') return;
-          state.selectedDashboardStage = stg;
-          modal.setAttribute('data-target-stage', String(stg));
-          self.startGame(stg);
         });
       }
 
