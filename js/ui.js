@@ -1507,6 +1507,7 @@
       const totalCorrect = parseInt(state.totalCorrect, 10) || 0;
       const bossesDefeated = parseInt(state.bossesDefeated, 10) || 0;
       const currentMult = typeof state.speedMultiplier === 'number' ? state.speedMultiplier : 1.0;
+      const currentObbyMult = typeof state.obbySpeedMultiplier === 'number' ? state.obbySpeedMultiplier : 1.2;
 
       // 1. Speed Selector inside Parent Modal
       const elSpeedBadge = byId('parent-current-speed-badge');
@@ -1519,6 +1520,20 @@
         speedBtns.forEach(function (btn) {
           const m = parseFloat(btn.getAttribute('data-mult'));
           btn.classList.toggle('active', Math.abs(m - currentMult) < 0.08);
+        });
+      }
+
+      // 1b. Obby Jump Mini-Game Speed Selector inside Parent Modal
+      const elObbySpeedBadge = byId('parent-current-obby-speed-badge');
+      if (elObbySpeedBadge) {
+        elObbySpeedBadge.textContent = `현재 설정: ${currentObbyMult.toFixed(1)}x 배속`;
+      }
+      const obbySpeedContainer = byId('dashboard-obby-speed-selector');
+      if (obbySpeedContainer) {
+        const obbyBtns = obbySpeedContainer.querySelectorAll('[data-obby-mult]');
+        obbyBtns.forEach(function (btn) {
+          const m = parseFloat(btn.getAttribute('data-obby-mult'));
+          btn.classList.toggle('active', Math.abs(m - currentObbyMult) < 0.08);
         });
       }
 

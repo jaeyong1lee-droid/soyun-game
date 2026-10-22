@@ -529,7 +529,7 @@
           <!-- Speed Multiplier Control Selector -->
           <section class="parent-section" aria-label="보호자 전용 주행 속도 배속 설정">
             <div class="parent-section-header">
-              <h3 class="parent-section-title">🚀 주행 속도 조절 <small>(단계별 +0.5 미세 가속 · 최대치 45 제한)</small></h3>
+              <h3 class="parent-section-title">🚀 주행 속도 조절 <small>(단계별 점진 가속 · 1단계의 2.5배 상한선)</small></h3>
               <span id="parent-current-speed-badge" class="parent-status-pill">1.0x 기본</span>
             </div>
             <div id="dashboard-speed-selector" class="speed-preset-group" role="radiogroup" aria-label="주행 속도 배속">
@@ -538,6 +538,21 @@
               <button type="button" class="speed-preset-pill" data-mult="1.9">⚡ 1.9x</button>
               <button type="button" class="speed-preset-pill" data-mult="2.2">🔥 2.2x</button>
               <button type="button" class="speed-preset-pill" data-mult="2.5">👑 2.5x</button>
+            </div>
+          </section>
+
+          <!-- Obby Jump Mini-Game Speed Multiplier Control Selector -->
+          <section class="parent-section" aria-label="보호자 전용 점프게임 속도 배율 설정">
+            <div class="parent-section-header">
+              <h3 class="parent-section-title">🧱🔥 점프게임(장애물·불구덩이) 속도 배율 <small>(현재 주행속도 대비 배율 · 기본 1.2x)</small></h3>
+              <span id="parent-current-obby-speed-badge" class="parent-status-pill">1.2x 기본</span>
+            </div>
+            <div id="dashboard-obby-speed-selector" class="speed-preset-group" role="radiogroup" aria-label="점프게임 속도 배속">
+              <button type="button" class="obby-speed-preset-pill speed-preset-pill" data-obby-mult="1.0">🐢 1.0x</button>
+              <button type="button" class="obby-speed-preset-pill speed-preset-pill active" data-obby-mult="1.2">🚗 1.2x (기본)</button>
+              <button type="button" class="obby-speed-preset-pill speed-preset-pill" data-obby-mult="1.4">🚀 1.4x</button>
+              <button type="button" class="obby-speed-preset-pill speed-preset-pill" data-obby-mult="1.6">⚡ 1.6x</button>
+              <button type="button" class="obby-speed-preset-pill speed-preset-pill" data-obby-mult="2.0">🔥 2.0x</button>
             </div>
           </section>
 

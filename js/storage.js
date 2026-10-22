@@ -276,6 +276,7 @@
           if (typeof customSettings.paidAshleyCount === 'number') _state.paidAshleyCount = customSettings.paidAshleyCount;
           if (typeof customSettings.paidJackpotCount === 'number') _state.paidJackpotCount = customSettings.paidJackpotCount;
           if (customSettings.speedMultiplier) _state.speedMultiplier = customSettings.speedMultiplier;
+          if (customSettings.obbySpeedMultiplier) _state.obbySpeedMultiplier = customSettings.obbySpeedMultiplier;
           if (customSettings.subjectMode) _state.subjectMode = customSettings.subjectMode;
         }
         try {
@@ -690,6 +691,22 @@
         this.save(true);
       }
       return state.speedMultiplier;
+    },
+
+    /**
+     * Updates and saves Parent-configured Obby Jump Mini-Game speed multiplier (0.8x ~ 2.5x, default 1.2x).
+     * @param {number} mult
+     * @returns {number}
+     */
+    setObbySpeedMultiplier: function (mult) {
+      const state = this.getState();
+      const parsed = parseFloat(mult);
+      if (!isNaN(parsed)) {
+        state.obbySpeedMultiplier = Math.max(0.8, Math.min(2.5, Math.round(parsed * 100) / 100));
+        _lastLocalSettingsEditAt = Date.now();
+        this.save(true);
+      }
+      return state.obbySpeedMultiplier;
     },
 
     /**
