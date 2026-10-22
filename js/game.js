@@ -2313,11 +2313,11 @@
         }
       });
 
-      // Start Dashboard Primary CTA
+      // Start Dashboard Primary CTA -> Opens Sky-Ascending World Tree Map BEFORE starting the race!
       const btnStart = document.getElementById('btn-start-game');
       if (btnStart) {
         btnStart.addEventListener('click', function () {
-          self.startGame(state.selectedDashboardStage);
+          self.openPreStartTreeMap(state.selectedDashboardStage);
         });
       }
 
@@ -2501,7 +2501,7 @@
         });
       }
 
-      // Boss Clear Step 2: Next Stage Confirmation Popup (#next-stage-modal)
+      // Boss Clear Step 2 & Pre-Start: Sky-Ascending World Tree Map Popup (#next-stage-modal)
       const btnNextStageYes = document.getElementById('btn-next-stage-yes');
       if (btnNextStageYes) {
         btnNextStageYes.addEventListener('click', function (e) {
@@ -2516,10 +2516,32 @@
         btnNextStageNo.addEventListener('click', function (e) {
           e.preventDefault();
           e.stopPropagation();
+          const modal = document.getElementById('next-stage-modal');
+          const mode = modal ? modal.getAttribute('data-treemap-mode') : 'next_stage';
           if (window.UIManager && typeof window.UIManager.hideNextStageModal === 'function') {
             window.UIManager.hideNextStageModal();
           }
-          self.returnToDashboard();
+          if (mode !== 'start') {
+            self.returnToDashboard();
+          }
+        });
+      }
+
+      // Clicking an unlocked stage node on the Sky Tree Map in 'start' mode selects that stage
+      const skyTreeList = document.getElementById('sky-treemap-list');
+      if (skyTreeList) {
+        skyTreeList.addEventListener('click', function (e) {
+          const modal = document.getElementById('next-stage-modal');
+          if (!modal || modal.getAttribute('data-treemap-mode') !== 'start') return;
+          const node = e.target.closest('[data-treemap-stage]');
+          if (!node || node.getAttribute('data-unlocked') !== 'true') return;
+          const stg = parseInt(node.getAttribute('data-treemap-stage'), 10);
+          if (!isNaN(stg) && stg >= 1) {
+            self.openPreStartTreeMap(stg);
+            if (window.UIManager && window.SaveManager) {
+              window.UIManager.renderDashboard(window.SaveManager.getState(), stg);
+            }
+          }
         });
       }
 
