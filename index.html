@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&family=Press+Start+2P&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
-  <link rel="stylesheet" href="css/style.css?v=20261022_28" />
+  <link rel="stylesheet" href="css/style.css?v=20261022_29" />
 </head>
 <body>
   <!-- 3D WebGL Viewport Container -->
@@ -29,9 +29,9 @@
   <!-- Explosive Comic / Roblox Hit-Marker Impact Overlay Layer -->
   <div id="impact-fx-layer" class="impact-fx-layer" aria-hidden="true"></div>
 
-  <!-- Left-Side Road Cute Mini Speed Arrows (x 1.0 ~ x 1.6) & Round Pause Button -->
+  <!-- Left-Side Road Cute Mini Speed Arrows (x 1.0 ~ x 2.5) & Round Pause Button -->
   <nav id="utility-bar" aria-label="속도 조절 및 일시정지 버튼">
-    <div id="left-speed-mini-ctrl" class="left-speed-mini-ctrl" role="group" aria-label="속도 증감 화살표 (x 1.0 ~ x 1.6)">
+    <div id="left-speed-mini-ctrl" class="left-speed-mini-ctrl" role="group" aria-label="속도 증감 화살표 (x 1.0 ~ x 2.5)">
       <button id="btn-speed-up" class="speed-mini-arrow-btn speed-arrow-up" type="button" title="속도 올리기 (▲)">▲</button>
       <span id="left-speed-mult-label" class="left-speed-mult-label">x1.0</span>
       <button id="btn-speed-down" class="speed-mini-arrow-btn speed-arrow-down" type="button" title="속도 내리기 (▼)">▼</button>
@@ -533,11 +533,11 @@
               <span id="parent-current-speed-badge" class="parent-status-pill">1.0x 기본</span>
             </div>
             <div id="dashboard-speed-selector" class="speed-preset-group" role="radiogroup" aria-label="주행 속도 배속">
-              <button type="button" class="speed-preset-pill" data-mult="0.6">🐢 0.6x</button>
-              <button type="button" class="speed-preset-pill" data-mult="0.8">🐣 0.8x</button>
-              <button type="button" class="speed-preset-pill active" data-mult="1.0">🚗 1.0x 기본</button>
-              <button type="button" class="speed-preset-pill" data-mult="1.3">🚀 1.3x</button>
-              <button type="button" class="speed-preset-pill" data-mult="1.6">⚡ 1.6x</button>
+              <button type="button" class="speed-preset-pill active" data-mult="1.3">🚗 1.3x</button>
+              <button type="button" class="speed-preset-pill" data-mult="1.6">🚀 1.6x</button>
+              <button type="button" class="speed-preset-pill" data-mult="1.9">⚡ 1.9x</button>
+              <button type="button" class="speed-preset-pill" data-mult="2.2">🔥 2.2x</button>
+              <button type="button" class="speed-preset-pill" data-mult="2.5">👑 2.5x</button>
             </div>
           </section>
 
@@ -801,16 +801,16 @@
   <!-- Three.js r128 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <!-- Nano Banana Generated Retro 3D Assets Bundle (CORS-free on file:// & http://) -->
-  <script src="js/assets_data.js?v=20261022_28"></script>
+  <script src="js/assets_data.js?v=20261022_29"></script>
   <!-- Shared Game Modules -->
-  <script src="js/config.js?v=20261022_28"></script>
-  <script src="js/storage.js?v=20261022_28"></script>
-  <script src="js/questionEngine.js?v=20261022_28"></script>
-  <script src="js/sound.js?v=20261022_28"></script>
-  <script src="js/engine3d.js?v=20261022_28"></script>
+  <script src="js/config.js?v=20261022_29"></script>
+  <script src="js/storage.js?v=20261022_29"></script>
+  <script src="js/questionEngine.js?v=20261022_29"></script>
+  <script src="js/sound.js?v=20261022_29"></script>
+  <script src="js/engine3d.js?v=20261022_29"></script>
   <!-- UI & Game Controller -->
-  <script src="js/ui.js?v=20261022_28"></script>
-  <script src="js/game.js?v=20261022_28"></script>
+  <script src="js/ui.js?v=20261022_29"></script>
+  <script src="js/game.js?v=20261022_29"></script>
 
   <!-- Google Chrome / Mobile PWA Service Worker & One-Click App Install Handler -->
   <script>
@@ -820,7 +820,7 @@
 
       if ('serviceWorker' in navigator && window.location.protocol !== 'file:') {
         window.addEventListener('load', function () {
-          navigator.serviceWorker.register('sw.js?v=20261022_28', { updateViaCache: 'none' }).then(function (reg) {
+          navigator.serviceWorker.register('sw.js?v=20261022_29', { updateViaCache: 'none' }).then(function (reg) {
             reg.update();
           }).catch(function () {});
         });
