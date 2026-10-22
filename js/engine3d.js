@@ -3741,20 +3741,21 @@
     },
 
     /**
-     * Launches Soyun's Roblox Super Kart into a 3D Jump! (Used to clear Lava Hurdles in Obby Rush!)
+     * Launches Soyun's Roblox Super Kart into a 3D Jump! (Used to clear Lava Hurdles & Narrow Fire Pits in Obby Rush!)
      */
-    jump: function () {
+    jump: function (powerScale) {
       if (this.isPaused) return false;
       if (this.carJumpY > 0.35 && this.carJumpVel > -2) {
         return false; // Already in mid-air
       }
+      const pScale = typeof powerScale === 'number' ? powerScale : 1.0;
       this.isJumping = true;
-      this.carJumpVel = 15.2;
-      this.avatarCheerTimer = 0.55;
-      this.petSpinTimer = 0.55;
-      this.cameraZoomPunch = 5.5;
+      this.carJumpVel = 15.6 * pScale;
+      this.avatarCheerTimer = 0.58;
+      this.petSpinTimer = 0.58;
+      this.cameraZoomPunch = 6.0;
       if (this.carGroup) {
-        this._spawnParticleBurst(this.carGroup.position.x, 0.4, getCfg().GATE_PASS_Z, 0x00f3ff, 22, 0.9);
+        this._spawnParticleBurst(this.carGroup.position.x, 0.4, getCfg().GATE_PASS_Z, 0x00f3ff, 24, 0.95);
       }
       return true;
     },
@@ -3774,8 +3775,11 @@
     },
 
     /**
-     * Spawns a 3-Lane Roblox Obby Action Obstacle Wave at z = -82
-     * @param {Object} waveConfig { waveIndex, totalWaves, lanes: ['block'|'hurdle'|'coin', ...] }
+     * Spawns a 3-Lane Roblox Obby Action Obstacle Wave
+     * Supports 2 distinct obstacle modes:
+     * - Mode A ('obstacle_wall'): 2 lanes Tall Block Wall ('block') + 1 lane Low Jump Hurdle ('hurdle')
+     * - Mode B ('fire_pit'): 2 lanes Very Wide Fire Pit ('wide_fire') + 1 lane Narrow Jumpable Fire Pit ('narrow_fire')
+     * @param {Object} waveConfig { z, waveIndex, totalWaves, waveType: 'obstacle_wall'|'fire_pit', lanes: [...] }
      */
     spawnObbyObstacleWave: function (waveConfig) {
       if (!this.isInitialized) this.init();
@@ -3786,10 +3790,10 @@
       const lanes = cfg.LANES;
       const laneTypes = (waveConfig && Array.isArray(waveConfig.lanes) && waveConfig.lanes.length === 3)
         ? waveConfig.lanes
-        : ['block', 'hurdle', 'coin'];
+        : ['block', 'block', 'hurdle'];
 
       const waveGroup = new THREE.Group();
-      const startZ = (waveConfig && typeof waveConfig.z === 'number') ? waveConfig.z : -82;
+      const startZ = (waveConfig && typeof waveConfig.z === 'number') ? waveConfig.z : -72;
       waveGroup.position.set(0, 0, startZ);
 
       const disposables = {
@@ -3799,71 +3803,192 @@
       };
 
       const coinMeshes = [];
+      const flameMeshes = [];
 
       for (let i = 0; i < 3; i++) {
         const lx = lanes[i] !== undefined ? lanes[i] : (i - 1) * 4.5;
         const type = laneTypes[i];
 
         if (type === 'block') {
-          // Tall Studded Roblox Hazard Block Wall (Must dodge left/right!)
-          const wallGeo = new THREE.BoxGeometry(3.45, 3.6, 1.35);
+          // 🧱 Tall Studded Roblox Hazard Block Wall (2 lanes blocked — must dodge into the 1 low lane!)
+          const wallGeo = new THREE.BoxGeometry(3.65, 3.85, 1.45);
           const wallMat = new THREE.MeshStandardMaterial({
-            color: 0xff1e42,
+            color: 0xff1744,
             emissive: 0x990022,
-            emissiveIntensity: 0.55,
+            emissiveIntensity: 0.6,
             roughness: 0.25
           });
           disposables.geometries.push(wallGeo);
           disposables.materials.push(wallMat);
 
           const wallMesh = new THREE.Mesh(wallGeo, wallMat);
-          wallMesh.position.set(lx, 1.8, 0);
+          wallMesh.position.set(lx, 1.92, 0);
           waveGroup.add(wallMesh);
 
-          // Yellow/Black hazard warning stripe bar across front
-          const stripeGeo = new THREE.BoxGeometry(3.52, 0.65, 1.42);
+          // Yellow/Black hazard warning stripe bars across front
+          const stripeGeo = new THREE.BoxGeometry(3.72, 0.62, 1.52);
           const stripeMat = new THREE.MeshBasicMaterial({ color: 0xffe600 });
           disposables.geometries.push(stripeGeo);
           disposables.materials.push(stripeMat);
-          const stripeMesh = new THREE.Mesh(stripeGeo, stripeMat);
-          stripeMesh.position.set(lx, 1.8, 0);
-          waveGroup.add(stripeMesh);
 
-          // Roblox studs on top of wall
-          if (this.sharedStudGeo) {
-            [-1.1, 0, 1.1].forEach((sx) => {
-              const stud = new THREE.Mesh(this.sharedStudGeo, stripeMat);
-              stud.scale.set(2.2, 2.5, 2.2);
-              stud.position.set(lx + sx, 3.7, 0);
-              waveGroup.add(stud);
-            });
+          const stripeMesh1 = new THREE.Mesh(stripeGeo, stripeMat);
+          stripeMesh1.position.set(lx, 1.25, 0);
+          waveGroup.add(stripeMesh1);
+
+          const stripeMesh2 = new THREE.Mesh(stripeGeo, stripeMat);
+          stripeMesh2.position.set(lx, 2.65, 0);
+          waveGroup.add(stripeMesh2);
+
+          // Top warning cones/studs on tall wall
+          const spikeGeo = new THREE.ConeGeometry(0.42, 0.95, 8);
+          const spikeMat = new THREE.MeshBasicMaterial({ color: 0xffe600 });
+          disposables.geometries.push(spikeGeo);
+          disposables.materials.push(spikeMat);
+          [-1.15, 0, 1.15].forEach((sx) => {
+            const spike = new THREE.Mesh(spikeGeo, spikeMat);
+            spike.position.set(lx + sx, 4.3, 0);
+            waveGroup.add(spike);
+          });
+        } else if (type === 'wide_fire') {
+          // 🔥 MASSIVE WIDE FIRE PIT (불구덩이가 매우 넓은 2개 레인 — 너무 넓어서 건널 수 없음!)
+          const pitRimGeo = new THREE.BoxGeometry(4.25, 0.36, 12.6);
+          const pitRimMat = new THREE.MeshBasicMaterial({ color: 0x1a0303 });
+          const lavaBedGeo = new THREE.BoxGeometry(3.92, 0.44, 12.1);
+          const lavaBedMat = new THREE.MeshBasicMaterial({ color: 0xff2200 });
+          const magmaCoreGeo = new THREE.BoxGeometry(3.2, 0.48, 11.4);
+          const magmaCoreMat = new THREE.MeshBasicMaterial({ color: 0xff9100 });
+          disposables.geometries.push(pitRimGeo, lavaBedGeo, magmaCoreGeo);
+          disposables.materials.push(pitRimMat, lavaBedMat, magmaCoreMat);
+
+          const pitRim = new THREE.Mesh(pitRimGeo, pitRimMat);
+          pitRim.position.set(lx, 0.14, -1.2);
+          const lavaBed = new THREE.Mesh(lavaBedGeo, lavaBedMat);
+          lavaBed.position.set(lx, 0.18, -1.2);
+          const magmaCore = new THREE.Mesh(magmaCoreGeo, magmaCoreMat);
+          magmaCore.position.set(lx, 0.21, -1.2);
+          waveGroup.add(pitRim, lavaBed, magmaCore);
+
+          // 9 Roaring 3D Flame Pillars across the entire 12.6m length of the Wide Fire Pit!
+          const outerFlameGeo = new THREE.ConeGeometry(0.76, 2.75, 8);
+          const innerFlameGeo = new THREE.ConeGeometry(0.48, 1.95, 8);
+          const outerFlameMat = new THREE.MeshBasicMaterial({
+            color: 0xff3d00,
+            transparent: true,
+            opacity: 0.92
+          });
+          const innerFlameMat = new THREE.MeshBasicMaterial({ color: 0xffe600 });
+          disposables.geometries.push(outerFlameGeo, innerFlameGeo);
+          disposables.materials.push(outerFlameMat, innerFlameMat);
+
+          const flamePositions = [
+            { x: -1.05, z: 4.0, s: 1.05 },
+            { x: 1.05, z: 3.4, s: 0.95 },
+            { x: 0.0, z: 1.8, s: 1.22 },
+            { x: -1.1, z: 0.2, s: 1.08 },
+            { x: 1.1, z: -0.4, s: 1.14 },
+            { x: 0.0, z: -2.2, s: 1.28 },
+            { x: -1.0, z: -4.0, s: 1.02 },
+            { x: 1.0, z: -4.6, s: 0.96 },
+            { x: 0.0, z: -6.2, s: 1.15 }
+          ];
+          flamePositions.forEach((fp, fIdx) => {
+            const fGroup = new THREE.Group();
+            fGroup.position.set(lx + fp.x, 1.15, fp.z);
+            fGroup.scale.set(fp.s, fp.s, fp.s);
+            fGroup.userData = { baseScaleY: fp.s, phase: fIdx * 1.1 + i * 2.0 };
+            const oMesh = new THREE.Mesh(outerFlameGeo, outerFlameMat);
+            const iMesh = new THREE.Mesh(innerFlameGeo, innerFlameMat);
+            iMesh.position.y = -0.2;
+            fGroup.add(oMesh, iMesh);
+            waveGroup.add(fGroup);
+            flameMeshes.push(fGroup);
+          });
+        } else if (type === 'narrow_fire') {
+          // 🔥⬆️ NARROW JUMPABLE FIRE PIT (불구덩이가 좁은 1개 레인 — 점프 발판을 밟고 뛰어넘을 수 있음!)
+          const narrowRimGeo = new THREE.BoxGeometry(4.0, 0.28, 1.65);
+          const narrowRimMat = new THREE.MeshBasicMaterial({ color: 0x260505 });
+          const narrowLavaGeo = new THREE.BoxGeometry(3.65, 0.34, 1.35);
+          const narrowLavaMat = new THREE.MeshBasicMaterial({ color: 0xff5500 });
+          disposables.geometries.push(narrowRimGeo, narrowLavaGeo);
+          disposables.materials.push(narrowRimMat, narrowLavaMat);
+
+          const narrowRim = new THREE.Mesh(narrowRimGeo, narrowRimMat);
+          narrowRim.position.set(lx, 0.12, 0);
+          const narrowLava = new THREE.Mesh(narrowLavaGeo, narrowLavaMat);
+          narrowLava.position.set(lx, 0.16, 0);
+          waveGroup.add(narrowRim, narrowLava);
+
+          // Small low embers inside the narrow pit
+          const miniFlameGeo = new THREE.ConeGeometry(0.38, 0.82, 7);
+          const miniFlameMat = new THREE.MeshBasicMaterial({ color: 0xffbe0b });
+          disposables.geometries.push(miniFlameGeo);
+          disposables.materials.push(miniFlameMat);
+          [-1.0, 0, 1.0].forEach((fx, fIdx) => {
+            const mf = new THREE.Mesh(miniFlameGeo, miniFlameMat);
+            mf.position.set(lx + fx, 0.52, 0);
+            mf.userData = { baseScaleY: 1.0, phase: fIdx * 1.4 };
+            waveGroup.add(mf);
+            flameMeshes.push(mf);
+          });
+
+          // Glowing Green/Cyan Turbo Jump Ramp right in front of the Narrow Fire Pit (+Z)
+          const rampGeo = new THREE.BoxGeometry(3.55, 0.24, 1.9);
+          const rampMat = new THREE.MeshBasicMaterial({ color: 0x00ff9d });
+          const rampStripeGeo = new THREE.BoxGeometry(3.6, 0.28, 0.45);
+          const rampStripeMat = new THREE.MeshBasicMaterial({ color: 0xffe600 });
+          disposables.geometries.push(rampGeo, rampStripeGeo);
+          disposables.materials.push(rampMat, rampStripeMat);
+
+          const rampMesh = new THREE.Mesh(rampGeo, rampMat);
+          rampMesh.position.set(lx, 0.14, 1.95);
+          rampMesh.rotation.x = 0.12;
+          const rampStripe = new THREE.Mesh(rampStripeGeo, rampStripeMat);
+          rampStripe.position.set(lx, 0.22, 1.35);
+          waveGroup.add(rampMesh, rampStripe);
+
+          // Floating Golden Robux Ring in the jump arc over the narrow fire pit!
+          if (this.sharedRobuxGeo && this.sharedRobuxMaterial) {
+            const airCoin = new THREE.Mesh(this.sharedRobuxGeo, this.sharedRobuxMaterial);
+            airCoin.scale.set(1.65, 1.65, 1.65);
+            airCoin.position.set(lx, 2.85, 0);
+            waveGroup.add(airCoin);
+            coinMeshes.push(airCoin);
           }
         } else if (type === 'hurdle') {
-          // Low Glowing Lava Kill-Brick Laser Hurdle (Must JUMP over!)
-          const hurdleGeo = new THREE.BoxGeometry(3.85, 1.0, 0.95);
+          // 🧱⬆️ Low Jumpable Obstacle Hurdle (낮은 1개 레인 장애물 — 점프해 뛰어넘음!)
+          const hurdleGeo = new THREE.BoxGeometry(3.85, 0.92, 0.92);
           const hurdleMat = new THREE.MeshBasicMaterial({
-            color: 0xff3300
+            color: 0xff5500
           });
           disposables.geometries.push(hurdleGeo);
           disposables.materials.push(hurdleMat);
 
           const hurdleMesh = new THREE.Mesh(hurdleGeo, hurdleMat);
-          hurdleMesh.position.set(lx, 0.52, 0);
+          hurdleMesh.position.set(lx, 0.48, 0);
           waveGroup.add(hurdleMesh);
 
           // Glowing Neon Yellow Top Rail
-          const railGeo = new THREE.BoxGeometry(3.9, 0.22, 1.02);
+          const railGeo = new THREE.BoxGeometry(3.9, 0.22, 0.98);
           const railMat = new THREE.MeshBasicMaterial({ color: 0xffe600 });
           disposables.geometries.push(railGeo);
           disposables.materials.push(railMat);
           const railMesh = new THREE.Mesh(railGeo, railMat);
-          railMesh.position.set(lx, 1.05, 0);
+          railMesh.position.set(lx, 0.98, 0);
           waveGroup.add(railMesh);
+
+          // Green Spring Jump Pad in front of the low hurdle
+          const padGeo = new THREE.BoxGeometry(3.4, 0.18, 1.7);
+          const padMat = new THREE.MeshBasicMaterial({ color: 0x00ff88 });
+          disposables.geometries.push(padGeo);
+          disposables.materials.push(padMat);
+          const padMesh = new THREE.Mesh(padGeo, padMat);
+          padMesh.position.set(lx, 0.1, 1.65);
+          waveGroup.add(padMesh);
 
           // Floating Golden Robux Ring in mid-air above the hurdle (y = 2.75) so jumping grabs it!
           if (this.sharedRobuxGeo && this.sharedRobuxMaterial) {
             const airCoin = new THREE.Mesh(this.sharedRobuxGeo, this.sharedRobuxMaterial);
-            airCoin.scale.set(1.55, 1.55, 1.55);
+            airCoin.scale.set(1.6, 1.6, 1.6);
             airCoin.position.set(lx, 2.75, 0);
             waveGroup.add(airCoin);
             coinMeshes.push(airCoin);
@@ -3897,10 +4022,12 @@
       const waveObj = {
         group: waveGroup,
         lanes: laneTypes,
+        waveType: (waveConfig && waveConfig.waveType) ? waveConfig.waveType : 'obstacle_wall',
         waveIndex: waveConfig && waveConfig.waveIndex ? waveConfig.waveIndex : 1,
-        totalWaves: waveConfig && waveConfig.totalWaves ? waveConfig.totalWaves : 8,
+        totalWaves: waveConfig && waveConfig.totalWaves ? waveConfig.totalWaves : 3,
         passed: false,
         coinMeshes: coinMeshes,
+        flameMeshes: flameMeshes,
         disposables: disposables
       };
 
