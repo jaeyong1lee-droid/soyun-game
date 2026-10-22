@@ -741,8 +741,19 @@
         </div>
       </div>
 
-      <div class="boss-reward-click-hint">
-        👆 이 창을 터치(클릭)하면 다음 STAGE 진행 창이 열립니다!
+      <!-- Failed Questions Review Box on Boss Clear (Answers Hidden until [👀 답 보기] is clicked!) -->
+      <div id="boss-clear-wrong-section" class="stage-wrong-review-section">
+        <div class="stage-wrong-header">
+          <span class="stage-wrong-title">📝 이번 단계 실패한 문제 리스트 <small>(답 보기를 누르면 정답 공개!)</small></span>
+          <button id="btn-boss-reveal-all" type="button" class="btn-reveal-all-ans">👀 전체 답 보기</button>
+        </div>
+        <div id="boss-clear-wrong-list" class="stage-wrong-list">
+          <!-- Populated dynamically by UIManager -->
+        </div>
+      </div>
+
+      <div id="boss-reward-next-btn" class="boss-reward-click-hint">
+        👆 확인 완료! 여기를 터치(클릭)하면 다음 STAGE 트리맵 창이 열립니다!
       </div>
     </div>
   </div>

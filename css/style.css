@@ -5212,6 +5212,184 @@ body.boss-phase-hud-active #hud-center-panel.hud-center-panel {
   gap: 6px !important;
 }
 
+/* ============================================================================
+   FAILED QUESTIONS REVIEW LIST (With Hidden Answers & [👀 답 보기] Button!)
+   Shown in #gameover-modal, #boss-reward-modal, and #review-modal
+   ============================================================================ */
+.stage-wrong-review-section {
+  width: 100%;
+  margin: 6px 0;
+  padding: 10px 11px;
+  border-radius: 13px;
+  background: rgba(12, 6, 28, 0.92);
+  border: 1.5px solid rgba(255, 42, 133, 0.55);
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  text-align: left;
+}
+
+.stage-wrong-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.stage-wrong-title {
+  font-size: 13px;
+  font-weight: 900;
+  color: #ffe600;
+}
+
+.stage-wrong-title small {
+  font-size: 11px;
+  font-weight: 700;
+  color: #cbd5e1;
+}
+
+.btn-reveal-all-ans {
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1.5px solid #00f5ff;
+  background: rgba(0, 245, 255, 0.16);
+  color: #80ffdb;
+  font-size: 11.5px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.btn-reveal-all-ans:hover,
+.btn-reveal-all-ans:active {
+  background: rgba(0, 245, 255, 0.34);
+  transform: scale(1.04);
+}
+
+.stage-wrong-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 175px;
+  overflow-y: auto;
+  padding-right: 3px;
+}
+
+.stage-wrong-empty {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(0, 230, 118, 0.12);
+  border: 1px dashed rgba(0, 230, 118, 0.55);
+  color: #80ffdb;
+  font-size: 12.5px;
+  font-weight: 900;
+  text-align: center;
+}
+
+.stage-wrong-item {
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(24, 14, 48, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.stage-wrong-item-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.stage-wrong-q-text {
+  font-size: 13.5px;
+  font-weight: 900;
+  color: #ffffff;
+  line-height: 1.3;
+}
+
+.stage-wrong-my-choice {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #ff6b8b;
+}
+
+.stage-wrong-ans-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-top: 3px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.12);
+}
+
+.stage-wrong-secret-box {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 900;
+}
+
+.stage-wrong-secret-box.is-hidden-ans {
+  color: #94a3b8;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px dashed rgba(148, 163, 184, 0.5);
+  padding: 3px 9px;
+  border-radius: 7px;
+}
+
+.stage-wrong-secret-box.is-revealed-ans {
+  color: #00ff88;
+  background: rgba(0, 255, 136, 0.16);
+  border: 1.5px solid #00ff88;
+  padding: 3px 10px;
+  border-radius: 7px;
+  box-shadow: 0 0 12px rgba(0, 255, 136, 0.35);
+}
+
+.btn-reveal-single-ans {
+  padding: 4px 11px;
+  border-radius: 8px;
+  border: 1.5px solid #ffe600;
+  background: linear-gradient(90deg, #ff2a85, #7209b7);
+  color: #ffffff;
+  font-size: 11.5px;
+  font-weight: 900;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(255, 42, 133, 0.4);
+  transition: transform 0.12s ease, filter 0.12s ease;
+}
+
+.btn-reveal-single-ans:hover,
+.btn-reveal-single-ans:active {
+  transform: scale(1.05);
+  filter: brightness(1.12);
+}
+
+.btn-reveal-single-ans.is-revealed {
+  background: rgba(30, 41, 59, 0.9);
+  border-color: rgba(148, 163, 184, 0.6);
+  color: #cbd5e1;
+  box-shadow: none;
+}
+
+.boss-reward-popup-card {
+  max-height: 92vh !important;
+  overflow-y: auto !important;
+}
+
+.boss-reward-click-hint {
+  cursor: pointer;
+}
+
+
 
 
 
