@@ -5629,11 +5629,12 @@
     triggerBossFinisherBarrage: function () {
       this._updateBossHpBar(0);
       this.bossDefeating = false;
-      this.bossFinisherSlowMoTimer = 8.5; // Slow-motion active for the 5s finisher and while awaiting player click
-      this.bossSpotlightTimer = 15.0;
-      this.avatarCheerTimer = 8.0;
-      this.petSpinTimer = 8.0;
-      this.boostEffectTimer = 8.0;
+      this.isVictoryCruise = false;
+      this.bossFinisherSlowMoTimer = 5.0; // Exact 5.0s Slow-Motion Boss Finisher Barrage
+      this.bossSpotlightTimer = 5.0;
+      this.avatarCheerTimer = 5.0;
+      this.petSpinTimer = 5.0;
+      this.boostEffectTimer = 5.0;
 
       this.bossFinisherQueue = [
         { delay: 0.15, weapon: 'ballistic_missile' },
@@ -5646,6 +5647,28 @@
         { delay: 3.45, weapon: 'round_bomb' },
         { delay: 3.85, weapon: 'meteor_hammer', isFinale: true }
       ];
+      return this;
+    },
+
+    /**
+     * Starts a calm, peaceful Victory Cruise animation after the 5-second slow-motion Boss finisher
+     * that continues until the player clicks once to open the Boss Clear popup!
+     */
+    startGentleVictoryCruise: function () {
+      this.hideBoss();
+      this.bossFinisherSlowMoTimer = 0;
+      this.bossSpotlightTimer = 0;
+      this.shakeTimer = 0;
+      this.cameraZoomPunch = 0;
+      this.isVictoryCruise = true;
+      this.victorySparkleTimer = 0.2;
+      this.setLane(1);
+      this.setSpeed(26);
+      return this;
+    },
+
+    stopVictoryCruise: function () {
+      this.isVictoryCruise = false;
       return this;
     },
 
@@ -5827,6 +5850,21 @@
           }
           const lx = lanes[nextLane] || 0;
           this._spawnParticleBurst(lx, 1.4, cfg.GATE_PASS_Z - 2, 0x00f3ff, 18, 0.9);
+        }
+      }
+
+      // Calm & Gentle Victory Cruise Animation after 5s Boss Finisher (continues until player clicks!)
+      if (this.isVictoryCruise) {
+        this.avatarCheerTimer = Math.max(this.avatarCheerTimer, 0.5);
+        this.victorySparkleTimer = (this.victorySparkleTimer || 0) - dt;
+        if (this.victorySparkleTimer <= 0) {
+          this.victorySparkleTimer = 0.45;
+          const gentleColors = [0xffe600, 0x00ffaa, 0x88e5ff, 0xff99cc];
+          const col = gentleColors[Math.floor(Math.random() * gentleColors.length)];
+          const sx = (this.carGroup ? this.carGroup.position.x : 0) + (Math.random() - 0.5) * 7.0;
+          const sy = 1.6 + Math.random() * 2.2;
+          const sz = cfg.GATE_PASS_Z - 4 - Math.random() * 14;
+          this._spawnParticleBurst(sx, sy, sz, col, 10, 1.2);
         }
       }
 

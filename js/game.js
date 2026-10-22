@@ -963,6 +963,9 @@
         } catch (_e) {}
         this._bossFinisherClickCleanup = null;
       }
+      if (window.Engine3D && typeof window.Engine3D.stopVictoryCruise === 'function') {
+        window.Engine3D.stopVictoryCruise();
+      }
       const existing = document.getElementById('boss-finisher-click-prompt');
       if (existing && existing.parentNode) {
         existing.parentNode.removeChild(existing);
@@ -971,11 +974,20 @@
 
     /**
      * Shows a full-screen clickable prompt after the 5-second slow-motion Boss finisher animation
-     * so the player clicks/taps once to proceed to the Boss Clear Reward Modal.
+     * while playing a calm, peaceful Victory Cruise animation until the player clicks once!
      */
     _showBossFinisherClickPrompt: function (pointsEarned) {
       this._clearBossFinisherClickPrompt();
       const self = this;
+
+      // Transition 3D scene & BGM into a calm, gentle victory cruise until the player clicks!
+      if (window.Engine3D && typeof window.Engine3D.startGentleVictoryCruise === 'function') {
+        window.Engine3D.startGentleVictoryCruise();
+      }
+      if (window.SoundEngine) {
+        window.SoundEngine.setSpeedTempo(26);
+        window.SoundEngine.startBGM(state.stage, false);
+      }
 
       const overlay = document.createElement('div');
       overlay.id = 'boss-finisher-click-prompt';
