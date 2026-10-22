@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&family=Press+Start+2P&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
-  <link rel="stylesheet" href="css/style.css?v=20261022_20" />
+  <link rel="stylesheet" href="css/style.css?v=20261022_21" />
 </head>
 <body>
   <!-- 3D WebGL Viewport Container -->
@@ -264,6 +264,31 @@
         <div class="showcase-top-bar">
           <span class="showcase-live-pill"><span class="live-dot"></span> LIVE 3D GAME ANIMATION</span>
           <span id="start-player-badge" class="showcase-vip-pill">👑 VIP 이소윤</span>
+        </div>
+
+        <!-- Blinking Arcade Attract Graphic ("이소윤 전용 용돈게임" 깜박이며 게임을 유도하는 그래픽) -->
+        <div id="soyun-arcade-attract-banner" class="soyun-arcade-attract" role="button" tabindex="0" aria-label="이소윤 전용 용돈게임 시작하기">
+          <div class="attract-coin-orbit" aria-hidden="true">
+            <span class="attract-floating-icon icon-1">💵</span>
+            <span class="attract-floating-icon icon-2">👑</span>
+            <span class="attract-floating-icon icon-3">🪙</span>
+            <span class="attract-floating-icon icon-4">🍓</span>
+            <span class="attract-floating-icon icon-5">💴</span>
+          </div>
+          <div class="attract-marquee-box">
+            <div class="attract-bulb-strip" aria-hidden="true">
+              <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+            </div>
+            <div class="attract-vip-ribbon">✨ SOYUN VIP SPECIAL ARCADE ✨</div>
+            <div class="attract-main-headline">
+              <span class="attract-crown">👑</span>
+              <span class="attract-title-text">이소윤 전용 용돈게임</span>
+              <span class="attract-money">💸</span>
+            </div>
+            <div class="attract-press-start">
+              ▶ 여기를 터치해서 용돈 모으러 출발!! 🚀 ◀
+            </div>
+          </div>
         </div>
 
         <!-- Animated Floating Character & Boss VS Action Overlay around the live 3D Car -->
@@ -793,16 +818,16 @@
   <!-- Three.js r128 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <!-- Nano Banana Generated Retro 3D Assets Bundle (CORS-free on file:// & http://) -->
-  <script src="js/assets_data.js?v=20261022_20"></script>
+  <script src="js/assets_data.js?v=20261022_21"></script>
   <!-- Shared Game Modules -->
-  <script src="js/config.js?v=20261022_20"></script>
-  <script src="js/storage.js?v=20261022_20"></script>
-  <script src="js/questionEngine.js?v=20261022_20"></script>
-  <script src="js/sound.js?v=20261022_20"></script>
-  <script src="js/engine3d.js?v=20261022_20"></script>
+  <script src="js/config.js?v=20261022_21"></script>
+  <script src="js/storage.js?v=20261022_21"></script>
+  <script src="js/questionEngine.js?v=20261022_21"></script>
+  <script src="js/sound.js?v=20261022_21"></script>
+  <script src="js/engine3d.js?v=20261022_21"></script>
   <!-- UI & Game Controller -->
-  <script src="js/ui.js?v=20261022_20"></script>
-  <script src="js/game.js?v=20261022_20"></script>
+  <script src="js/ui.js?v=20261022_21"></script>
+  <script src="js/game.js?v=20261022_21"></script>
 
   <!-- Google Chrome / Mobile PWA Service Worker & One-Click App Install Handler -->
   <script>
@@ -812,7 +837,7 @@
 
       if ('serviceWorker' in navigator && window.location.protocol !== 'file:') {
         window.addEventListener('load', function () {
-          navigator.serviceWorker.register('sw.js?v=20261022_20', { updateViaCache: 'none' }).then(function (reg) {
+          navigator.serviceWorker.register('sw.js?v=20261022_21', { updateViaCache: 'none' }).then(function (reg) {
             reg.update();
           }).catch(function () {});
         });
