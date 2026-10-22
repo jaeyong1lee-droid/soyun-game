@@ -415,6 +415,15 @@
         if (typeof window.UIManager.hideObbyHUD === 'function') {
           window.UIManager.hideObbyHUD();
         }
+        if (typeof window.UIManager.hideExitConfirmModal === 'function') {
+          window.UIManager.hideExitConfirmModal();
+        }
+        if (typeof window.UIManager.hideBossRewardModal === 'function') {
+          window.UIManager.hideBossRewardModal();
+        }
+        if (typeof window.UIManager.hideNextStageModal === 'function') {
+          window.UIManager.hideNextStageModal();
+        }
         window.UIManager.hideStageClearBanner();
         window.UIManager.updateActiveLane(1);
         if (typeof window.UIManager.pushRobloxChat === 'function') {
@@ -922,18 +931,21 @@
         : 53;
       state.speed = Math.min(maxSpeedCap, Math.max(state.speed + stageSpeedBonus, nextStageCfg.baseSpeed || 38));
 
+      stopSpeechListening();
+
       if (window.SoundEngine) {
         window.SoundEngine.playBossDefeat();
         window.SoundEngine.playStageClear();
         window.SoundEngine.setSpeedTempo(getEffectiveSpeed());
-        window.SoundEngine.startBGM(nextStage, false);
       }
 
       if (window.Engine3D) {
         window.Engine3D.triggerStageClearEffect();
         window.Engine3D.defeatBoss();
+        window.Engine3D.clearActiveGates();
         window.Engine3D.setStageTheme(nextStageCfg);
         window.Engine3D.setSpeed(getEffectiveSpeed());
+        window.Engine3D.setPaused(true);
       }
 
       if (window.UIManager) {
@@ -945,7 +957,6 @@
             isJackpot: isTenStageJackpot
           });
         }
-        window.UIManager.showStageClearBanner(clearedStage, nextStageCfg);
         const jpName = (window.SaveManager && window.SaveManager.getState().bonusNameJackpot) || '10판 보스 만원 상금';
         const clearToast = isTenStageJackpot
           ? `💴🎊 대박!! ${clearedStage}판째 보스 격파!! [${jpName}] 보너스 달성 + 상금 게이지 +10 상승!!`
@@ -960,10 +971,86 @@
             'system'
           );
         }
+        if (typeof window.UIManager.showBossRewardModal === 'function') {
+          window.UIManager.showBossRewardModal(clearedStage, afterSave);
+        }
       }
 
       syncHUD();
+    },
+
+    /**
+     * Step 1 -> Step 2 on Boss Clear:
+     * Clicking the Center Reward Status Popup (#boss-reward-modal) hides it and opens the Next Stage Confirm Popup (#next-stage-modal).
+     */
+    onBossRewardModalClick: function () {
+      if (window.SoundEngine) {
+        window.SoundEngine.playClick();
+      }
+      if (window.UIManager) {
+        if (typeof window.UIManager.hideBossRewardModal === 'function') {
+          window.UIManager.hideBossRewardModal();
+        }
+        if (typeof window.UIManager.showNextStageModal === 'function') {
+          window.UIManager.showNextStageModal(state.stage, state.stageConfig);
+        }
+      }
+    },
+
+    /**
+     * Step 2 Confirm on Boss Clear:
+     * Starts the newly unlocked next stage immediately when the user clicks [네! STAGE X 출발하기!].
+     */
+    confirmNextStageStart: function () {
+      if (window.SoundEngine) {
+        window.SoundEngine.playClick();
+        window.SoundEngine.setSpeedTempo(getEffectiveSpeed());
+        window.SoundEngine.startBGM(state.stage, false);
+      }
+      if (window.UIManager && typeof window.UIManager.hideNextStageModal === 'function') {
+        window.UIManager.hideNextStageModal();
+      }
+      if (window.Engine3D) {
+        window.Engine3D.setPaused(false);
+      }
+      syncHUD();
       this.spawnNextQuestion();
+    },
+
+    /**
+     * Opens the Confirm Exit Popup (#exit-confirm-modal) when user clicks the top-right [✕ 닫기] button.
+     */
+    openExitConfirmModal: function () {
+      if (window.SoundEngine) {
+        window.SoundEngine.playClick();
+      }
+      stopSpeechListening();
+      if (window.Engine3D) {
+        window.Engine3D.setPaused(true);
+      }
+      if (window.UIManager && typeof window.UIManager.showExitConfirmModal === 'function') {
+        window.UIManager.showExitConfirmModal();
+      }
+    },
+
+    /**
+     * Cancels Exit and resumes gameplay when user clicks [아니오, 계속 달리기].
+     */
+    cancelExitConfirmModal: function () {
+      if (window.SoundEngine) {
+        window.SoundEngine.playClick();
+      }
+      if (window.UIManager && typeof window.UIManager.hideExitConfirmModal === 'function') {
+        window.UIManager.hideExitConfirmModal();
+      }
+      if (state.isPlaying && !state.isGameOver && !state.isPaused) {
+        if (window.Engine3D) {
+          window.Engine3D.setPaused(false);
+        }
+        if (state.currentQuestion && state.currentQuestion.isSpeech && !state.currentQuestion.speechPassed) {
+          startSpeechListening(state.currentQuestion);
+        }
+      }
     },
 
     /**
