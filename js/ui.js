@@ -1208,29 +1208,12 @@
         return;
       }
 
-      container.innerHTML = combined
-        .map(function (entry) {
-          const catBadge = entry.category === 'english' ? '🔤 영어' : '🧮 수학';
-          const statusClass = entry.inQueue ? 'pending' : 'mastered';
-          const cardClass = entry.inQueue ? 'is-pending' : 'is-mastered';
-          const statusText = entry.inQueue
-            ? `🔥 복습 재출제 대기중 (오답 ${entry.wrongCount}회)`
-            : '✅ 복습 마스터 완료';
-
-          return `
-            <div class="review-item-card ${cardClass}">
-              <div class="review-item-main">
-                <div class="review-item-prompt">[${catBadge}] ${escapeHtml(entry.prompt)}</div>
-                <div class="review-item-detail">
-                  정답: <strong class="ans-correct">${escapeHtml(entry.answerText)}</strong>
-                  &nbsp;|&nbsp; 내가 선택한 답: <strong class="ans-wrong">${escapeHtml(entry.wrongChoice)}</strong>
-                </div>
-              </div>
-              <span class="review-status-tag ${statusClass}">${statusText}</span>
-            </div>
-          `;
-        })
-        .join('');
+      this._renderHiddenAnswerList(
+        container,
+        null,
+        combined,
+        '✨ 아직 틀린 문제가 없습니다!'
+      );
     },
 
     /**
