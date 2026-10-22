@@ -8,6 +8,7 @@
   const STAGES = [
     {
       stage: 1,
+      biome: 'river_nature',
       title: '🏞️ 에메랄드 강변 & 알프스 대자연 숲',
       subtitle: '이소윤의 기초 연산·구구단 밖 곱셈·나눗셈 & 기초 영단어·생활영어!',
       questionsToBoss: 15, // 15문제 풀어야 보스 출현
@@ -24,14 +25,75 @@
     },
     {
       stage: 2,
-      title: '☁️ 천공의 구름 왕국 · 하늘 위 무지개 길',
-      subtitle: '구구단 밖 곱셈·나눗셈 & 초등 필수 생활영어 회화!',
-      questionsToBoss: 18,
-      bossName: '알파벳 빌런 눕킹 (Noob King)',
-      bossTitle: '2단계 하늘 구름왕국 보스',
+      biome: 'jungle_safari',
+      title: '🌴 아마존 정글 & 황금 사자 사파리',
+      subtitle: '갈기 사자와 원숭이가 반기는 정글! 구구단 밖 곱셈·나눗셈 & 생활영어!',
+      questionsToBoss: 16,
+      bossName: '정글 킹 라이온 메카 (Lion Mecha)',
+      bossTitle: '2단계 아마존 정글 수호신',
       bossHp: 10,
       baseSpeed: 36.5, // 단계별 미세 가속 (+0.5)
       gateSolveSeconds: 9.4,
+      themeColor: '#84cc16',
+      roadColor: '#292514',
+      skyColor: '#14532d',
+      fogColor: '#1a3a1e',
+      bossColor: 0xf59e0b
+    },
+    {
+      stage: 3,
+      biome: 'desert_pyramid',
+      title: '🏜️ 황금 사막 피라미드 & 낙타 오아시스',
+      subtitle: '쌍봉 낙타와 사막여우가 돌아다니는 사막! 곱셈·나눗셈 & 생활영어!',
+      questionsToBoss: 16,
+      bossName: '코블록스 스핑크스 (Korblox Sphinx)',
+      bossTitle: '3단계 황금 피라미드 파라오 보스',
+      bossHp: 10,
+      baseSpeed: 37.0, // 단계별 미세 가속 (+0.5)
+      gateSolveSeconds: 9.2,
+      themeColor: '#fbbf24',
+      roadColor: '#3d2814',
+      skyColor: '#7c2d12',
+      fogColor: '#5c3415',
+      bossColor: 0xfbbf24
+    },
+    {
+      stage: 4,
+      biome: 'glacier_ice',
+      title: '🧊 남극 크리스탈 빙하 & 얼음 대륙',
+      subtitle: '뒤뚱뒤뚱 펭귄과 북극곰의 빙하 나라! 심화 곱셈·나눗셈 & 생활영어!',
+      questionsToBoss: 17,
+      bossName: '아이스 프로스트 드래곤 (Frost Dragon)',
+      bossTitle: '4단계 크리스탈 빙하 지배자',
+      bossHp: 11,
+      baseSpeed: 37.5, // 단계별 미세 가속 (+0.5)
+      gateSolveSeconds: 9.1,
+      themeColor: '#38bdf8',
+      roadColor: '#0f2942',
+      skyColor: '#082f49',
+      fogColor: '#0c4a6e',
+      bossColor: 0x00f5ff
+    }
+  ];
+
+  // 무한 스테이지(STAGE 5 ~ ∞)를 위한 다채로운 배경 월드 템플릿 (공룡시대·하늘왕국·바닷속·화산용암·상상의나라·벚꽃호수 등)
+  const EXTRA_STAGE_TEMPLATES = [
+    {
+      biome: 'dino_jurassic',
+      titlePrefix: '🦖 쥬라기 공룡시대 & 원시 화산 밀림',
+      bossName: '메카 티라노 렉스 (Mecha T-Rex)',
+      bossRole: '공룡시대 원시 밀림 지배자',
+      themeColor: '#22c55e',
+      roadColor: '#262114',
+      skyColor: '#3f2e18',
+      fogColor: '#2c351d',
+      bossColor: 0x22c55e
+    },
+    {
+      biome: 'sky_heaven',
+      titlePrefix: '☁️ 천공의 구름 왕국 · 하늘 위 무지개 길',
+      bossName: '알파벳 빌런 눕킹 (Noob King)',
+      bossRole: '하늘 구름왕국 수호자',
       themeColor: '#00e5ff',
       roadColor: '#1e3a5f',
       skyColor: '#0277bd',
@@ -39,42 +101,29 @@
       bossColor: 0xff9900
     },
     {
-      stage: 3,
-      title: '🐠 신비한 바닷속 산호초 & 아틀란티스 해저월드',
-      subtitle: '곱셈·나눗셈·두자리 연산 & 실전 생활영어 마스터!',
-      questionsToBoss: 16,
-      bossName: '코블록스 스핑크스 (Korblox Sphinx)',
-      bossTitle: '3단계 해저 아틀란티스 보스',
-      bossHp: 10,
-      baseSpeed: 37.0, // 단계별 미세 가속 (+0.5)
-      gateSolveSeconds: 9.2,
+      biome: 'underwater_ocean',
+      titlePrefix: '🐠 신비한 바닷속 산호초 & 아틀란티스',
+      bossName: '포세이돈 심해 메카 (Poseidon Mecha)',
+      bossRole: '바닷속 아틀란티스 지배자',
       themeColor: '#00f5d4',
       roadColor: '#06283d',
       skyColor: '#001233',
       fogColor: '#003554',
-      bossColor: 0x00ffcc
+      bossColor: 0x00f5d4
     },
     {
-      stage: 4,
-      title: '🌋 불타는 화산 용암지대 & 마그마 협곡',
-      subtitle: '심화 곱셈·나눗셈 & 필수 생활영어 스피드 배틀!',
-      questionsToBoss: 17,
+      biome: 'molten_lava',
+      titlePrefix: '🌋 불타는 화산 용암지대 & 마그마 협곡',
       bossName: '밴해머 레드 드래곤 (Ban-Hammer Dragon)',
-      bossTitle: '4단계 화산 용암 드래곤',
-      bossHp: 11,
-      baseSpeed: 37.5, // 단계별 미세 가속 (+0.5)
-      gateSolveSeconds: 9.1,
+      bossRole: '용암 협곡 화산 드래곤',
       themeColor: '#ff6d00',
       roadColor: '#240905',
       skyColor: '#1a0000',
       fogColor: '#2d0604',
       bossColor: 0xff2200
-    }
-  ];
-
-  // 무한 스테이지(STAGE 5 ~ ∞)를 위한 다채로운 배경 월드 템플릿 (상상의 나라·벚꽃 호수·설산 오로라·환상의 세계 등)
-  const EXTRA_STAGE_TEMPLATES = [
+    },
     {
+      biome: 'wonderland_magic',
       titlePrefix: '🎠 상상의 나라 · 마법 동화 & 캔디 원더랜드',
       bossName: '마시멜로 골렘 킹 (Marshmallow King)',
       bossRole: '상상의 나라 마법 보스',
@@ -85,7 +134,8 @@
       bossColor: 0xff66cc
     },
     {
-      titlePrefix: '🌸 벚꽃 호수 & 봄날의 산악 계곡',
+      biome: 'cherry_lake',
+      titlePrefix: '🌸 벚꽃 호수 & 황금 신전 계곡',
       bossName: '도미누스 타이탄 (Dominus Titan)',
       bossRole: '벚꽃 호수 수호신',
       themeColor: '#ff8fab',
@@ -95,64 +145,48 @@
       bossColor: 0xff8fab
     },
     {
-      titlePrefix: '❄️ 알래스카 설산 & 빙하 강 오로라 월드',
-      bossName: '아이스 프로스트 드래곤 (Frost Dragon)',
-      bossRole: '설산 빙하 오로라 지배자',
-      themeColor: '#64ffda',
-      roadColor: '#102538',
-      skyColor: '#021124',
-      fogColor: '#0d2b45',
-      bossColor: 0x00f5ff
-    },
-    {
-      titlePrefix: '🌈 사이버 은하수 & 네온 환상의 세계',
-      bossName: '오메가 발키리 (Omega Valkyrie)',
-      bossRole: '환상의 세계 지배자',
-      themeColor: '#00f3ff',
-      roadColor: '#16092c',
-      skyColor: '#040112',
-      fogColor: '#0d041d',
-      bossColor: 0xc084fc
-    },
-    {
+      biome: 'river_nature',
       titlePrefix: '🏞️ 에메랄드 대자연 협곡 & 폭포 숲',
-      bossName: '메카 티라노 렉스 (Mecha T-Rex)',
-      bossRole: '대자연 아일랜드 챔피언',
-      themeColor: '#22c55e',
+      bossName: '에메랄드 포레스트 타이탄 (Forest Titan)',
+      bossRole: '대자연 폭포 아일랜드 챔피언',
+      themeColor: '#10b981',
       roadColor: '#0f2918',
       skyColor: '#06140b',
       fogColor: '#0c2113',
-      bossColor: 0x22c55e
+      bossColor: 0x10b981
     },
     {
-      titlePrefix: '☁️ 천공의 무지개 아일랜드 & 구름 신전',
-      bossName: '포세이돈 스카이 메카 (Sky Mecha)',
-      bossRole: '하늘 신전 수호자',
-      themeColor: '#06b6d4',
-      roadColor: '#082530',
-      skyColor: '#031217',
-      fogColor: '#071f29',
-      bossColor: 0x06b6d4
+      biome: 'jungle_safari',
+      titlePrefix: '🦁 황금 사자 정글 & 고대 밀림 사파리',
+      bossName: '골든 라이온 오버로드 (Lion Overlord)',
+      bossRole: '정글 사파리 챔피언',
+      themeColor: '#84cc16',
+      roadColor: '#292514',
+      skyColor: '#14532d',
+      fogColor: '#1a3a1e',
+      bossColor: 0xf59e0b
     },
     {
-      titlePrefix: '🐠 아틀란티스 산호초 & 심해 보물 해협',
-      bossName: '인피니티 엠페러 (Infinity Emperor)',
-      bossRole: '바닷속 심해 마스터',
-      themeColor: '#00f5d4',
-      roadColor: '#06283d',
-      skyColor: '#001233',
-      fogColor: '#003554',
-      bossColor: 0x00f5d4
+      biome: 'desert_pyramid',
+      titlePrefix: '🐪 파라오 황금 사막 & 오아시스 신전',
+      bossName: '아누비스 골드 메카 (Anubis Mecha)',
+      bossRole: '사막 오아시스 수호신',
+      themeColor: '#fbbf24',
+      roadColor: '#3d2814',
+      skyColor: '#7c2d12',
+      fogColor: '#5c3415',
+      bossColor: 0xfbbf24
     },
     {
-      titlePrefix: '🌋 마그마 볼케이노 & 불꽃 드래곤 밸리',
-      bossName: '갤럭시 오버로드 (Galaxy Overlord)',
-      bossRole: '용암 협곡 챔피언',
-      themeColor: '#facc15',
-      roadColor: '#2b230c',
-      skyColor: '#141004',
-      fogColor: '#261e09',
-      bossColor: 0xfacc15
+      biome: 'glacier_ice',
+      titlePrefix: '🐧 오로라 빙하 대륙 & 북극 얼음 왕국',
+      bossName: '글레이셔 엠페러 (Glacier Emperor)',
+      bossRole: '빙하 오로라 지배자',
+      themeColor: '#38bdf8',
+      roadColor: '#0f2942',
+      skyColor: '#082f49',
+      fogColor: '#0c4a6e',
+      bossColor: 0x38bdf8
     }
   ];
 
