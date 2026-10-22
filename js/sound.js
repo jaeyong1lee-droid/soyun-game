@@ -455,29 +455,56 @@
     },
 
     /**
-     * Heavy bomb/missile cannon launch whoosh + whistle fired at the boss on a correct answer!
+     * Multi-weapon launch sound (Ballistic Missile / Super Water Gun / Mega Laser / Round Bomb / Meteor)
+     * fired at the boss on a correct answer!
      */
-    playLaserShot: function () {
-      // Sub-bass cannon launch kick
-      playTone(210, 'sine', 0.16, 0, 0.42, 48);
-      // Missile thruster ignition noise + flying bomb whistle arc
-      playNoiseBurst(0.14, 0, 0.28, 3200);
-      playTone(520, 'sawtooth', 0.28, 0.02, 0.30, 1280);
-      playTone(1350, 'triangle', 0.18, 0.14, 0.28, 220);
+    playLaserShot: function (attackType) {
+      if (attackType === 'water_gun') {
+        // High-pressure hydro water cannon spray + bubbly stream whoosh
+        playNoiseBurst(0.24, 0, 0.36, 4200);
+        playTone(440, 'sine', 0.14, 0, 0.34, 980);
+        playTone(680, 'triangle', 0.16, 0.05, 0.32, 1420);
+        playTone(920, 'sine', 0.14, 0.11, 0.30, 560);
+      } else if (attackType === 'mega_laser') {
+        // Sci-fi hyper plasma laser beam charge + electric zap
+        playTone(1480, 'sawtooth', 0.16, 0, 0.36, 320);
+        playTone(880, 'square', 0.22, 0.02, 0.34, 1960);
+        playNoiseBurst(0.18, 0.01, 0.32, 4800);
+      } else if (attackType === 'ballistic_missile') {
+        // 3-warhead supersonic rocket ignition + high-altitude scream
+        playTone(190, 'sine', 0.16, 0, 0.44, 42);
+        playNoiseBurst(0.22, 0, 0.35, 3600);
+        playTone(380, 'sawtooth', 0.28, 0.02, 0.32, 1560);
+        playTone(540, 'sawtooth', 0.26, 0.07, 0.28, 1780);
+      } else {
+        // Heavy mortar cannon launch kick + flying bomb whistle arc
+        playTone(210, 'sine', 0.16, 0, 0.42, 48);
+        playNoiseBurst(0.14, 0, 0.28, 3200);
+        playTone(520, 'sawtooth', 0.28, 0.02, 0.30, 1280);
+        playTone(1350, 'triangle', 0.18, 0.14, 0.28, 220);
+      }
     },
 
     /**
-     * Massive bomb explosion + block smash when the bomb slams into the boss!
+     * Massive weapon-specific boss impact explosion + block smash when the attack hits the boss!
      */
-    playBossHit: function () {
-      // Deep bomb explosion boom + shockwave crunch
-      playNoiseBurst(0.38, 0, 0.50, 2400);
-      playTone(165, 'sine', 0.32, 0, 0.48, 28);
-      playTone(125, 'sawtooth', 0.30, 0.02, 0.42, 30);
-      playTone(90, 'square', 0.26, 0.04, 0.38, 26);
-      // Metallic hit marker ding
-      playTone(680, 'triangle', 0.12, 0.05, 0.28, 1120);
-      playTone(1020, 'sine', 0.16, 0.10, 0.32, 1360);
+    playBossHit: function (attackType) {
+      if (attackType === 'water_gun') {
+        // Giant hydro splash burst + bubbly wave crash + hit ding
+        playNoiseBurst(0.36, 0, 0.48, 3800);
+        playTone(260, 'sine', 0.26, 0, 0.44, 65);
+        playTone(520, 'sine', 0.14, 0.04, 0.34, 1180);
+        playTone(840, 'triangle', 0.16, 0.09, 0.34, 1480);
+        return;
+      }
+      // Deep bomb/missile/laser explosion boom + shockwave crunch
+      playNoiseBurst(0.42, 0, 0.54, 2400);
+      playTone(175, 'sine', 0.34, 0, 0.50, 26);
+      playTone(130, 'sawtooth', 0.32, 0.02, 0.44, 28);
+      playTone(95, 'square', 0.28, 0.04, 0.40, 24);
+      // Crisp metallic critical-hit marker ding
+      playTone(680, 'triangle', 0.12, 0.05, 0.30, 1120);
+      playTone(1020, 'sine', 0.16, 0.10, 0.34, 1360);
     },
 
     /**
