@@ -2523,10 +2523,13 @@
         });
       }
 
-      // Boss Clear Step 1: Center Reward Status Popup (#boss-reward-modal) -> click anywhere to open Step 2 (#next-stage-modal)
+      // Boss Clear Step 1: Center Reward Status Popup (#boss-reward-modal) -> click anywhere (except inside the failed questions answer reveal box) to open Step 2 (#next-stage-modal)
       const bossRewardModal = document.getElementById('boss-reward-modal');
       if (bossRewardModal) {
         bossRewardModal.addEventListener('click', function (e) {
+          if (e.target && e.target.closest('#boss-clear-wrong-section')) {
+            return;
+          }
           e.preventDefault();
           e.stopPropagation();
           self.onBossRewardModalClick();
