@@ -764,24 +764,44 @@
           }
 
           if (state.bossCurrentHp <= 0) {
+            if (this._bossSpotlightTimer) {
+              clearTimeout(this._bossSpotlightTimer);
+              this._bossSpotlightTimer = null;
+            }
+            document.body.classList.remove('boss-attack-spotlight-active');
             this.handleBossDefeated(pointsEarned);
             return;
           } else {
-            if (window.UIManager) {
-              window.UIManager.showFeedbackToast(
-                true,
-                `${atkInfo.toastTitle} (+${pointsEarned} R$ · 보스 HP ${state.bossCurrentHp}/${state.bossMaxHp})`
+            if (window.UIManager && typeof window.UIManager.pushRobloxChat === 'function') {
+              window.UIManager.pushRobloxChat(
+                '로블록스TV',
+                atkInfo.tvMsg,
+                'tv'
               );
-              if (typeof window.UIManager.pushRobloxChat === 'function') {
-                window.UIManager.pushRobloxChat(
-                  '로블록스TV',
-                  atkInfo.tvMsg,
-                  'tv'
-                );
-              }
             }
             syncHUD();
-            this.spawnNextQuestion();
+
+            // Boss Attack Spotlight Interval:
+            // Keep the car racing at high speed while increasing the distance/interval before the next question gate spawns,
+            // and temporarily hide the question banner so the Boss getting blasted by special weapons is 100% spotlighted!
+            if (this._bossSpotlightTimer) {
+              clearTimeout(this._bossSpotlightTimer);
+              this._bossSpotlightTimer = null;
+            }
+            document.body.classList.add('boss-attack-spotlight-active');
+            if (window.Engine3D) {
+              window.Engine3D.setSpeed(getEffectiveSpeed() * 1.18);
+            }
+            const self = this;
+            this._bossSpotlightTimer = setTimeout(function () {
+              self._bossSpotlightTimer = null;
+              document.body.classList.remove('boss-attack-spotlight-active');
+              if (!state.isPlaying || state.isGameOver || !state.isBossPhase) return;
+              if (window.Engine3D) {
+                window.Engine3D.setSpeed(getEffectiveSpeed());
+              }
+              self.spawnNextQuestion();
+            }, 1300);
           }
         } else {
           // Normal Stage Question Phase
@@ -1151,6 +1171,11 @@
     handleGameOver: function () {
       state.isPlaying = false;
       state.isGameOver = true;
+      if (this._bossSpotlightTimer) {
+        clearTimeout(this._bossSpotlightTimer);
+        this._bossSpotlightTimer = null;
+      }
+      document.body.classList.remove('boss-attack-spotlight-active');
 
       if (window.Engine3D) {
         window.Engine3D.setPaused(true);
