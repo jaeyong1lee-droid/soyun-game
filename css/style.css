@@ -5591,6 +5591,80 @@ body.start-screen-active #utility-bar {
   80% { transform: translate3d(-4px, 2px, 0) scale(1.01) rotate(-0.4deg); }
 }
 
+/* ==========================================================================
+   Boss Attack Spotlight Window & Zero-Scroll Retry Modal (#gameover-modal)
+   ========================================================================== */
+
+/* Temporarily hide the question signboard while special weapons slam into the Boss */
+body.boss-attack-spotlight-active #question-banner {
+  opacity: 0 !important;
+  transform: translateY(-12px) scale(0.94) !important;
+  pointer-events: none !important;
+  transition: opacity 0.16s ease, transform 0.16s ease !important;
+}
+
+/* Zero-scroll compact Stage Retry Modal (#gameover-modal) */
+#gameover-modal {
+  align-items: center !important;
+  overflow: hidden !important;
+}
+
+#gameover-modal .retry-card {
+  overflow: hidden !important;
+  max-height: 94dvh !important;
+  padding: 14px 16px !important;
+  gap: 8px !important;
+}
+
+#gameover-modal .retry-icon-badge {
+  font-size: 30px !important;
+  line-height: 1 !important;
+  margin-bottom: -2px !important;
+}
+
+#gameover-modal .modal-title {
+  font-size: clamp(18px, 4.6vw, 22px) !important;
+  margin: 0 !important;
+}
+
+#gameover-modal .modal-subtitle {
+  font-size: 13px !important;
+  margin: 0 !important;
+}
+
+#gameover-modal .stage-wrong-review-box {
+  padding: 8px 10px !important;
+  margin: 0 !important;
+}
+
+#gameover-modal .stage-wrong-title {
+  font-size: 12px !important;
+  margin-bottom: 4px !important;
+}
+
+#gameover-modal .stage-wrong-list {
+  max-height: none !important;
+  overflow: hidden !important;
+  gap: 4px !important;
+}
+
+#gameover-modal .stage-wrong-item {
+  padding: 5px 8px !important;
+  font-size: 12px !important;
+}
+
+#gameover-modal .modal-action-stack {
+  gap: 6px !important;
+  margin-top: 2px !important;
+}
+
+#gameover-modal .btn-primary-cta,
+#gameover-modal .btn-secondary {
+  padding: 10px 12px !important;
+  font-size: 14px !important;
+}
+
+
 
 
 
