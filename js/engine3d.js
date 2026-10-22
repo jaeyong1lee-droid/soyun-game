@@ -3933,13 +3933,16 @@
       if (typeof stageConfig === 'number') {
         theme = STAGE_THEMES[(stageConfig - 1) % STAGE_THEMES.length] || STAGE_THEMES[0];
       } else if (stageConfig && typeof stageConfig === 'object') {
-        if (stageConfig.biome) {
-          theme = Object.assign({}, stageConfig);
-        } else {
-          const idx = (stageConfig.id || stageConfig.stage || 1) - 1;
-          const base = STAGE_THEMES[Math.max(0, idx) % STAGE_THEMES.length] || STAGE_THEMES[0];
-          theme = Object.assign({}, base);
-        }
+        const idx = Math.max(0, (stageConfig.id || stageConfig.stage || 1) - 1);
+        const byBiome = stageConfig.biome
+          ? STAGE_THEMES.find(function (t) { return t.biome === stageConfig.biome; })
+          : null;
+        const base = byBiome || STAGE_THEMES[idx % STAGE_THEMES.length] || STAGE_THEMES[0];
+        theme = Object.assign({}, base, {
+          biome: base.biome,
+          id: stageConfig.stage || base.id,
+          name: stageConfig.title || base.name
+        });
       }
 
       this.currentTheme = theme;
