@@ -15,151 +15,151 @@
    */
   const ENGLISH_DICTIONARY = [
     // Tier 1: Animals & Fruits/Food (Basic)
-    { en: 'apple', kr: '사과', emoji: '🍎', theme: 'food', level: 1 },
-    { en: 'banana', kr: '바나나', emoji: '🍌', theme: 'food', level: 1 },
-    { en: 'grape', kr: '포도', emoji: '🍇', theme: 'food', level: 1 },
-    { en: 'peach', kr: '복숭아', emoji: '🍑', theme: 'food', level: 1 },
-    { en: 'watermelon', kr: '수박', emoji: '🍉', theme: 'food', level: 1 },
-    { en: 'strawberry', kr: '딸기', emoji: '🍓', theme: 'food', level: 1 },
-    { en: 'orange', kr: '오렌지', emoji: '🍊', theme: 'food', level: 1 },
-    { en: 'lemon', kr: '레몬', emoji: '🍋', theme: 'food', level: 1 },
-    { en: 'milk', kr: '우유', emoji: '🥛', theme: 'food', level: 1 },
-    { en: 'bread', kr: '빵', emoji: '🍞', theme: 'food', level: 1 },
-    { en: 'cheese', kr: '치즈', emoji: '🧀', theme: 'food', level: 1 },
-    { en: 'water', kr: '물', emoji: '💧', theme: 'food', level: 1 },
-    { en: 'dog', kr: '강아지', emoji: '🐶', theme: 'animal', level: 1 },
-    { en: 'cat', kr: '고양이', emoji: '🐱', theme: 'animal', level: 1 },
-    { en: 'tiger', kr: '호랑이', emoji: '🐯', theme: 'animal', level: 1 },
-    { en: 'lion', kr: '사자', emoji: '🦁', theme: 'animal', level: 1 },
-    { en: 'rabbit', kr: '토끼', emoji: '🐰', theme: 'animal', level: 1 },
-    { en: 'monkey', kr: '원숭이', emoji: '🐵', theme: 'animal', level: 1 },
-    { en: 'bear', kr: '곰', emoji: '🐻', theme: 'animal', level: 1 },
-    { en: 'horse', kr: '말', emoji: '🐴', theme: 'animal', level: 1 },
-    { en: 'sheep', kr: '양', emoji: '🐑', theme: 'animal', level: 1 },
-    { en: 'duck', kr: '오리', emoji: '🦆', theme: 'animal', level: 1 },
-    { en: 'bird', kr: '새', emoji: '🐦', theme: 'animal', level: 1 },
-    { en: 'fish', kr: '물고기', emoji: '🐟', theme: 'animal', level: 1 },
+    { en: 'apple', kr: '사과', pron: '애플', emoji: '🍎', theme: 'food', level: 1 },
+    { en: 'banana', kr: '바나나', pron: '바나나', emoji: '🍌', theme: 'food', level: 1 },
+    { en: 'grape', kr: '포도', pron: '그레이프', emoji: '🍇', theme: 'food', level: 1 },
+    { en: 'peach', kr: '복숭아', pron: '피치', emoji: '🍑', theme: 'food', level: 1 },
+    { en: 'watermelon', kr: '수박', pron: '워터멜론', emoji: '🍉', theme: 'food', level: 1 },
+    { en: 'strawberry', kr: '딸기', pron: '스트로베리', emoji: '🍓', theme: 'food', level: 1 },
+    { en: 'orange', kr: '오렌지', pron: '오렌지', emoji: '🍊', theme: 'food', level: 1 },
+    { en: 'lemon', kr: '레몬', pron: '레몬', emoji: '🍋', theme: 'food', level: 1 },
+    { en: 'milk', kr: '우유', pron: '밀크', emoji: '🥛', theme: 'food', level: 1 },
+    { en: 'bread', kr: '빵', pron: '브레드', emoji: '🍞', theme: 'food', level: 1 },
+    { en: 'cheese', kr: '치즈', pron: '치즈', emoji: '🧀', theme: 'food', level: 1 },
+    { en: 'water', kr: '물', pron: '워터', emoji: '💧', theme: 'food', level: 1 },
+    { en: 'dog', kr: '강아지', pron: '도그', emoji: '🐶', theme: 'animal', level: 1 },
+    { en: 'cat', kr: '고양이', pron: '캣', emoji: '🐱', theme: 'animal', level: 1 },
+    { en: 'tiger', kr: '호랑이', pron: '타이거', emoji: '🐯', theme: 'animal', level: 1 },
+    { en: 'lion', kr: '사자', pron: '라이언', emoji: '🦁', theme: 'animal', level: 1 },
+    { en: 'rabbit', kr: '토끼', pron: '래빗', emoji: '🐰', theme: 'animal', level: 1 },
+    { en: 'monkey', kr: '원숭이', pron: '멍키', emoji: '🐵', theme: 'animal', level: 1 },
+    { en: 'bear', kr: '곰', pron: '베어', emoji: '🐻', theme: 'animal', level: 1 },
+    { en: 'horse', kr: '말', pron: '홀스', emoji: '🐴', theme: 'animal', level: 1 },
+    { en: 'sheep', kr: '양', pron: '쉽', emoji: '🐑', theme: 'animal', level: 1 },
+    { en: 'duck', kr: '오리', pron: '덕', emoji: '🦆', theme: 'animal', level: 1 },
+    { en: 'bird', kr: '새', pron: '버드', emoji: '🐦', theme: 'animal', level: 1 },
+    { en: 'fish', kr: '물고기', pron: '피쉬', emoji: '🐟', theme: 'animal', level: 1 },
 
     // Tier 1-2: School, Family & Daily Objects
-    { en: 'school', kr: '학교', emoji: '🏫', theme: 'school', level: 1 },
-    { en: 'teacher', kr: '선생님', emoji: '👩‍🏫', theme: 'school', level: 1 },
-    { en: 'student', kr: '학생', emoji: '🧑‍🎓', theme: 'school', level: 1 },
-    { en: 'pencil', kr: '연필', emoji: '✏️', theme: 'school', level: 1 },
-    { en: 'eraser', kr: '지우개', emoji: '🧽', theme: 'school', level: 1 },
-    { en: 'notebook', kr: '공책', emoji: '📓', theme: 'school', level: 1 },
-    { en: 'book', kr: '책', emoji: '📖', theme: 'school', level: 1 },
-    { en: 'desk', kr: '책상', emoji: '🪑', theme: 'school', level: 1 },
-    { en: 'chair', kr: '의자', emoji: '🪑', theme: 'school', level: 1 },
-    { en: 'bag', kr: '가방', emoji: '🎒', theme: 'school', level: 1 },
-    { en: 'ruler', kr: '자', emoji: '📏', theme: 'school', level: 2 },
-    { en: 'family', kr: '가족', emoji: '👨‍👩‍👧‍👦', theme: 'family', level: 1 },
-    { en: 'mother', kr: '어머니', emoji: '👩', theme: 'family', level: 1 },
-    { en: 'father', kr: '아버지', emoji: '👨', theme: 'family', level: 1 },
-    { en: 'brother', kr: '형/오빠/남동생', emoji: '👦', theme: 'family', level: 1 },
-    { en: 'sister', kr: '언니/누나/여동생', emoji: '👧', theme: 'family', level: 1 },
-    { en: 'friend', kr: '친구', emoji: '🤝', theme: 'family', level: 1 },
-    { en: 'baby', kr: '아기', emoji: '👶', theme: 'family', level: 1 },
+    { en: 'school', kr: '학교', pron: '스쿨', emoji: '🏫', theme: 'school', level: 1 },
+    { en: 'teacher', kr: '선생님', pron: '티처', emoji: '👩‍🏫', theme: 'school', level: 1 },
+    { en: 'student', kr: '학생', pron: '스튜던트', emoji: '🧑‍🎓', theme: 'school', level: 1 },
+    { en: 'pencil', kr: '연필', pron: '펜슬', emoji: '✏️', theme: 'school', level: 1 },
+    { en: 'eraser', kr: '지우개', pron: '이레이저', emoji: '🧽', theme: 'school', level: 1 },
+    { en: 'notebook', kr: '공책', pron: '노트북', emoji: '📓', theme: 'school', level: 1 },
+    { en: 'book', kr: '책', pron: '북', emoji: '📖', theme: 'school', level: 1 },
+    { en: 'desk', kr: '책상', pron: '데스크', emoji: '🪑', theme: 'school', level: 1 },
+    { en: 'chair', kr: '의자', pron: '체어', emoji: '🪑', theme: 'school', level: 1 },
+    { en: 'bag', kr: '가방', pron: '백', emoji: '🎒', theme: 'school', level: 1 },
+    { en: 'ruler', kr: '자', pron: '룰러', emoji: '📏', theme: 'school', level: 2 },
+    { en: 'family', kr: '가족', pron: '패밀리', emoji: '👨‍👩‍👧‍👦', theme: 'family', level: 1 },
+    { en: 'mother', kr: '어머니', pron: '마더', emoji: '👩', theme: 'family', level: 1 },
+    { en: 'father', kr: '아버지', pron: '파더', emoji: '👨', theme: 'family', level: 1 },
+    { en: 'brother', kr: '형/오빠/남동생', pron: '브라더', emoji: '👦', theme: 'family', level: 1 },
+    { en: 'sister', kr: '언니/누나/여동생', pron: '시스터', emoji: '👧', theme: 'family', level: 1 },
+    { en: 'friend', kr: '친구', pron: '프렌드', emoji: '🤝', theme: 'family', level: 1 },
+    { en: 'baby', kr: '아기', pron: '베이비', emoji: '👶', theme: 'family', level: 1 },
 
     // Tier 2: Animals, Nature, Weather, Vehicles & Places
-    { en: 'elephant', kr: '코끼리', emoji: '🐘', theme: 'animal', level: 2 },
-    { en: 'giraffe', kr: '기린', emoji: '🦒', theme: 'animal', level: 2 },
-    { en: 'dolphin', kr: '돌고래', emoji: '🐬', theme: 'animal', level: 2 },
-    { en: 'penguin', kr: '펭귄', emoji: '🐧', theme: 'animal', level: 2 },
-    { en: 'zebra', kr: '얼룩말', emoji: '🦓', theme: 'animal', level: 2 },
-    { en: 'kangaroo', kr: '캥거루', emoji: '🦘', theme: 'animal', level: 2 },
-    { en: 'butterfly', kr: '나비', emoji: '🦋', theme: 'animal', level: 2 },
-    { en: 'turtle', kr: '거북이', emoji: '🐢', theme: 'animal', level: 2 },
-    { en: 'whale', kr: '고래', emoji: '🐋', theme: 'animal', level: 2 },
-    { en: 'shark', kr: '상어', emoji: '🦈', theme: 'animal', level: 2 },
-    { en: 'library', kr: '도서관', emoji: '📚', theme: 'place', level: 2 },
-    { en: 'hospital', kr: '병원', emoji: '🏥', theme: 'place', level: 2 },
-    { en: 'museum', kr: '박물관', emoji: '🏛️', theme: 'place', level: 2 },
-    { en: 'bakery', kr: '빵집', emoji: '🥐', theme: 'place', level: 2 },
-    { en: 'airport', kr: '공항', emoji: '🛫', theme: 'place', level: 2 },
-    { en: 'park', kr: '공원', emoji: '🏞️', theme: 'place', level: 1 },
-    { en: 'market', kr: '시장', emoji: '🛒', theme: 'place', level: 2 },
-    { en: 'umbrella', kr: '우산', emoji: '☂️', theme: 'object', level: 2 },
-    { en: 'bicycle', kr: '자전거', emoji: '🚲', theme: 'vehicle', level: 2 },
-    { en: 'airplane', kr: '비행기', emoji: '✈️', theme: 'vehicle', level: 2 },
-    { en: 'subway', kr: '지하철', emoji: '🚇', theme: 'vehicle', level: 2 },
-    { en: 'train', kr: '기차', emoji: '🚆', theme: 'vehicle', level: 1 },
-    { en: 'ship', kr: '배(선박)', emoji: '🚢', theme: 'vehicle', level: 2 },
-    { en: 'computer', kr: '컴퓨터', emoji: '💻', theme: 'object', level: 2 },
-    { en: 'camera', kr: '사진기', emoji: '📷', theme: 'object', level: 2 },
-    { en: 'mirror', kr: '거울', emoji: '🪞', theme: 'object', level: 2 },
-    { en: 'clock', kr: '시계', emoji: '⏰', theme: 'object', level: 1 },
-    { en: 'window', kr: '창문', emoji: '🪟', theme: 'object', level: 1 },
+    { en: 'elephant', kr: '코끼리', pron: '엘리펀트', emoji: '🐘', theme: 'animal', level: 2 },
+    { en: 'giraffe', kr: '기린', pron: '지라프', emoji: '🦒', theme: 'animal', level: 2 },
+    { en: 'dolphin', kr: '돌고래', pron: '돌핀', emoji: '🐬', theme: 'animal', level: 2 },
+    { en: 'penguin', kr: '펭귄', pron: '펭귄', emoji: '🐧', theme: 'animal', level: 2 },
+    { en: 'zebra', kr: '얼룩말', pron: '지브라', emoji: '🦓', theme: 'animal', level: 2 },
+    { en: 'kangaroo', kr: '캥거루', pron: '캥거루', emoji: '🦘', theme: 'animal', level: 2 },
+    { en: 'butterfly', kr: '나비', pron: '버터플라이', emoji: '🦋', theme: 'animal', level: 2 },
+    { en: 'turtle', kr: '거북이', pron: '터틀', emoji: '🐢', theme: 'animal', level: 2 },
+    { en: 'whale', kr: '고래', pron: '웨일', emoji: '🐋', theme: 'animal', level: 2 },
+    { en: 'shark', kr: '상어', pron: '샤크', emoji: '🦈', theme: 'animal', level: 2 },
+    { en: 'library', kr: '도서관', pron: '라이브러리', emoji: '📚', theme: 'place', level: 2 },
+    { en: 'hospital', kr: '병원', pron: '하스피털', emoji: '🏥', theme: 'place', level: 2 },
+    { en: 'museum', kr: '박물관', pron: '뮤지엄', emoji: '🏛️', theme: 'place', level: 2 },
+    { en: 'bakery', kr: '빵집', pron: '베이커리', emoji: '🥐', theme: 'place', level: 2 },
+    { en: 'airport', kr: '공항', pron: '에어포트', emoji: '🛫', theme: 'place', level: 2 },
+    { en: 'park', kr: '공원', pron: '파크', emoji: '🏞️', theme: 'place', level: 1 },
+    { en: 'market', kr: '시장', pron: '마켓', emoji: '🛒', theme: 'place', level: 2 },
+    { en: 'umbrella', kr: '우산', pron: '엄브렐러', emoji: '☂️', theme: 'object', level: 2 },
+    { en: 'bicycle', kr: '자전거', pron: '바이시클', emoji: '🚲', theme: 'vehicle', level: 2 },
+    { en: 'airplane', kr: '비행기', pron: '에어플레인', emoji: '✈️', theme: 'vehicle', level: 2 },
+    { en: 'subway', kr: '지하철', pron: '서브웨이', emoji: '🚇', theme: 'vehicle', level: 2 },
+    { en: 'train', kr: '기차', pron: '트레인', emoji: '🚆', theme: 'vehicle', level: 1 },
+    { en: 'ship', kr: '배(선박)', pron: '쉽', emoji: '🚢', theme: 'vehicle', level: 2 },
+    { en: 'computer', kr: '컴퓨터', pron: '컴퓨터', emoji: '💻', theme: 'object', level: 2 },
+    { en: 'camera', kr: '사진기', pron: '카메라', emoji: '📷', theme: 'object', level: 2 },
+    { en: 'mirror', kr: '거울', pron: '미러', emoji: '🪞', theme: 'object', level: 2 },
+    { en: 'clock', kr: '시계', pron: '클락', emoji: '⏰', theme: 'object', level: 1 },
+    { en: 'window', kr: '창문', pron: '윈도우', emoji: '🪟', theme: 'object', level: 1 },
 
     // Tier 2-3: Nature, Seasons, Time & Meals
-    { en: 'morning', kr: '아침', emoji: '🌅', theme: 'time', level: 2 },
-    { en: 'afternoon', kr: '오후', emoji: '☀️', theme: 'time', level: 2 },
-    { en: 'evening', kr: '저녁', emoji: '🌆', theme: 'time', level: 2 },
-    { en: 'night', kr: '밤', emoji: '🌙', theme: 'time', level: 1 },
-    { en: 'tomorrow', kr: '내일', emoji: '📅', theme: 'time', level: 2 },
-    { en: 'yesterday', kr: '어제', emoji: '⏪', theme: 'time', level: 2 },
-    { en: 'breakfast', kr: '아침식사', emoji: '🍳', theme: 'food', level: 2 },
-    { en: 'lunch', kr: '점심식사', emoji: '🍱', theme: 'food', level: 2 },
-    { en: 'dinner', kr: '저녁식사', emoji: '🍽️', theme: 'food', level: 2 },
-    { en: 'rainbow', kr: '무지개', emoji: '🌈', theme: 'nature', level: 2 },
-    { en: 'mountain', kr: '산', emoji: '⛰️', theme: 'nature', level: 2 },
-    { en: 'river', kr: '강', emoji: '🏞️', theme: 'nature', level: 2 },
-    { en: 'ocean', kr: '바다', emoji: '🌊', theme: 'nature', level: 2 },
-    { en: 'forest', kr: '숲', emoji: '🌲', theme: 'nature', level: 2 },
-    { en: 'island', kr: '섬', emoji: '🏝️', theme: 'nature', level: 3 },
-    { en: 'weather', kr: '날씨', emoji: '⛅', theme: 'nature', level: 2 },
-    { en: 'cloud', kr: '구름', emoji: '☁️', theme: 'nature', level: 1 },
-    { en: 'wind', kr: '바람', emoji: '🌬️', theme: 'nature', level: 1 },
-    { en: 'spring', kr: '봄', emoji: '🌸', theme: 'nature', level: 2 },
-    { en: 'summer', kr: '여름', emoji: '🌻', theme: 'nature', level: 2 },
-    { en: 'autumn', kr: '가을', emoji: '🍁', theme: 'nature', level: 2 },
-    { en: 'winter', kr: '겨울', emoji: '⛄', theme: 'nature', level: 2 },
+    { en: 'morning', kr: '아침', pron: '모닝', emoji: '🌅', theme: 'time', level: 2 },
+    { en: 'afternoon', kr: '오후', pron: '애프터눈', emoji: '☀️', theme: 'time', level: 2 },
+    { en: 'evening', kr: '저녁', pron: '이브닝', emoji: '🌆', theme: 'time', level: 2 },
+    { en: 'night', kr: '밤', pron: '나이트', emoji: '🌙', theme: 'time', level: 1 },
+    { en: 'tomorrow', kr: '내일', pron: '투모로우', emoji: '📅', theme: 'time', level: 2 },
+    { en: 'yesterday', kr: '어제', pron: '예스터데이', emoji: '⏪', theme: 'time', level: 2 },
+    { en: 'breakfast', kr: '아침식사', pron: '브렉퍼스트', emoji: '🍳', theme: 'food', level: 2 },
+    { en: 'lunch', kr: '점심식사', pron: '런치', emoji: '🍱', theme: 'food', level: 2 },
+    { en: 'dinner', kr: '저녁식사', pron: '디너', emoji: '🍽️', theme: 'food', level: 2 },
+    { en: 'rainbow', kr: '무지개', pron: '레인보우', emoji: '🌈', theme: 'nature', level: 2 },
+    { en: 'mountain', kr: '산', pron: '마운틴', emoji: '⛰️', theme: 'nature', level: 2 },
+    { en: 'river', kr: '강', pron: '리버', emoji: '🏞️', theme: 'nature', level: 2 },
+    { en: 'ocean', kr: '바다', pron: '오션', emoji: '🌊', theme: 'nature', level: 2 },
+    { en: 'forest', kr: '숲', pron: '포레스트', emoji: '🌲', theme: 'nature', level: 2 },
+    { en: 'island', kr: '섬', pron: '아일랜드', emoji: '🏝️', theme: 'nature', level: 3 },
+    { en: 'weather', kr: '날씨', pron: '웨더', emoji: '⛅', theme: 'nature', level: 2 },
+    { en: 'cloud', kr: '구름', pron: '클라우드', emoji: '☁️', theme: 'nature', level: 1 },
+    { en: 'wind', kr: '바람', pron: '윈드', emoji: '🌬️', theme: 'nature', level: 1 },
+    { en: 'spring', kr: '봄', pron: '스프링', emoji: '🌸', theme: 'nature', level: 2 },
+    { en: 'summer', kr: '여름', pron: '서머', emoji: '🌻', theme: 'nature', level: 2 },
+    { en: 'autumn', kr: '가을', pron: '오텀', emoji: '🍁', theme: 'nature', level: 2 },
+    { en: 'winter', kr: '겨울', pron: '윈터', emoji: '⛄', theme: 'nature', level: 2 },
 
     // Tier 3-4: Adjectives, Verbs, Jobs, Subjects & Abstract Concepts
-    { en: 'happy', kr: '행복한', emoji: '😊', theme: 'adjective', level: 1 },
-    { en: 'brave', kr: '용감한', emoji: '🦁', theme: 'adjective', level: 2 },
-    { en: 'smart', kr: '똑똑한', emoji: '🧠', theme: 'adjective', level: 2 },
-    { en: 'fast', kr: '빠른', emoji: '⚡', theme: 'adjective', level: 1 },
-    { en: 'slow', kr: '느린', emoji: '🐢', theme: 'adjective', level: 1 },
-    { en: 'strong', kr: '강한', emoji: '💪', theme: 'adjective', level: 2 },
-    { en: 'kind', kr: '친절한', emoji: '💖', theme: 'adjective', level: 2 },
-    { en: 'beautiful', kr: '아름다운', emoji: '✨', theme: 'adjective', level: 3 },
-    { en: 'delicious', kr: '맛있는', emoji: '😋', theme: 'adjective', level: 3 },
-    { en: 'important', kr: '중요한', emoji: '⭐', theme: 'adjective', level: 3 },
-    { en: 'different', kr: '다른', emoji: '🔀', theme: 'adjective', level: 3 },
-    { en: 'difficult', kr: '어려운', emoji: '🧩', theme: 'adjective', level: 3 },
-    { en: 'easy', kr: '쉬운', emoji: '👌', theme: 'adjective', level: 2 },
-    { en: 'healthy', kr: '건강한', emoji: '🥗', theme: 'adjective', level: 3 },
-    { en: 'famous', kr: '유명한', emoji: '🌟', theme: 'adjective', level: 3 },
-    { en: 'careful', kr: '조심하는', emoji: '⚠️', theme: 'adjective', level: 3 },
-    { en: 'police', kr: '경찰', emoji: '👮', theme: 'job', level: 2 },
-    { en: 'firefighter', kr: '소방관', emoji: '🧑‍🚒', theme: 'job', level: 3 },
-    { en: 'scientist', kr: '과학자', emoji: '🧑‍🔬', theme: 'job', level: 3 },
-    { en: 'doctor', kr: '의사', emoji: '🧑‍⚕️', theme: 'job', level: 1 },
-    { en: 'pilot', kr: '조종사', emoji: '🧑‍✈️', theme: 'job', level: 2 },
-    { en: 'astronaut', kr: '우주비행사', emoji: '🧑‍🚀', theme: 'job', level: 3 },
-    { en: 'artist', kr: '예술가/화가', emoji: '🧑‍🎨', theme: 'job', level: 2 },
-    { en: 'cook', kr: '요리사', emoji: '🧑‍🍳', theme: 'job', level: 2 },
-    { en: 'music', kr: '음악', emoji: '🎵', theme: 'subject', level: 1 },
-    { en: 'science', kr: '과학', emoji: '🔬', theme: 'subject', level: 2 },
-    { en: 'math', kr: '수학', emoji: '➗', theme: 'subject', level: 1 },
-    { en: 'english', kr: '영어', emoji: '🔤', theme: 'subject', level: 1 },
-    { en: 'history', kr: '역사', emoji: '📜', theme: 'subject', level: 3 },
-    { en: 'question', kr: '질문/문제', emoji: '❓', theme: 'study', level: 2 },
-    { en: 'answer', kr: '정답/대답', emoji: '⭕', theme: 'study', level: 2 },
-    { en: 'dictionary', kr: '사전', emoji: '📕', theme: 'study', level: 3 },
-    { en: 'homework', kr: '숙제', emoji: '📝', theme: 'study', level: 2 },
-    { en: 'vacation', kr: '방학/휴가', emoji: '🏖️', theme: 'study', level: 3 },
-    { en: 'planet', kr: '행성', emoji: '🪐', theme: 'space', level: 3 },
-    { en: 'universe', kr: '우주', emoji: '🌌', theme: 'space', level: 3 },
-    { en: 'earth', kr: '지구', emoji: '🌍', theme: 'space', level: 2 },
-    { en: 'future', kr: '미래', emoji: '🚀', theme: 'concept', level: 3 },
-    { en: 'dream', kr: '꿈', emoji: '💭', theme: 'concept', level: 2 },
-    { en: 'promise', kr: '약속', emoji: '🤙', theme: 'concept', level: 3 },
-    { en: 'treasure', kr: '보물', emoji: '💎', theme: 'concept', level: 3 },
-    { en: 'adventure', kr: '모험', emoji: '🧭', theme: 'concept', level: 3 },
-    { en: 'trophy', kr: '트로피', emoji: '🏆', theme: 'concept', level: 2 },
-    { en: 'victory', kr: '승리', emoji: '✌️', theme: 'concept', level: 3 },
-    { en: 'champion', kr: '챔피언/우승자', emoji: '🥇', theme: 'concept', level: 3 }
+    { en: 'happy', kr: '행복한', pron: '해피', emoji: '😊', theme: 'adjective', level: 1 },
+    { en: 'brave', kr: '용감한', pron: '브레이브', emoji: '🦁', theme: 'adjective', level: 2 },
+    { en: 'smart', kr: '똑똑한', pron: '스마트', emoji: '🧠', theme: 'adjective', level: 2 },
+    { en: 'fast', kr: '빠른', pron: '패스트', emoji: '⚡', theme: 'adjective', level: 1 },
+    { en: 'slow', kr: '느린', pron: '슬로우', emoji: '🐢', theme: 'adjective', level: 1 },
+    { en: 'strong', kr: '강한', pron: '스트롱', emoji: '💪', theme: 'adjective', level: 2 },
+    { en: 'kind', kr: '친절한', pron: '카인드', emoji: '💖', theme: 'adjective', level: 2 },
+    { en: 'beautiful', kr: '아름다운', pron: '뷰티풀', emoji: '✨', theme: 'adjective', level: 3 },
+    { en: 'delicious', kr: '맛있는', pron: '딜리셔스', emoji: '😋', theme: 'adjective', level: 3 },
+    { en: 'important', kr: '중요한', pron: '임포턴트', emoji: '⭐', theme: 'adjective', level: 3 },
+    { en: 'different', kr: '다른', pron: '디퍼런트', emoji: '🔀', theme: 'adjective', level: 3 },
+    { en: 'difficult', kr: '어려운', pron: '디피컬트', emoji: '🧩', theme: 'adjective', level: 3 },
+    { en: 'easy', kr: '쉬운', pron: '이지', emoji: '👌', theme: 'adjective', level: 2 },
+    { en: 'healthy', kr: '건강한', pron: '헬시', emoji: '🥗', theme: 'adjective', level: 3 },
+    { en: 'famous', kr: '유명한', pron: '페이머스', emoji: '🌟', theme: 'adjective', level: 3 },
+    { en: 'careful', kr: '조심하는', pron: '케어풀', emoji: '⚠️', theme: 'adjective', level: 3 },
+    { en: 'police', kr: '경찰', pron: '폴리스', emoji: '👮', theme: 'job', level: 2 },
+    { en: 'firefighter', kr: '소방관', pron: '파이어파이터', emoji: '🧑‍🚒', theme: 'job', level: 3 },
+    { en: 'scientist', kr: '과학자', pron: '사이언티스트', emoji: '🧑‍🔬', theme: 'job', level: 3 },
+    { en: 'doctor', kr: '의사', pron: '닥터', emoji: '🧑‍⚕️', theme: 'job', level: 1 },
+    { en: 'pilot', kr: '조종사', pron: '파일럿', emoji: '🧑‍✈️', theme: 'job', level: 2 },
+    { en: 'astronaut', kr: '우주비행사', pron: '애스트로넛', emoji: '🧑‍🚀', theme: 'job', level: 3 },
+    { en: 'artist', kr: '예술가/화가', pron: '아티스트', emoji: '🧑‍🎨', theme: 'job', level: 2 },
+    { en: 'cook', kr: '요리사', pron: '쿡', emoji: '🧑‍🍳', theme: 'job', level: 2 },
+    { en: 'music', kr: '음악', pron: '뮤직', emoji: '🎵', theme: 'subject', level: 1 },
+    { en: 'science', kr: '과학', pron: '사이언스', emoji: '🔬', theme: 'subject', level: 2 },
+    { en: 'math', kr: '수학', pron: '매쓰', emoji: '➗', theme: 'subject', level: 1 },
+    { en: 'english', kr: '영어', pron: '잉글리시', emoji: '🔤', theme: 'subject', level: 1 },
+    { en: 'history', kr: '역사', pron: '히스토리', emoji: '📜', theme: 'subject', level: 3 },
+    { en: 'question', kr: '질문/문제', pron: '퀘스천', emoji: '❓', theme: 'study', level: 2 },
+    { en: 'answer', kr: '정답/대답', pron: '앤서', emoji: '⭕', theme: 'study', level: 2 },
+    { en: 'dictionary', kr: '사전', pron: '딕셔너리', emoji: '📕', theme: 'study', level: 3 },
+    { en: 'homework', kr: '숙제', pron: '홈워크', emoji: '📝', theme: 'study', level: 2 },
+    { en: 'vacation', kr: '방학/휴가', pron: '베이케이션', emoji: '🏖️', theme: 'study', level: 3 },
+    { en: 'planet', kr: '행성', pron: '플래닛', emoji: '🪐', theme: 'space', level: 3 },
+    { en: 'universe', kr: '우주', pron: '유니버스', emoji: '🌌', theme: 'space', level: 3 },
+    { en: 'earth', kr: '지구', pron: '어스', emoji: '🌍', theme: 'space', level: 2 },
+    { en: 'future', kr: '미래', pron: '퓨처', emoji: '🚀', theme: 'concept', level: 3 },
+    { en: 'dream', kr: '꿈', pron: '드림', emoji: '💭', theme: 'concept', level: 2 },
+    { en: 'promise', kr: '약속', pron: '프라미스', emoji: '🤙', theme: 'concept', level: 3 },
+    { en: 'treasure', kr: '보물', pron: '트레저', emoji: '💎', theme: 'concept', level: 3 },
+    { en: 'adventure', kr: '모험', pron: '어드벤처', emoji: '🧭', theme: 'concept', level: 3 },
+    { en: 'trophy', kr: '트로피', pron: '트로피', emoji: '🏆', theme: 'concept', level: 2 },
+    { en: 'victory', kr: '승리', pron: '빅토리', emoji: '✌️', theme: 'concept', level: 3 },
+    { en: 'champion', kr: '챔피언/우승자', pron: '챔피언', emoji: '🥇', theme: 'concept', level: 3 }
   ];
 
   /**
@@ -737,19 +737,22 @@
   }
 
   /**
-   * Generates a bidirectional Elementary English question (Vocabulary, Conversational 생활영어, or Stage 3+ Pronunciation!).
-   * As stages go up, the share of Conversational 생활영어 increases!
+   * Generates a bidirectional Elementary English question:
+   * 1) English Word -> Korean Phonetic Reading ("APPLE" -> "애플", subType: 'en_to_pron')
+   * 2) English Word <-> Korean Meaning ('apple' <-> '사과', subType: 'en_to_kr' | 'kr_to_en')
+   * 3) Conversational Everyday English (생활영어 회화)
+   * 4) Stage 3+ Microphone Speaking Pronunciation
    */
   function generateEnglishQuestion(stageNum) {
     const stage = Math.max(1, parseInt(stageNum, 10) || 1);
 
-    // Stage 3+: Include Microphone English Pronunciation Questions (~32% of English questions)
-    if (stage >= 3 && Math.random() < 0.32) {
+    // Stage 3+: Include Microphone English Pronunciation Questions (~22% of English questions)
+    if (stage >= 3 && Math.random() < 0.22) {
       return generatePronunciationQuestion(stage);
     }
 
-    // Probability of Everyday Conversational English (생활영어) scales up micro-gradually with stage (30% -> 68% max)
-    const dailyExprProb = Math.min(0.68, 0.30 + (stage - 1) * 0.04);
+    // Probability of Everyday Conversational English (생활영어): ~28% -> 42%
+    const dailyExprProb = Math.min(0.42, 0.26 + (stage - 1) * 0.02);
     if (Math.random() < dailyExprProb) {
       return generateDailyEnglishQuestion(stage);
     }
@@ -760,10 +763,20 @@
       return w.level <= maxWordLevel;
     });
 
-    let targetWord = eligiblePool[randomInt(0, eligiblePool.length - 1)];
+    // 45% of vocabulary questions are English-to-Korean-Reading ("APPLE" -> "애플")!
+    const modeRoll = Math.random();
+    const isReadingQuiz = modeRoll < 0.45;
+
+    // For reading quiz ("APPLE -> 애플"), prefer words that have a clear Korean phonetic reading
+    const readingPool = isReadingQuiz
+      ? eligiblePool.filter(function (w) { return Boolean(w.pron); })
+      : eligiblePool;
+    const activePool = readingPool.length > 0 ? readingPool : eligiblePool;
+
+    let targetWord = activePool[randomInt(0, activePool.length - 1)];
     for (let attempt = 0; attempt < 25; attempt++) {
-      const candidate = eligiblePool[randomInt(0, eligiblePool.length - 1)];
-      const candidateId = `eng_${candidate.en}`;
+      const candidate = activePool[randomInt(0, activePool.length - 1)];
+      const candidateId = isReadingQuiz ? `eng_pron_${candidate.en}` : `eng_${candidate.en}`;
       if (!_recentIds.includes(candidateId)) {
         targetWord = candidate;
         rememberQuestionId(candidateId);
@@ -773,17 +786,44 @@
 
     // Prefer distractors from the same theme first for realistic educational challenge
     const sameThemePool = ENGLISH_DICTIONARY.filter(function (w) {
-      return w.en !== targetWord.en && w.kr !== targetWord.kr && w.theme === targetWord.theme;
+      return w.en !== targetWord.en && w.kr !== targetWord.kr && w.pron !== targetWord.pron && w.theme === targetWord.theme;
     });
     const otherPool = ENGLISH_DICTIONARY.filter(function (w) {
-      return w.en !== targetWord.en && w.kr !== targetWord.kr && w.theme !== targetWord.theme;
+      return w.en !== targetWord.en && w.kr !== targetWord.kr && w.pron !== targetWord.pron && w.theme !== targetWord.theme;
     });
 
     const combinedDistractorPool = shuffleArray(sameThemePool).concat(shuffleArray(otherPool));
     const distractorWords = [combinedDistractorPool[0], combinedDistractorPool[1]];
 
-    // 50% KR -> EN, 50% EN -> KR
-    const isKrToEn = Math.random() < 0.5;
+    // Mode 1: English Word -> Korean Phonetic Reading ("APPLE -> 애플")
+    if (isReadingQuiz && targetWord.pron) {
+      const upperEn = targetWord.en.toUpperCase();
+      const answerStr = targetWord.pron;
+      const laneData = buildThreeLaneChoices(
+        answerStr,
+        distractorWords[0].pron || distractorWords[0].kr,
+        distractorWords[1].pron || distractorWords[1].kr
+      );
+
+      return {
+        id: `eng_pron_${targetWord.en}`,
+        category: 'english',
+        categoryLabel: '초등 영어 · 영단어 발음 읽기 퀴즈',
+        subType: 'en_to_pron',
+        stage: stage,
+        prompt: `🔊 "${upperEn}" 어떻게 읽을까요?`,
+        subPrompt: `영어 단어 "${upperEn}"(${targetWord.kr})를 한국어로 읽은 발음 레인으로 달리세요!`,
+        choices: laneData.choices,
+        correctLane: laneData.correctLane,
+        answerText: answerStr,
+        correctAnswer: answerStr,
+        isReview: false,
+        wrongCount: 0
+      };
+    }
+
+    // Mode 2 & 3: 50% KR -> EN, 50% EN -> KR
+    const isKrToEn = modeRoll < 0.725;
     const emojiPrefix = targetWord.emoji ? `${targetWord.emoji} ` : '🔤 ';
 
     if (isKrToEn) {
