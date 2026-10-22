@@ -5958,13 +5958,27 @@
         const vibeFreq = 26 + this.currentSpeed * 0.1;
         this.carGroup.position.y = this.carJumpY + Math.sin(this.elapsedTime * vibeFreq) * 0.025;
 
+        // Hurt / Ouch Animation ("아픈 애니"): Car spins/tilts/bucks & Soyun shakes head/arms in pain when hitting a block or fire pit!
+        if (this.carHurtTimer > 0) {
+          this.carHurtTimer = Math.max(0, this.carHurtTimer - dt);
+          const hurtEnv = Math.min(1, this.carHurtTimer * 1.6);
+          this.carGroup.rotation.z += Math.sin(this.elapsedTime * 48) * 0.54 * hurtEnv;
+          this.carGroup.rotation.y += Math.cos(this.elapsedTime * 38) * 0.48 * hurtEnv;
+          this.carGroup.rotation.x += Math.sin(this.elapsedTime * 34) * 0.36 * hurtEnv;
+        }
+
         // Steering wheel & Soyun's Blocky Avatar Arms/Head/Pigtails animation!
         if (this.steeringWheelMesh) {
           this.steeringWheelMesh.rotation.z = -dx * 0.35;
         }
         if (this.soyunHeadMesh) {
-          this.soyunHeadMesh.rotation.y = -dx * 0.12;
-          this.soyunHeadMesh.rotation.z = -dx * 0.06;
+          if (this.carHurtTimer > 0) {
+            this.soyunHeadMesh.rotation.y = Math.sin(this.elapsedTime * 52) * 0.65;
+            this.soyunHeadMesh.rotation.z = Math.cos(this.elapsedTime * 44) * 0.42;
+          } else {
+            this.soyunHeadMesh.rotation.y = -dx * 0.12;
+            this.soyunHeadMesh.rotation.z = -dx * 0.06;
+          }
         }
         if (this.soyunLeftPigtail && this.soyunRightPigtail) {
           const bounce = Math.sin(this.elapsedTime * 18) * 0.08;
@@ -5972,7 +5986,11 @@
           this.soyunRightPigtail.rotation.z = 0.1 - bounce - dx * 0.08;
         }
         if (this.soyunLeftArm && this.soyunRightArm) {
-          if (this.avatarCheerTimer > 0) {
+          if (this.carHurtTimer > 0) {
+            const flail = Math.sin(this.elapsedTime * 56) * 0.55;
+            this.soyunLeftArm.rotation.x = 2.95 + flail;
+            this.soyunRightArm.rotation.x = 2.95 - flail;
+          } else if (this.avatarCheerTimer > 0) {
             this.avatarCheerTimer -= dt;
             // Cheer with both arms raised high!
             const wave = Math.sin(this.elapsedTime * 28) * 0.25;
@@ -6166,11 +6184,26 @@
           }
         }
 
-        // Auto spring-jump when the player steers into a low hurdle lane right before reaching it!
-        if (!wave.passed && wave.group.position.z >= passZ - 6.0 && wave.group.position.z < passZ - 0.8) {
+        // Flicker roaring 3D flames in Fire Pit waves
+        if (Array.isArray(wave.flameMeshes)) {
+          for (let f = 0; f < wave.flameMeshes.length; f++) {
+            const fl = wave.flameMeshes[f];
+            if (!fl) continue;
+            const ud = fl.userData || {};
+            const baseSY = ud.baseScaleY || 1.0;
+            const ph = ud.phase || 0;
+            const flicker = baseSY * (0.82 + Math.sin(this.elapsedTime * 26 + ph) * 0.26);
+            fl.scale.y = flicker;
+            fl.rotation.y += dt * 3.5;
+          }
+        }
+
+        // Auto spring-jump when the player steers into a passable low hurdle or narrow fire pit lane right before reaching it!
+        if (!wave.passed && wave.group.position.z >= passZ - 5.6 && wave.group.position.z < passZ - 0.8) {
           const approachLane = this.targetLane;
-          if (wave.lanes[approachLane] === 'hurdle' && !this.isCarJumping) {
-            this.jump();
+          const approachType = wave.lanes[approachLane];
+          if ((approachType === 'hurdle' || approachType === 'narrow_fire') && !this.isJumping) {
+            this.jump(approachType === 'narrow_fire' ? 1.16 : 1.04);
           }
         }
 
@@ -6188,13 +6221,18 @@
             cleared = false;
             actionType = 'hit_block';
             outcome = 'hit_block';
-            this.triggerDamageEffect(laneX);
-          } else if (laneType === 'hurdle') {
-            if (!this.isCarJumping && this.carJumpY < 0.65) {
-              this.jump();
+            this.triggerDamageEffect(laneX, 'block');
+          } else if (laneType === 'wide_fire') {
+            cleared = false;
+            actionType = 'hit_fire';
+            outcome = 'hit_fire';
+            this.triggerDamageEffect(laneX, 'wide_fire');
+          } else if (laneType === 'hurdle' || laneType === 'narrow_fire') {
+            if (!this.isJumping && this.carJumpY < 0.65) {
+              this.jump(laneType === 'narrow_fire' ? 1.16 : 1.04);
             }
             cleared = true;
-            actionType = 'jumped_hurdle';
+            actionType = laneType === 'narrow_fire' ? 'jumped_fire' : 'jumped_hurdle';
             outcome = 'jump_clear';
             this.triggerCorrectEffect(laneX);
           } else {
@@ -6211,6 +6249,7 @@
               actionType: actionType,
               outcome: outcome,
               laneType: laneType,
+              waveType: wave.waveType || 'obstacle_wall',
               lane: playerLane,
               waveIndex: wave.waveIndex,
               totalWaves: wave.totalWaves
