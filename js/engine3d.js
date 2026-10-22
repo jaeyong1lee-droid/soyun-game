@@ -1543,48 +1543,228 @@
           ctx.ellipse(px, py, 5, 3, (i % 6) * 0.5, 0, Math.PI * 2);
           ctx.fill();
         }
-      } else if (biome === 'snow_aurora') {
-        // ❄️ STAGE 7: Arctic Snow Mountains, Glacial River & Glowing Aurora Borealis
-        // Stars
-        ctx.fillStyle = '#ffffff';
-        for (let i = 0; i < 140; i++) {
+      } else if (biome === 'jungle_safari') {
+        // 🌴 STAGE 2: Amazon Tropical Jungle, Sunbeams, Hanging Vines & Lion Safari Valley
+        const sunG = ctx.createRadialGradient(w * 0.5, h * 0.36, 12, w * 0.5, h * 0.36, 175);
+        sunG.addColorStop(0, '#ffffff');
+        sunG.addColorStop(0.35, '#fef08a');
+        sunG.addColorStop(0.75, 'rgba(132, 204, 22, 0.35)');
+        sunG.addColorStop(1, 'rgba(20, 83, 45, 0)');
+        ctx.fillStyle = sunG;
+        ctx.beginPath();
+        ctx.arc(w * 0.5, h * 0.36, 175, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Lush Layered Tropical Jungle Mountains & Waterfalls
+        [
+          { x1: -30, xp: 180, x2: 410, yp: 195, c: '#14532d' },
+          { x1: 260, xp: 512, x2: 760, yp: 155, c: '#166534' },
+          { x1: 620, xp: 850, x2: 1060, yp: 185, c: '#14532d' }
+        ].forEach((jm) => {
+          ctx.fillStyle = jm.c;
           ctx.beginPath();
-          ctx.arc((i * 97) % w, (i * 41) % 340, (i % 2) + 1.2, 0, Math.PI * 2);
+          ctx.moveTo(jm.x1, h);
+          ctx.quadraticCurveTo(jm.xp, jm.yp - 35, jm.x2, h);
+          ctx.closePath();
+          ctx.fill();
+        });
+
+        // Sparkling Jungle Waterfall cascading down center cliff
+        const wfGrad = ctx.createLinearGradient(512, 210, 512, h);
+        wfGrad.addColorStop(0, '#e0f2fe');
+        wfGrad.addColorStop(0.5, '#38bdf8');
+        wfGrad.addColorStop(1, '#0d9488');
+        ctx.fillStyle = wfGrad;
+        ctx.fillRect(496, 220, 32, h - 220);
+
+        // Top Jungle Canopy Leaves & Hanging Liana Vines
+        ctx.fillStyle = '#052e16';
+        for (let vx = 40; vx < w; vx += 85) {
+          ctx.beginPath();
+          ctx.arc(vx, 12, 54, 0, Math.PI);
+          ctx.fill();
+          ctx.strokeStyle = '#15803d';
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.moveTo(vx, 40);
+          ctx.quadraticCurveTo(vx + ((vx % 2 === 0) ? 18 : -18), 115, vx + 6, 185 + (vx % 55));
+          ctx.stroke();
+        }
+      } else if (biome === 'desert_pyramid') {
+        // 🏜️ STAGE 3: Golden Desert Pyramids, Blazing Sun, Sand Dunes & Camel Oasis
+        // Giant Blazing Golden Sun
+        const dSun = ctx.createRadialGradient(w * 0.5, h * 0.34, 18, w * 0.5, h * 0.34, 155);
+        dSun.addColorStop(0, '#ffffff');
+        dSun.addColorStop(0.35, '#fef08a');
+        dSun.addColorStop(0.75, '#f59e0b');
+        dSun.addColorStop(1, 'rgba(234, 88, 12, 0)');
+        ctx.fillStyle = dSun;
+        ctx.beginPath();
+        ctx.arc(w * 0.5, h * 0.34, 155, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Three Majestic Ancient Golden Egyptian Pyramids on the Horizon!
+        const pyramids = [
+          { cx: 230, baseW: 230, peakY: 225, leftCol: '#f59e0b', rightCol: '#b45309' },
+          { cx: 512, baseW: 290, peakY: 165, leftCol: '#fbbf24', rightCol: '#92400e' },
+          { cx: 795, baseW: 220, peakY: 235, leftCol: '#f59e0b', rightCol: '#b45309' }
+        ];
+        pyramids.forEach((p) => {
+          // Sunlit Left Face
+          ctx.fillStyle = p.leftCol;
+          ctx.beginPath();
+          ctx.moveTo(p.cx - p.baseW / 2, h - 45);
+          ctx.lineTo(p.cx, p.peakY);
+          ctx.lineTo(p.cx, h - 45);
+          ctx.closePath();
+          ctx.fill();
+          // Shaded Right Face
+          ctx.fillStyle = p.rightCol;
+          ctx.beginPath();
+          ctx.moveTo(p.cx, p.peakY);
+          ctx.lineTo(p.cx + p.baseW / 2, h - 45);
+          ctx.lineTo(p.cx, h - 45);
+          ctx.closePath();
+          ctx.fill();
+          // Glowing Gold Capstone
+          ctx.fillStyle = '#fef08a';
+          ctx.beginPath();
+          ctx.moveTo(p.cx - 24, p.peakY + 34);
+          ctx.lineTo(p.cx, p.peakY);
+          ctx.lineTo(p.cx + 24, p.peakY + 34);
+          ctx.closePath();
+          ctx.fill();
+        });
+
+        // Sweeping Golden Sand Dunes & Shimmering Turquoise Oasis Strip
+        ctx.fillStyle = '#d97706';
+        ctx.beginPath();
+        ctx.moveTo(0, h);
+        ctx.quadraticCurveTo(260, 405, 520, 442);
+        ctx.quadraticCurveTo(790, 405, w, 445);
+        ctx.lineTo(w, h);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = '#06b6d4';
+        ctx.fillRect(0, 462, w, h - 462);
+      } else if (biome === 'glacier_ice' || biome === 'snow_aurora') {
+        // 🧊 STAGE 4: Crystal Glacier Continent, Towering Blue Icebergs & Polar Aurora
+        ctx.fillStyle = '#ffffff';
+        for (let i = 0; i < 130; i++) {
+          ctx.beginPath();
+          ctx.arc((i * 97) % w, (i * 41) % 320, (i % 2) + 1.4, 0, Math.PI * 2);
           ctx.fill();
         }
 
-        // Sweeping Ribbons of Northern Lights (Aurora Borealis)
+        // Sweeping Polar Aurora Borealis Ribbons
         [
-          { y: 120, c1: 'rgba(100, 255, 218, 0.55)', c2: 'rgba(0, 229, 255, 0)' },
-          { y: 175, c1: 'rgba(185, 246, 202, 0.5)', c2: 'rgba(124, 77, 255, 0)' },
-          { y: 225, c1: 'rgba(0, 229, 255, 0.45)', c2: 'rgba(234, 128, 252, 0)' }
+          { y: 115, c1: 'rgba(56, 189, 248, 0.55)', c2: 'rgba(0, 245, 212, 0)' },
+          { y: 170, c1: 'rgba(0, 245, 212, 0.5)', c2: 'rgba(125, 211, 252, 0)' }
         ].forEach((au, idx) => {
-          const ag = ctx.createLinearGradient(0, au.y - 50, 0, au.y + 70);
+          const ag = ctx.createLinearGradient(0, au.y - 45, 0, au.y + 65);
           ag.addColorStop(0, au.c2);
           ag.addColorStop(0.5, au.c1);
           ag.addColorStop(1, au.c2);
           ctx.strokeStyle = ag;
-          ctx.lineWidth = 48;
+          ctx.lineWidth = 44;
           ctx.beginPath();
           ctx.moveTo(0, au.y);
-          ctx.bezierCurveTo(w * 0.3, au.y - 55 + idx * 18, w * 0.7, au.y + 55 - idx * 15, w, au.y - 15);
+          ctx.bezierCurveTo(w * 0.3, au.y - 50 + idx * 18, w * 0.7, au.y + 50 - idx * 15, w, au.y - 12);
           ctx.stroke();
         });
 
-        // White Snowy Alpine Peaks
+        // Towering Faceted Crystal Blue Glaciers & Icebergs
         [
-          { x1: -20, xp: 180, x2: 390, yp: 195 },
-          { x1: 280, xp: 520, x2: 760, yp: 155 },
-          { x1: 640, xp: 860, x2: 1060, yp: 185 }
-        ].forEach((m) => {
-          ctx.fillStyle = '#cfe8fc';
+          { x1: -20, xp: 165, x2: 360, yp: 175, c1: '#e0f2fe', c2: '#38bdf8' },
+          { x1: 270, xp: 512, x2: 750, yp: 130, c1: '#ffffff', c2: '#0284c7' },
+          { x1: 650, xp: 855, x2: 1050, yp: 165, c1: '#e0f2fe', c2: '#38bdf8' }
+        ].forEach((gl) => {
+          ctx.fillStyle = gl.c1;
           ctx.beginPath();
-          ctx.moveTo(m.x1, h);
-          ctx.lineTo(m.xp, m.yp);
-          ctx.lineTo(m.x2, h);
+          ctx.moveTo(gl.x1, h);
+          ctx.lineTo(gl.xp - 28, gl.yp + 18);
+          ctx.lineTo(gl.xp, gl.yp);
+          ctx.lineTo(gl.xp, h);
+          ctx.closePath();
+          ctx.fill();
+
+          ctx.fillStyle = gl.c2;
+          ctx.beginPath();
+          ctx.moveTo(gl.xp, gl.yp);
+          ctx.lineTo(gl.xp + 32, gl.yp + 24);
+          ctx.lineTo(gl.x2, h);
+          ctx.lineTo(gl.xp, h);
           ctx.closePath();
           ctx.fill();
         });
+
+        // Frozen Glacial Sea & Ice Floes
+        ctx.fillStyle = '#0369a1';
+        ctx.fillRect(0, 448, w, h - 448);
+        ctx.fillStyle = '#f0f9ff';
+        for (let ix = 50; ix < w; ix += 160) {
+          ctx.fillRect(ix, 456, 75, 14);
+        }
+      } else if (biome === 'dino_jurassic') {
+        // 🦖 STAGE 5: Jurassic Dinosaur Era, Prehistoric Smoking Volcano & Flying Pterodactyls
+        // Glowing Prehistoric Amber Sun & Meteor Streak
+        const jSun = ctx.createRadialGradient(w * 0.72, h * 0.3, 14, w * 0.72, h * 0.3, 140);
+        jSun.addColorStop(0, '#ffffff');
+        jSun.addColorStop(0.4, '#fde047');
+        jSun.addColorStop(1, 'rgba(249, 115, 22, 0)');
+        ctx.fillStyle = jSun;
+        ctx.beginPath();
+        ctx.arc(w * 0.72, h * 0.3, 140, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Giant Prehistoric Smoking Volcano on the Horizon
+        ctx.fillStyle = '#292524';
+        ctx.beginPath();
+        ctx.moveTo(220, h);
+        ctx.lineTo(465, 165);
+        ctx.lineTo(558, 165);
+        ctx.lineTo(800, h);
+        ctx.closePath();
+        ctx.fill();
+
+        // Volcano Lava Glow & Ash Plume
+        ctx.fillStyle = '#ff5722';
+        ctx.beginPath();
+        ctx.ellipse(512, 165, 48, 14, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = 'rgba(68, 64, 60, 0.65)';
+        [
+          { x: 512, y: 120, r: 42 },
+          { x: 475, y: 85, r: 52 },
+          { x: 430, y: 60, r: 60 }
+        ].forEach((sm) => {
+          ctx.beginPath();
+          ctx.arc(sm.x, sm.y, sm.r, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        // Flying Pterodactyl Silhouettes in the Jurassic Sky!
+        ctx.fillStyle = '#1c1917';
+        [
+          { x: 210, y: 135, s: 1.1 },
+          { x: 330, y: 175, s: 0.85 },
+          { x: 810, y: 145, s: 1.0 }
+        ].forEach((pt) => {
+          ctx.beginPath();
+          ctx.moveTo(pt.x, pt.y);
+          ctx.lineTo(pt.x - 38 * pt.s, pt.y - 18 * pt.s);
+          ctx.lineTo(pt.x - 14 * pt.s, pt.y + 4 * pt.s);
+          ctx.lineTo(pt.x, pt.y + 12 * pt.s);
+          ctx.lineTo(pt.x + 14 * pt.s, pt.y + 4 * pt.s);
+          ctx.lineTo(pt.x + 38 * pt.s, pt.y - 18 * pt.s);
+          ctx.closePath();
+          ctx.fill();
+        });
+
+        // Prehistoric Jungle Swamp Horizon
+        ctx.fillStyle = '#14532d';
+        ctx.fillRect(0, 442, w, h - 442);
       } else {
         // 🌈 STAGE 8: Cyber Neon Synthwave Fantasy World
         ctx.fillStyle = '#ffffff';
