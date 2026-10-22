@@ -523,6 +523,8 @@
     bossRecoilYaw: 0,
     bossRecoilRoll: 0,
     bossSquashTimer: 0,
+    bossSpotlightTimer: 0,
+    bossImpactLight: null,
     bossAttackCycleIndex: 0,
     lastBossAttackInfo: null,
     bossChainExplosions: [],
@@ -3627,18 +3629,23 @@
       this.bossRightArm.add(this.bossHammerGroup);
       this.bossGroup.add(this.bossRightArm);
 
-      // 3D Overhead Boss HP Bar in World Space (positioned at y = 4.1 so it stays below HUD banner)
+      // 3D Overhead Boss HP Bar in World Space (positioned compactly at y = 3.15 so it stays below HUD banner)
       const hpBgGeo = new THREE.PlaneGeometry(7.6, 0.58);
       const hpBgMat = new THREE.MeshBasicMaterial({ color: 0x150520, side: THREE.DoubleSide });
       const hpBgMesh = new THREE.Mesh(hpBgGeo, hpBgMat);
-      hpBgMesh.position.set(0, 4.1, 0.8);
+      hpBgMesh.position.set(0, 3.15, 0.8);
       this.bossGroup.add(hpBgMesh);
 
       const hpFillGeo = new THREE.PlaneGeometry(7.2, 0.38);
       const hpFillMat = new THREE.MeshBasicMaterial({ color: 0x00ff9d, side: THREE.DoubleSide });
       this.bossHpFillMesh = new THREE.Mesh(hpFillGeo, hpFillMat);
-      this.bossHpFillMesh.position.set(0, 4.1, 0.85);
+      this.bossHpFillMesh.position.set(0, 3.15, 0.85);
       this.bossGroup.add(this.bossHpFillMesh);
+
+      // Dedicated 3D Spotlight PointLight in front of Boss that flares up when Boss is hit by special weapons!
+      this.bossImpactLight = new THREE.PointLight(0xffe600, 0, 28);
+      this.bossImpactLight.position.set(0, 1.2, 3.2);
+      this.bossGroup.add(this.bossImpactLight);
     },
 
     /**
