@@ -62,6 +62,7 @@ async function ensureTable() {
     ALTER TABLE soyun_roblox_racer_save ADD COLUMN IF NOT EXISTS bonus_target_jackpot INT DEFAULT 10;
     ALTER TABLE soyun_roblox_racer_save ADD COLUMN IF NOT EXISTS live_url VARCHAR(255) DEFAULT '';
     ALTER TABLE soyun_roblox_racer_save ADD COLUMN IF NOT EXISTS build_id VARCHAR(64) DEFAULT '';
+    ALTER TABLE soyun_roblox_racer_save ADD COLUMN IF NOT EXISTS obby_speed_multiplier NUMERIC(4,2) DEFAULT 1.2;
   `);
   isTableReady = true;
 }
@@ -76,6 +77,7 @@ function rowToState(row) {
     highScore: Math.max(0, parseInt(row.high_score, 10) || 0),
     maxSpeed: Math.max(36, parseInt(row.max_speed, 10) || 36),
     speedMultiplier: parseFloat(row.speed_multiplier) || 1.0,
+    obbySpeedMultiplier: parseFloat(row.obby_speed_multiplier) || 1.2,
     totalSolved: Math.max(0, parseInt(row.total_solved, 10) || 0),
     totalCorrect: Math.max(0, parseInt(row.total_correct, 10) || 0),
     totalWrong: Math.max(0, parseInt(row.total_wrong, 10) || 0),
@@ -221,7 +223,8 @@ module.exports = async function handler(req, res) {
       const totalScore = Math.max(0, parseInt(s.totalScore, 10) || 0);
       const highScore = Math.max(totalScore, parseInt(s.highScore, 10) || 0);
       const maxSpeed = Math.max(36, parseInt(s.maxSpeed, 10) || 36);
-      const speedMultiplier = Math.max(0.4, Math.min(2.0, parseFloat(s.speedMultiplier) || 1.0));
+      const speedMultiplier = Math.max(1.0, Math.min(2.5, parseFloat(s.speedMultiplier) || 1.0));
+      const obbySpeedMultiplier = Math.max(0.8, Math.min(2.5, parseFloat(s.obbySpeedMultiplier) || 1.2));
       const totalSolved = Math.max(0, parseInt(s.totalSolved, 10) || 0);
       const totalCorrect = Math.max(0, parseInt(s.totalCorrect, 10) || 0);
       const totalWrong = Math.max(0, parseInt(s.totalWrong, 10) || 0);

@@ -110,6 +110,7 @@
       highScore: Math.max(0, parseInt(row.high_score, 10) || 0),
       maxSpeed: Math.max(36, parseInt(row.max_speed, 10) || 36),
       speedMultiplier: parseFloat(row.speed_multiplier) || 1.0,
+      obbySpeedMultiplier: parseFloat(row.obby_speed_multiplier) || 1.2,
       totalSolved: Math.max(0, parseInt(row.total_solved, 10) || 0),
       totalCorrect: Math.max(0, parseInt(row.total_correct, 10) || 0),
       totalWrong: Math.max(0, parseInt(row.total_wrong, 10) || 0),
@@ -580,7 +581,8 @@
         const totalScore = Math.max(0, parseInt(s.totalScore, 10) || 0);
         const highScore = Math.max(totalScore, parseInt(s.highScore, 10) || 0);
         const maxSpeed = Math.max(36, parseInt(s.maxSpeed, 10) || 36);
-        const speedMultiplier = Math.max(0.4, Math.min(2.0, parseFloat(s.speedMultiplier) || 1.0));
+        const speedMultiplier = Math.max(1.0, Math.min(2.5, parseFloat(s.speedMultiplier) || 1.0));
+        const obbySpeedMultiplier = Math.max(0.8, Math.min(2.5, parseFloat(s.obbySpeedMultiplier) || 1.2));
         const totalSolved = Math.max(0, parseInt(s.totalSolved, 10) || 0);
         const totalCorrect = Math.max(0, parseInt(s.totalCorrect, 10) || 0);
         const totalWrong = Math.max(0, parseInt(s.totalWrong, 10) || 0);
@@ -614,6 +616,7 @@
                bonus_name_pocket = $17, bonus_name_ashley = $18, bonus_name_jackpot = $19,
                subject_mode = $20, wrong_answer_queue = $21::jsonb, review_history = $22::jsonb,
                bonus_target_pocket = $23, bonus_target_ashley = $24, bonus_target_jackpot = $25,
+               obby_speed_multiplier = $26,
                updated_at = CURRENT_TIMESTAMP
              WHERE player_id = 'soyun_vip'`,
             [
@@ -622,7 +625,8 @@
               mathCorrect, englishCorrect, bossesDefeated, paidPocketCount, paidAshleyCount,
               paidJackpotCount, bonusNamePocket, bonusNameAshley, bonusNameJackpot,
               subjectMode, wrongQueueJson, reviewHistoryJson,
-              bonusTargetPocket, bonusTargetAshley, bonusTargetJackpot
+              bonusTargetPocket, bonusTargetAshley, bonusTargetJackpot,
+              obbySpeedMultiplier
             ]
           ).then(function () { return { ok: true }; });
         }
