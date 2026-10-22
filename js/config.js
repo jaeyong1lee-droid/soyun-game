@@ -32,8 +32,8 @@
       bossName: '정글 킹 라이온 메카 (Lion Mecha)',
       bossTitle: '2단계 아마존 정글 수호신',
       bossHp: 10,
-      baseSpeed: 36.5, // 단계별 미세 가속 (+0.5)
-      gateSolveSeconds: 9.4,
+      baseSpeed: 39.0, // 단계별 점진적 가속 (+3.0, 최대 1단계의 2.5배=90까지)
+      gateSolveSeconds: 8.8,
       themeColor: '#84cc16',
       roadColor: '#292514',
       skyColor: '#14532d',
@@ -49,8 +49,8 @@
       bossName: '코블록스 스핑크스 (Korblox Sphinx)',
       bossTitle: '3단계 황금 피라미드 파라오 보스',
       bossHp: 10,
-      baseSpeed: 37.0, // 단계별 미세 가속 (+0.5)
-      gateSolveSeconds: 9.2,
+      baseSpeed: 42.0, // 단계별 점진적 가속 (+3.0, 최대 1단계의 2.5배=90까지)
+      gateSolveSeconds: 8.1,
       themeColor: '#fbbf24',
       roadColor: '#3d2814',
       skyColor: '#7c2d12',
@@ -66,8 +66,8 @@
       bossName: '아이스 프로스트 드래곤 (Frost Dragon)',
       bossTitle: '4단계 크리스탈 빙하 지배자',
       bossHp: 11,
-      baseSpeed: 37.5, // 단계별 미세 가속 (+0.5)
-      gateSolveSeconds: 9.1,
+      baseSpeed: 45.0, // 단계별 점진적 가속 (+3.0, 최대 1단계의 2.5배=90까지)
+      gateSolveSeconds: 7.6,
       themeColor: '#38bdf8',
       roadColor: '#0f2942',
       skyColor: '#082f49',
