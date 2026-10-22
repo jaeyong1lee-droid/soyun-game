@@ -143,10 +143,9 @@
     const paidPocketCount = parseInt(raw.paidPocketCount, 10) || 0;
     const paidAshleyCount = parseInt(raw.paidAshleyCount, 10) || 0;
     const paidJackpotCount = parseInt(raw.paidJackpotCount, 10) || 0;
-    const rawPocketName = (typeof raw.bonusNamePocket === 'string' && raw.bonusNamePocket.trim())
+    const bonusNamePocket = (typeof raw.bonusNamePocket === 'string' && raw.bonusNamePocket.trim())
       ? raw.bonusNamePocket.trim()
       : '용돈 3,000원';
-    const bonusNamePocket = rawPocketName === '용돈 5,000원' ? '용돈 3,000원' : rawPocketName;
     const bonusNameAshley = (typeof raw.bonusNameAshley === 'string' && raw.bonusNameAshley.trim())
       ? raw.bonusNameAshley.trim()
       : '애슐리 외식';
@@ -220,7 +219,9 @@
           _state = sanitizeState(parsed);
         } else {
           _state = createDefaultState();
-          this.save();
+          try {
+            window.localStorage.setItem(getStorageKey(), JSON.stringify(_state));
+          } catch (_e) {}
         }
       } catch (err) {
         console.warn('[SaveManager] Failed to load state from localStorage, using defaults:', err);
@@ -233,9 +234,10 @@
 
     /**
      * Saves current cumulative state to localStorage immediately.
+     * @param {boolean} [immediateCloudPush=false]
      * @returns {Object} Current state
      */
-    save: function () {
+    save: function (immediateCloudPush) {
       if (!_state) {
         _state = createDefaultState();
       }
@@ -251,7 +253,7 @@
       } catch (err) {
         console.warn('[SaveManager] Failed to write state to localStorage:', err);
       }
-      this.scheduleCloudPush(false);
+      this.scheduleCloudPush(false, Boolean(immediateCloudPush));
       return _state;
     },
 
@@ -306,8 +308,26 @@
 
           const cloud = sanitizeState(data.state);
           const local = self.getState();
+          const recentlyEditedLocally = (Date.now() - _lastLocalSettingsEditAt) < 12000;
 
-          if (cloud.totalSolved > local.totalSolved || cloud.totalScore > local.totalScore || cloud.maxStageReached > local.maxStageReached) {
+          const hasCloudMoreProgress = (
+            cloud.totalSolved > local.totalSolved ||
+            cloud.totalScore > local.totalScore ||
+            cloud.maxStageReached > local.maxStageReached
+          );
+          const hasCloudDifferentSettings = !recentlyEditedLocally && (
+            cloud.bonusNamePocket !== local.bonusNamePocket ||
+            cloud.bonusNameAshley !== local.bonusNameAshley ||
+            cloud.bonusNameJackpot !== local.bonusNameJackpot ||
+            cloud.bonusTargetPocket !== local.bonusTargetPocket ||
+            cloud.bonusTargetAshley !== local.bonusTargetAshley ||
+            cloud.bonusTargetJackpot !== local.bonusTargetJackpot ||
+            cloud.paidPocketCount !== local.paidPocketCount ||
+            cloud.paidAshleyCount !== local.paidAshleyCount ||
+            cloud.paidJackpotCount !== local.paidJackpotCount
+          );
+
+          if (hasCloudMoreProgress || hasCloudDifferentSettings) {
             _state = sanitizeState({
               currentStage: cloud.totalSolved >= local.totalSolved ? cloud.currentStage : local.currentStage,
               maxStageReached: Math.max(local.maxStageReached, cloud.maxStageReached),
@@ -315,24 +335,24 @@
               totalScore: Math.max(local.totalScore, cloud.totalScore),
               highScore: Math.max(local.highScore, cloud.highScore),
               maxSpeed: Math.max(local.maxSpeed, cloud.maxSpeed),
-              speedMultiplier: local.speedMultiplier || cloud.speedMultiplier || 1.0,
+              speedMultiplier: recentlyEditedLocally ? local.speedMultiplier : (cloud.speedMultiplier || local.speedMultiplier || 1.0),
               totalSolved: Math.max(local.totalSolved, cloud.totalSolved),
               totalCorrect: Math.max(local.totalCorrect, cloud.totalCorrect),
               totalWrong: Math.max(local.totalWrong, cloud.totalWrong),
               mathCorrect: Math.max(local.mathCorrect, cloud.mathCorrect),
               englishCorrect: Math.max(local.englishCorrect, cloud.englishCorrect),
               bossesDefeated: Math.max(local.bossesDefeated, cloud.bossesDefeated),
-              paidPocketCount: (typeof local.paidPocketCount === 'number' && local.paidPocketCount !== 0) ? local.paidPocketCount : (cloud.paidPocketCount || 0),
-              paidAshleyCount: (typeof local.paidAshleyCount === 'number' && local.paidAshleyCount !== 0) ? local.paidAshleyCount : (cloud.paidAshleyCount || 0),
-              paidJackpotCount: (typeof local.paidJackpotCount === 'number' && local.paidJackpotCount !== 0) ? local.paidJackpotCount : (cloud.paidJackpotCount || 0),
-              bonusNamePocket: local.bonusNamePocket || cloud.bonusNamePocket || '용돈 3,000원',
-              bonusNameAshley: local.bonusNameAshley || cloud.bonusNameAshley || '애슐리 외식',
-              bonusNameJackpot: local.bonusNameJackpot || cloud.bonusNameJackpot || '10판 보스 만원 상금',
-              bonusTargetPocket: local.bonusTargetPocket || cloud.bonusTargetPocket || 100,
-              bonusTargetAshley: local.bonusTargetAshley || cloud.bonusTargetAshley || 1000,
-              bonusTargetJackpot: local.bonusTargetJackpot || cloud.bonusTargetJackpot || 10,
+              paidPocketCount: recentlyEditedLocally ? local.paidPocketCount : (cloud.paidPocketCount || 0),
+              paidAshleyCount: recentlyEditedLocally ? local.paidAshleyCount : (cloud.paidAshleyCount || 0),
+              paidJackpotCount: recentlyEditedLocally ? local.paidJackpotCount : (cloud.paidJackpotCount || 0),
+              bonusNamePocket: recentlyEditedLocally ? local.bonusNamePocket : (cloud.bonusNamePocket || local.bonusNamePocket || '용돈 3,000원'),
+              bonusNameAshley: recentlyEditedLocally ? local.bonusNameAshley : (cloud.bonusNameAshley || local.bonusNameAshley || '애슐리 외식'),
+              bonusNameJackpot: recentlyEditedLocally ? local.bonusNameJackpot : (cloud.bonusNameJackpot || local.bonusNameJackpot || '10판 보스 만원 상금'),
+              bonusTargetPocket: recentlyEditedLocally ? local.bonusTargetPocket : (cloud.bonusTargetPocket || local.bonusTargetPocket || 100),
+              bonusTargetAshley: recentlyEditedLocally ? local.bonusTargetAshley : (cloud.bonusTargetAshley || local.bonusTargetAshley || 1000),
+              bonusTargetJackpot: recentlyEditedLocally ? local.bonusTargetJackpot : (cloud.bonusTargetJackpot || local.bonusTargetJackpot || 10),
               parentPin: '1508',
-              subjectMode: local.subjectMode || cloud.subjectMode || 'mixed',
+              subjectMode: recentlyEditedLocally ? local.subjectMode : (cloud.subjectMode || local.subjectMode || 'mixed'),
               wrongAnswerQueue: cloud.totalSolved >= local.totalSolved ? cloud.wrongAnswerQueue : local.wrongAnswerQueue,
               reviewHistory: cloud.totalSolved >= local.totalSolved ? cloud.reviewHistory : local.reviewHistory,
               lastPlayedAt: cloud.lastPlayedAt || local.lastPlayedAt
@@ -343,8 +363,8 @@
             if (window.GameController && typeof window.GameController.syncFromCloud === 'function') {
               window.GameController.syncFromCloud(_state);
             }
-          } else if (local.totalSolved > cloud.totalSolved || local.totalScore > cloud.totalScore) {
-            self.scheduleCloudPush(false);
+          } else if (local.totalSolved > cloud.totalSolved || local.totalScore > cloud.totalScore || recentlyEditedLocally) {
+            self.scheduleCloudPush(false, true);
           }
 
           updateCloudStatusBadge('☁️ NEON DB 실시간 클라우드 연동중');
@@ -357,8 +377,9 @@
     /**
      * Pushes current cumulative state to Neon PostgreSQL (/api/progress or direct Neon HTTP SQL)
      * @param {boolean} [forceReset=false]
+     * @param {boolean} [immediate=false]
      */
-    scheduleCloudPush: function (forceReset) {
+    scheduleCloudPush: function (forceReset, immediate) {
       if (typeof window.fetch !== 'function') return;
       if (window.location && window.location.protocol === 'file:') return;
 
