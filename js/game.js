@@ -1095,11 +1095,15 @@
 
       const stageSpeedBonus = (window.GameConfig && window.GameConfig.SPEED_STAGE_BONUS)
         ? window.GameConfig.SPEED_STAGE_BONUS
-        : 2;
+        : 3.0;
       const maxSpeedCap = (window.GameConfig && window.GameConfig.MAX_SPEED_CAP)
         ? window.GameConfig.MAX_SPEED_CAP
-        : 53;
-      state.speed = Math.min(maxSpeedCap, Math.max(state.speed + stageSpeedBonus, nextStageCfg.baseSpeed || 38));
+        : 90;
+      state.speed = Math.min(maxSpeedCap, Math.max(state.speed + stageSpeedBonus, nextStageCfg.baseSpeed || 39));
+
+      if (window.QuestionEngine && typeof window.QuestionEngine.resetStageCounters === 'function') {
+        window.QuestionEngine.resetStageCounters(nextStage);
+      }
 
       stopSpeechListening();
 

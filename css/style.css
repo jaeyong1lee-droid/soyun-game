@@ -5684,17 +5684,59 @@ body.obby-mode-active .gate-approach-wrap {
   display: none !important;
 }
 
+/* Post-5s Slow-Motion Boss Finisher Click-to-Proceed Overlay */
+.boss-finisher-click-prompt {
+  position: fixed;
+  inset: 0;
+  z-index: 980;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 20px 16px clamp(74px, 13dvh, 120px);
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
 
+.boss-finisher-click-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 22px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(12, 16, 42, 0.94), rgba(38, 12, 58, 0.94));
+  border: 2.5px solid #ffd700;
+  box-shadow: 0 0 28px rgba(255, 215, 0, 0.75), 0 8px 24px rgba(0, 0, 0, 0.7);
+  color: #ffffff;
+  font-family: var(--font-kr);
+  font-size: clamp(14px, 3.6vw, 18px);
+  font-weight: 800;
+  animation: bossClickPromptPulse 1.05s ease-in-out infinite alternate;
+}
 
+.boss-finisher-click-pill strong {
+  color: #00ff9d;
+  font-weight: 900;
+}
 
+.boss-finisher-click-arrow {
+  padding: 4px 11px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ffd700, #ff6d00);
+  color: #0a0818;
+  font-weight: 900;
+  font-size: 0.92em;
+}
 
-
-
-
-
-
-
-
-
+@keyframes bossClickPromptPulse {
+  0% {
+    transform: translateY(0) scale(1);
+    box-shadow: 0 0 22px rgba(255, 215, 0, 0.65), 0 8px 24px rgba(0, 0, 0, 0.7);
+  }
+  100% {
+    transform: translateY(-5px) scale(1.04);
+    box-shadow: 0 0 36px rgba(0, 255, 157, 0.9), 0 12px 28px rgba(0, 0, 0, 0.8);
+  }
+}
 
 
