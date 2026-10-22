@@ -23,6 +23,7 @@
     maxHp: 5,
     speed: 36,
     speedMultiplier: 1.0,
+    obbySpeedMultiplier: 1.2,
     combo: 0,
     currentLane: 1,
     currentQuestion: null,
@@ -199,7 +200,7 @@
   }
 
   function getEffectiveSpeed() {
-    const obbyFactor = state.isObbyMode ? 1.2 : 1.0;
+    const obbyFactor = state.isObbyMode ? (Number(state.obbySpeedMultiplier) || 1.2) : 1.0;
     const bossFactor = (!state.isObbyMode && state.isBossPhase)
       ? ((window.GameConfig && window.GameConfig.BOSS_SPEED_MULTIPLIER) ? window.GameConfig.BOSS_SPEED_MULTIPLIER : 1.5)
       : 1.0;
@@ -293,6 +294,7 @@
       state.stageConfig = getStageCfg(state.stage);
       state.stageProgress = Math.max(0, parseInt(saveState.stageProgress, 10) || 0);
       state.speedMultiplier = typeof saveState.speedMultiplier === 'number' ? saveState.speedMultiplier : 1.0;
+      state.obbySpeedMultiplier = typeof saveState.obbySpeedMultiplier === 'number' ? saveState.obbySpeedMultiplier : 1.2;
       state.speed = state.stageConfig.baseSpeed || 36;
       state.currentLane = 1;
       try {
@@ -399,6 +401,7 @@
       state.pauseChancesRemaining = state.maxPauseChances;
       state.combo = 0;
       state.speedMultiplier = typeof saveState.speedMultiplier === 'number' ? saveState.speedMultiplier : 1.0;
+      state.obbySpeedMultiplier = typeof saveState.obbySpeedMultiplier === 'number' ? saveState.obbySpeedMultiplier : 1.2;
       state.speed = state.stageConfig.baseSpeed || 36;
       state.currentLane = 1;
       state.isPlaying = true;
@@ -1719,6 +1722,33 @@
     },
 
     /**
+     * Sets Parent-configured Obby Jump Mini-Game speed multiplier (0.8x ~ 2.5x, default 1.2x).
+     * @param {number} mult
+     */
+    setObbySpeedMultiplier: function (mult) {
+      const clamped = Math.max(0.8, Math.min(2.5, Math.round((Number(mult) || 1.2) * 100) / 100));
+      state.obbySpeedMultiplier = clamped;
+      if (window.SaveManager && typeof window.SaveManager.setObbySpeedMultiplier === 'function') {
+        window.SaveManager.setObbySpeedMultiplier(clamped);
+      }
+      if (state.isObbyMode && window.Engine3D) {
+        window.Engine3D.setSpeed(getEffectiveSpeed());
+      }
+      if (window.UIManager) {
+        if (window.SaveManager) {
+          window.UIManager.renderParentModal(window.SaveManager.getState());
+          window.UIManager.renderDashboard(window.SaveManager.getState(), state.selectedDashboardStage);
+        }
+        window.UIManager.showFeedbackToast(
+          true,
+          `🧱🔥 점프게임 속도 배율 설정: 현재 주행속도의 ${clamped.toFixed(1)}x 배속`
+        );
+      }
+      syncHUD();
+      return state.obbySpeedMultiplier;
+    },
+
+    /**
      * Adjusts speed multiplier up or down by delta (e.g. -0.1 or +0.1)
      * @param {number} delta
      */
@@ -2395,6 +2425,20 @@
             if (window.UIManager && window.SaveManager) {
               window.UIManager.renderParentModal(window.SaveManager.getState());
             }
+          }
+        });
+      }
+
+      // Parent Modal Obby Jump Mini-Game Speed Multiplier Selector (#dashboard-obby-speed-selector inside #parent-modal)
+      const dashObbySpeedContainer = document.getElementById('dashboard-obby-speed-selector');
+      if (dashObbySpeedContainer) {
+        dashObbySpeedContainer.addEventListener('click', function (e) {
+          const btn = e.target.closest('[data-obby-mult]');
+          if (!btn) return;
+          const obbyMult = parseFloat(btn.getAttribute('data-obby-mult'));
+          if (!isNaN(obbyMult)) {
+            if (window.SoundEngine) window.SoundEngine.playClick();
+            self.setObbySpeedMultiplier(obbyMult);
           }
         });
       }
