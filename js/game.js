@@ -1289,7 +1289,9 @@
           }
           if (typeof window.Engine3D.spawnObbyObstacleWave === 'function') {
             window.Engine3D.spawnObbyObstacleWave({
-              z: -56 - w * 28,
+              z: -56 - w * 34,
+              waveIndex: w + 1,
+              totalWaves: state.obbyWavesTotal,
               lanes: basePat
             });
           }
@@ -1326,7 +1328,7 @@
       if (!state.isPlaying || !state.isObbyMode) return;
 
       state.obbyWavesCleared += 1;
-      const outcome = res ? res.outcome : 'coin';
+      const outcome = res ? (res.outcome || (res.cleared ? 'coin' : 'hit_block')) : 'coin';
 
       if (outcome === 'jump_clear' || outcome === 'coin') {
         const bonusPts = outcome === 'jump_clear' ? 80 : 60;
