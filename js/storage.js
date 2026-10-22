@@ -288,15 +288,10 @@
           if (!data || !data.ok || !data.state) return;
           _cloudLoaded = true;
 
-          // Auto-redirect if temporary Vercel URL renewed, or auto-reload if a new build was pushed
-          if (data.state.liveUrl && window.location && window.location.hostname.endsWith('.tmp.now')) {
-            try {
-              const targetUrl = new URL(data.state.liveUrl);
-              if (targetUrl.hostname && targetUrl.hostname !== window.location.hostname) {
-                window.location.replace(data.state.liveUrl);
-                return;
-              }
-            } catch (_e) {}
+          // Always redirect legacy temporary (.tmp.now) URLs to the permanent standalone address
+          if (window.location && window.location.hostname.endsWith('.tmp.now')) {
+            window.location.replace('https://jaeyong1lee-droid.github.io/soyun-game/');
+            return;
           }
           if (data.state.buildId) {
             if (!window.__SOYUN_BUILD_ID__) {
