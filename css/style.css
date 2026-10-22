@@ -5471,6 +5471,127 @@ body.boss-phase-hud-active.view-mode-landscape #hud-center-panel.hud-center-pane
   100% { transform: translateY(-7px) rotate(12deg) scale(1.14); }
 }
 
+/* ============================================================================
+   LEFT-SIDE CUTE MINI SPEED ARROWS (x 1.0 ~ x 1.6) & BOSS HIT IMPACT FX
+   ============================================================================ */
+#utility-bar {
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+
+body.start-screen-active #utility-bar {
+  display: none !important;
+}
+
+.left-speed-mini-ctrl {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 4px 4px;
+  border-radius: 16px;
+  background: rgba(14, 10, 34, 0.88);
+  border: 1.5px solid rgba(255, 230, 0, 0.72);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.55), 0 0 12px rgba(255, 230, 0, 0.25);
+  backdrop-filter: blur(6px);
+  pointer-events: auto;
+  user-select: none;
+}
+
+.speed-mini-arrow-btn {
+  width: 28px;
+  height: 22px;
+  padding: 0;
+  border-radius: 9px;
+  border: 1.5px solid #ffffff;
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1;
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform 0.1s ease, filter 0.15s ease, opacity 0.15s ease;
+}
+
+.speed-mini-arrow-btn.speed-arrow-up {
+  background: linear-gradient(135deg, #ff70a6 0%, #ff2a85 100%);
+  box-shadow: 0 2px 0 #9d174d, 0 0 8px rgba(255, 42, 133, 0.6);
+}
+
+.speed-mini-arrow-btn.speed-arrow-down {
+  background: linear-gradient(135deg, #48cae4 0%, #0096c7 100%);
+  box-shadow: 0 2px 0 #023e8a, 0 0 8px rgba(0, 229, 255, 0.6);
+}
+
+.speed-mini-arrow-btn:active:not(:disabled) {
+  transform: translateY(2px) scale(0.92);
+}
+
+.speed-mini-arrow-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+  filter: grayscale(0.4);
+}
+
+.left-speed-mult-label {
+  font-family: var(--font-arcade);
+  font-size: 9.5px;
+  font-weight: 900;
+  color: #ffe600;
+  letter-spacing: -0.3px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.95);
+  padding: 1px 2px;
+}
+
+/* Weapon-Themed Full-Screen Impact Flash on Boss Hit */
+.impact-boss-screen-flash {
+  position: fixed;
+  inset: 0;
+  z-index: 44;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(255, 230, 0, 0.16) 25%, rgba(255, 69, 0, 0.55) 100%);
+  animation: bossHitFlashFade 0.36s ease-out forwards;
+}
+
+.impact-boss-screen-flash.flash-water_gun {
+  background: radial-gradient(circle, rgba(224, 247, 250, 0.22) 25%, rgba(0, 229, 255, 0.62) 100%);
+}
+
+.impact-boss-screen-flash.flash-mega_laser {
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.26) 20%, rgba(0, 245, 255, 0.58) 65%, rgba(255, 0, 127, 0.65) 100%);
+}
+
+.impact-boss-screen-flash.flash-ballistic_missile {
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.28) 20%, rgba(255, 23, 68, 0.62) 100%);
+}
+
+@keyframes bossHitFlashFade {
+  0% { opacity: 1; transform: scale(1.02); }
+  100% { opacity: 0; transform: scale(1); }
+}
+
+/* Violent Boss HUD Bar Shake & Red/White Strobe when Boss takes a hit */
+#boss-hud.boss-hud-hit-shake {
+  animation: bossHudHitRattle 0.48s cubic-bezier(0.36, 0.07, 0.19, 0.97) both !important;
+  border-color: #ffffff !important;
+  box-shadow: 0 0 38px rgba(255, 230, 0, 0.98), 0 0 60px rgba(255, 0, 85, 0.95) !important;
+}
+
+@keyframes bossHudHitRattle {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  15% { transform: translate3d(-10px, 4px, 0) scale(1.04) rotate(-1.2deg); }
+  30% { transform: translate3d(10px, -4px, 0) scale(1.05) rotate(1.2deg); }
+  45% { transform: translate3d(-8px, -3px, 0) scale(1.03) rotate(-0.9deg); }
+  60% { transform: translate3d(8px, 3px, 0) scale(1.02) rotate(0.8deg); }
+  80% { transform: translate3d(-4px, 2px, 0) scale(1.01) rotate(-0.4deg); }
+}
+
+
 
 
 
