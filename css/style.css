@@ -5253,6 +5253,201 @@ body.boss-phase-hud-active #hud-center-panel.hud-center-panel {
   cursor: pointer;
 }
 
+/* ============================================================================
+   BLINKING ARCADE ATTRACT GRAPHIC ON MAIN SCREEN ("이소윤 전용 용돈게임")
+   Positioned in the upper-center sky area of .main-game-showcase
+   ============================================================================ */
+.soyun-arcade-attract {
+  position: relative;
+  z-index: 4;
+  align-self: center;
+  margin: 6px auto auto auto;
+  width: min(92%, 420px);
+  cursor: pointer;
+  user-select: none;
+  pointer-events: auto;
+  animation: attractFloatPulse 2s ease-in-out infinite alternate;
+}
+
+@keyframes attractFloatPulse {
+  0% { transform: translateY(0px) scale(0.985); }
+  100% { transform: translateY(-5px) scale(1.025); }
+}
+
+.attract-marquee-box {
+  position: relative;
+  padding: 10px 14px 11px 14px;
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255, 230, 0, 0.28) 0%, transparent 68%),
+    linear-gradient(135deg, rgba(24, 6, 48, 0.88) 0%, rgba(56, 8, 68, 0.88) 50%, rgba(14, 24, 64, 0.88) 100%);
+  border: 2.5px solid #ffe600;
+  box-shadow:
+    0 0 24px rgba(255, 230, 0, 0.65),
+    0 0 44px rgba(255, 42, 133, 0.45),
+    inset 0 0 18px rgba(0, 245, 255, 0.28);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  text-align: center;
+  backdrop-filter: blur(5px);
+  animation: attractBorderFlash 0.95s steps(2, start) infinite;
+}
+
+@keyframes attractBorderFlash {
+  0% {
+    border-color: #ffe600;
+    box-shadow: 0 0 26px rgba(255, 230, 0, 0.85), 0 0 48px rgba(255, 42, 133, 0.55), inset 0 0 18px rgba(255, 230, 0, 0.35);
+  }
+  50% {
+    border-color: #00f5ff;
+    box-shadow: 0 0 28px rgba(0, 245, 255, 0.85), 0 0 52px rgba(0, 255, 136, 0.55), inset 0 0 18px rgba(0, 245, 255, 0.35);
+  }
+}
+
+/* Chasing Arcade Marquee Light Bulbs along the Top */
+.attract-bulb-strip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 1px;
+}
+
+.attract-bulb-strip span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ffe600;
+  box-shadow: 0 0 8px #ffe600, 0 0 14px #ff9100;
+  animation: bulbBlink 0.6s infinite alternate;
+}
+
+.attract-bulb-strip span:nth-child(even) {
+  background: #00f5ff;
+  box-shadow: 0 0 8px #00f5ff, 0 0 14px #ff2a85;
+  animation-delay: 0.3s;
+}
+
+@keyframes bulbBlink {
+  0% { opacity: 0.35; transform: scale(0.8); }
+  100% { opacity: 1; transform: scale(1.25); }
+}
+
+.attract-vip-ribbon {
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ff2a85, #7209b7, #00bbf9);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  color: #ffffff;
+  font-family: var(--font-arcade);
+  font-size: clamp(9px, 2.3vw, 11px);
+  font-weight: 900;
+  letter-spacing: 0.8px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+.attract-main-headline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+.attract-crown,
+.attract-money {
+  font-size: clamp(20px, 5.2vw, 28px);
+  filter: drop-shadow(0 0 10px rgba(255, 230, 0, 0.9));
+  animation: iconWiggle 0.7s ease-in-out infinite alternate;
+}
+
+@keyframes iconWiggle {
+  0% { transform: rotate(-10deg) scale(0.95); }
+  100% { transform: rotate(10deg) scale(1.12); }
+}
+
+.attract-title-text {
+  font-family: var(--font-kr);
+  font-size: clamp(20px, 5.6vw, 30px);
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  background: linear-gradient(90deg, #ffffff 0%, #ffe600 30%, #ff70a6 65%, #00f5ff 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 0 #2b0538) drop-shadow(0 0 14px rgba(255, 230, 0, 0.75));
+  animation: attractTextShimmer 1.4s linear infinite, attractTextBlink 0.75s ease-in-out infinite alternate;
+}
+
+@keyframes attractTextShimmer {
+  0% { background-position: 0% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes attractTextBlink {
+  0% { transform: scale(0.98); filter: drop-shadow(0 2px 0 #2b0538) drop-shadow(0 0 10px rgba(255, 230, 0, 0.65)); }
+  100% { transform: scale(1.04); filter: drop-shadow(0 2px 0 #2b0538) drop-shadow(0 0 22px rgba(255, 42, 133, 0.95)); }
+}
+
+/* Classic Arcade "PRESS START" Blinking Call-To-Action Bar */
+.attract-press-start {
+  margin-top: 2px;
+  padding: 4px 14px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ffe600 0%, #ff9100 50%, #ffe600 100%);
+  color: #140624;
+  font-size: clamp(11px, 3vw, 13.5px);
+  font-weight: 900;
+  box-shadow: 0 0 16px rgba(255, 230, 0, 0.9);
+  animation: arcadePressStartBlink 0.65s steps(2, start) infinite;
+}
+
+@keyframes arcadePressStartBlink {
+  0% {
+    opacity: 1;
+    transform: scale(1.03);
+    background: linear-gradient(90deg, #ffe600, #00ff88);
+    box-shadow: 0 0 18px rgba(0, 255, 136, 0.95);
+  }
+  50% {
+    opacity: 0.28;
+    transform: scale(0.97);
+    background: linear-gradient(90deg, #ff2a85, #ffe600);
+    box-shadow: 0 0 8px rgba(255, 42, 133, 0.6);
+  }
+}
+
+/* Floating Money & Reward Icons around the Attract Sign */
+.attract-coin-orbit {
+  position: absolute;
+  inset: -10px -12px;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.attract-floating-icon {
+  position: absolute;
+  font-size: clamp(16px, 4.2vw, 22px);
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.65));
+  animation: floatCoinBounce 1.5s ease-in-out infinite alternate;
+}
+
+.attract-floating-icon.icon-1 { top: -8px; left: 4%; animation-delay: 0s; }
+.attract-floating-icon.icon-2 { top: -10px; right: 5%; animation-delay: 0.3s; }
+.attract-floating-icon.icon-3 { bottom: -6px; left: 2%; animation-delay: 0.6s; }
+.attract-floating-icon.icon-4 { bottom: -6px; right: 3%; animation-delay: 0.9s; }
+.attract-floating-icon.icon-5 { top: 38%; right: -10px; animation-delay: 0.45s; }
+
+@keyframes floatCoinBounce {
+  0% { transform: translateY(2px) rotate(-12deg) scale(0.92); }
+  100% { transform: translateY(-7px) rotate(12deg) scale(1.14); }
+}
+
 
 
 

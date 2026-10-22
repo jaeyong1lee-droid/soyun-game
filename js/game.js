@@ -2345,10 +2345,26 @@
         }
       });
 
-      // Start Dashboard Primary CTA -> Opens Sky-Ascending World Tree Map BEFORE starting the race!
+      // Start Dashboard Primary CTA & Blinking Attract Graphic -> Opens World Adventure Tree Map BEFORE starting the race!
       const btnStart = document.getElementById('btn-start-game');
       if (btnStart) {
         btnStart.addEventListener('click', function () {
+          self.openPreStartTreeMap(state.selectedDashboardStage);
+        });
+      }
+
+      const attractBanner = document.getElementById('soyun-arcade-attract-banner');
+      if (attractBanner) {
+        attractBanner.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          self.openPreStartTreeMap(state.selectedDashboardStage);
+        });
+      }
+
+      const showcaseStage = document.getElementById('main-game-stage-showcase');
+      if (showcaseStage) {
+        showcaseStage.addEventListener('click', function () {
           self.openPreStartTreeMap(state.selectedDashboardStage);
         });
       }
