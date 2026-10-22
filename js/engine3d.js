@@ -5619,6 +5619,34 @@
     },
 
     /**
+     * Trigger 5-Second All-Out Overwhelming Firepower Finisher Barrage on Boss when HP reaches 0!
+     * Fires all 5 special weapons (Ballistic Missiles, Water Gun, Mega Laser, Round Bomb, Meteor) in rapid waves
+     * for 4.05s, culminating in the massive Boss supernova explosion from 4.05s to 5.0s!
+     */
+    triggerBossFinisherBarrage: function () {
+      this._updateBossHpBar(0);
+      this.bossDefeating = false;
+      this.bossSpotlightTimer = 5.2;
+      this.avatarCheerTimer = 5.0;
+      this.petSpinTimer = 5.0;
+      this.boostEffectTimer = 5.0;
+
+      this.bossFinisherQueue = [
+        { delay: 0.35, weapon: 'ballistic_missile' },
+        { delay: 0.85, weapon: 'water_gun' },
+        { delay: 1.35, weapon: 'mega_laser' },
+        { delay: 1.85, weapon: 'round_bomb' },
+        { delay: 2.35, weapon: 'meteor_hammer' },
+        { delay: 2.80, weapon: 'ballistic_missile' },
+        { delay: 3.15, weapon: 'mega_laser' },
+        { delay: 3.50, weapon: 'water_gun' },
+        { delay: 3.80, weapon: 'round_bomb' },
+        { delay: 4.05, weapon: 'meteor_hammer', isFinale: true }
+      ];
+      return this;
+    },
+
+    /**
      * Trigger dramatic multi-burst Boss defeat sequence with massive Roblox Brick explosion
      */
     defeatBoss: function (onComplete) {
@@ -5627,20 +5655,25 @@
       this.bossDefeatTimer = 0;
       this.bossDefeatCallback = typeof onComplete === 'function' ? onComplete : null;
       this.bossChainExplosions = [];
+      this.bossFinisherQueue = [];
 
       if (this.bossGroup) {
         const bx = this.bossGroup.position.x;
         const by = this.bossGroup.position.y;
         const bz = this.bossGroup.position.z;
-        this.spawnBrickExplosion(bx, by + 1, bz + 2, 72, true);
-        this._spawnParticleBurst(bx, by, bz, 0xff0055, 80, 2.3);
-        this._spawnParticleBurst(bx - 3, by + 1, bz + 2, 0xffe600, 65, 2.0);
-        this._spawnParticleBurst(bx + 3, by - 1, bz + 2, 0x00f3ff, 65, 2.0);
+        this.spawnBrickExplosion(bx, by + 1, bz + 2, 110, true);
+        this._spawnParticleBurst(bx, by, bz, 0xff0055, 95, 2.5);
+        this._spawnParticleBurst(bx - 3, by + 1, bz + 2, 0xffe600, 80, 2.2);
+        this._spawnParticleBurst(bx + 3, by - 1, bz + 2, 0x00f3ff, 80, 2.2);
       }
 
-      this.shakeIntensity = 0.85;
-      this.shakeTimer = 0.65;
-      this.cameraZoomPunch = 15.0;
+      if (global.SoundEngine && typeof global.SoundEngine.playBossDefeat === 'function') {
+        global.SoundEngine.playBossDefeat();
+      }
+
+      this.shakeIntensity = 1.15;
+      this.shakeTimer = 0.85;
+      this.cameraZoomPunch = 18.0;
       return this;
     },
 
@@ -5652,6 +5685,7 @@
       this.bossDefeating = false;
       this.bossDefeatCallback = null;
       this.bossChainExplosions = [];
+      this.bossFinisherQueue = [];
       if (this.bossGroup) {
         this.bossGroup.visible = false;
       }
