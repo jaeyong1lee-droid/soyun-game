@@ -737,24 +737,46 @@
   </div>
 
   <!-- =====================================================================
-       MODAL 8: Boss Clear Step 2 — Next Stage Confirmation Popup (#next-stage-modal)
-       Shown immediately when the user clicks #boss-reward-modal
+       MODAL 8: Sky-Ascending World Tree Map Popup (#next-stage-modal)
+       Shown BEFORE Game Start AND when advancing to the Next Stage after Boss Clear!
+       ("1단계는 어느나라 - 2단계는 어느나라" 하늘로 올라가는 단계별 트리맵 요약도)
        ===================================================================== -->
   <div id="next-stage-modal" class="modal-backdrop hidden">
-    <div class="modal-card confirm-popup-card next-stage-popup-card" role="dialog" aria-modal="true" aria-labelledby="next-stage-title">
-      <div class="arcade-title-pill">NEXT STAGE READY!</div>
-      <h2 id="next-stage-title" class="retry-title">🚀 다음 STAGE로 갈까요?</h2>
-      <div id="next-stage-preview-box" class="next-stage-preview-box">
-        <span id="next-stage-badge" class="next-stage-badge">🏁 STAGE 2</span>
-        <strong id="next-stage-name" class="next-stage-name">🍕 피자 팩토리 타워 (Pizza Obby Tower)</strong>
-        <span class="next-stage-bonus-note">❤️ 체력 +2 회복 · ⏸️ 일시정지 2회 충전 완료!</span>
+    <div class="modal-card confirm-popup-card next-stage-popup-card sky-treemap-card" role="dialog" aria-modal="true" aria-labelledby="next-stage-title">
+      <div class="sky-treemap-header">
+        <div class="sky-treemap-pill-row">
+          <span id="sky-treemap-mode-pill" class="arcade-title-pill">☁️ SKY WORLD TREE MAP ⬆️</span>
+          <span id="sky-treemap-altitude-badge" class="sky-altitude-badge">🌤️ 현재 고도: 상공 1,000m</span>
+        </div>
+        <h2 id="next-stage-title" class="retry-title sky-treemap-title">🗺️ 하늘로 올라가는 소윤이의 월드 트리맵</h2>
+        <p id="sky-treemap-subtitle" class="sky-treemap-subtitle">
+          1단계 대자연의 나라부터 하늘 끝 만원 보스 왕국까지 한 단계씩 정복하며 위로 올라가요!
+        </p>
       </div>
-      <div class="confirm-popup-actions">
+
+      <!-- Vertical Sky-Climbing Tree Map Container (Bottom = Stage 1 Ground -> Top = Sky Kingdom Peak) -->
+      <div id="sky-treemap-scroll" class="sky-treemap-scroll" aria-label="하늘로 올라가는 단계별 월드 트리맵 요약도">
+        <div class="sky-treemap-clouds-bg" aria-hidden="true"></div>
+        <div id="sky-treemap-list" class="sky-treemap-list">
+          <!-- Populated dynamically by UIManager.renderSkyTreeMap() -->
+        </div>
+      </div>
+
+      <!-- Current Position Summary Box -->
+      <div id="next-stage-preview-box" class="next-stage-preview-box">
+        <div class="next-stage-preview-top">
+          <span id="next-stage-badge" class="next-stage-badge">📍 현재 위치: 1단계</span>
+          <strong id="next-stage-name" class="next-stage-name">🏞️ 에메랄드 대자연의 나라</strong>
+        </div>
+        <span id="next-stage-bonus-note" class="next-stage-bonus-note">알프스 만년설 산맥 · 에메랄드 강변 · 푸른 소나무 숲</span>
+      </div>
+
+      <div class="confirm-popup-actions sky-treemap-actions">
         <button id="btn-next-stage-yes" class="btn-primary-cta btn-confirm-yes" type="button">
-          🚀 네! 다음 STAGE 바로 출발하기!
+          🚀 1단계 (에메랄드 대자연의 나라) 출발하기!
         </button>
         <button id="btn-next-stage-no" class="btn-secondary-action btn-confirm-no" type="button">
-          🏠 메인 화면으로 나가기
+          🏠 메인 화면으로
         </button>
       </div>
     </div>
@@ -763,16 +785,16 @@
   <!-- Three.js r128 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <!-- Nano Banana Generated Retro 3D Assets Bundle (CORS-free on file:// & http://) -->
-  <script src="js/assets_data.js?v=20261022_16"></script>
+  <script src="js/assets_data.js?v=20261022_17"></script>
   <!-- Shared Game Modules -->
-  <script src="js/config.js?v=20261022_16"></script>
-  <script src="js/storage.js?v=20261022_16"></script>
-  <script src="js/questionEngine.js?v=20261022_16"></script>
-  <script src="js/sound.js?v=20261022_16"></script>
-  <script src="js/engine3d.js?v=20261022_16"></script>
+  <script src="js/config.js?v=20261022_17"></script>
+  <script src="js/storage.js?v=20261022_17"></script>
+  <script src="js/questionEngine.js?v=20261022_17"></script>
+  <script src="js/sound.js?v=20261022_17"></script>
+  <script src="js/engine3d.js?v=20261022_17"></script>
   <!-- UI & Game Controller -->
-  <script src="js/ui.js?v=20261022_16"></script>
-  <script src="js/game.js?v=20261022_16"></script>
+  <script src="js/ui.js?v=20261022_17"></script>
+  <script src="js/game.js?v=20261022_17"></script>
 
   <!-- Google Chrome / Mobile PWA Service Worker & One-Click App Install Handler -->
   <script>
@@ -782,7 +804,7 @@
 
       if ('serviceWorker' in navigator && window.location.protocol !== 'file:') {
         window.addEventListener('load', function () {
-          navigator.serviceWorker.register('sw.js?v=20261022_16', { updateViaCache: 'none' }).then(function (reg) {
+          navigator.serviceWorker.register('sw.js?v=20261022_17', { updateViaCache: 'none' }).then(function (reg) {
             reg.update();
           }).catch(function () {});
         });
