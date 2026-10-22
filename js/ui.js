@@ -461,12 +461,12 @@
       }
       const elLeftSpeedLbl = byId('left-speed-mult-label');
       if (elLeftSpeedLbl) {
-        const clampedArrowMult = Math.max(1.0, Math.min(1.6, multVal));
+        const clampedArrowMult = Math.max(1.0, Math.min(2.5, multVal));
         elLeftSpeedLbl.textContent = `x${clampedArrowMult.toFixed(1)}`;
       }
       const btnSpeedUp = byId('btn-speed-up');
       if (btnSpeedUp) {
-        btnSpeedUp.disabled = multVal >= 1.6 - 0.01;
+        btnSpeedUp.disabled = multVal >= 2.5 - 0.01;
       }
       const btnSpeedDown = byId('btn-speed-down');
       if (btnSpeedDown) {

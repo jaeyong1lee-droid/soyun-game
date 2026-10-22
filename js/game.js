@@ -1562,11 +1562,11 @@
     },
 
     /**
-     * Sets user speed multiplier (0.4x ~ 2.0x) and updates 3D engine & HUD immediately.
+     * Sets user speed multiplier (1.0x ~ 2.5x) and updates 3D engine & HUD immediately.
      * @param {number} mult
      */
     setSpeedMultiplier: function (mult) {
-      const clamped = Math.max(0.4, Math.min(2.0, Math.round((Number(mult) || 1.0) * 100) / 100));
+      const clamped = Math.max(1.0, Math.min(2.5, Math.round((Number(mult) || 1.0) * 100) / 100));
       state.speedMultiplier = clamped;
       if (window.SaveManager && typeof window.SaveManager.setSpeedMultiplier === 'function') {
         window.SaveManager.setSpeedMultiplier(clamped);
@@ -1603,15 +1603,15 @@
     },
 
     /**
-     * Steps the left-side cute speed arrows strictly within x 1.0 ~ x 1.6!
+     * Steps the left-side cute speed arrows strictly within x 1.0 ~ x 2.5!
      * @param {number} delta (+0.1 or -0.1)
      */
     stepLeftSpeedArrow: function (delta) {
       if (window.SoundEngine) {
         window.SoundEngine.playClick();
       }
-      const base = Math.max(1.0, Math.min(1.6, Number(state.speedMultiplier) || 1.0));
-      const nextMult = Math.max(1.0, Math.min(1.6, Math.round((base + (Number(delta) || 0)) * 10) / 10));
+      const base = Math.max(1.0, Math.min(2.5, Number(state.speedMultiplier) || 1.0));
+      const nextMult = Math.max(1.0, Math.min(2.5, Math.round((base + (Number(delta) || 0)) * 10) / 10));
       return this.setSpeedMultiplier(nextMult);
     },
 
