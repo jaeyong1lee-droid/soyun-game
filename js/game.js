@@ -408,6 +408,17 @@
       state.obbyWavesCleared = 0;
       state.stageWrongQuestions = [];
 
+      if (this._bossSpotlightTimer) {
+        clearTimeout(this._bossSpotlightTimer);
+        this._bossSpotlightTimer = null;
+      }
+      this._clearBossFinisherClickPrompt();
+      document.body.classList.remove('boss-attack-spotlight-active');
+
+      if (window.QuestionEngine && typeof window.QuestionEngine.resetStageCounters === 'function') {
+        window.QuestionEngine.resetStageCounters(targetStage);
+      }
+
       if (window.UIManager) {
         window.UIManager.setStartScreenVisible(false);
         window.UIManager.hideGameOverModal();
@@ -1931,6 +1942,17 @@
       state.isObbyMode = false;
       state.obbyWavesCleared = 0;
       state.stageWrongQuestions = [];
+
+      if (this._bossSpotlightTimer) {
+        clearTimeout(this._bossSpotlightTimer);
+        this._bossSpotlightTimer = null;
+      }
+      this._clearBossFinisherClickPrompt();
+      document.body.classList.remove('boss-attack-spotlight-active');
+
+      if (window.QuestionEngine && typeof window.QuestionEngine.resetStageCounters === 'function') {
+        window.QuestionEngine.resetStageCounters(targetStage);
+      }
 
       if (window.Engine3D) {
         window.Engine3D.clearActiveGates();

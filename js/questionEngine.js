@@ -269,6 +269,22 @@
   const REVIEW_INTERVAL = 2;
   let _questionsSinceLastReview = 0;
 
+  // Per-stage cap for Korean phonetic reading questions ("영어를 소리나는대로 읽는문제는 단계당 2~3문제만 내")
+  const _stageReadingTracker = {
+    stage: 0,
+    count: 0,
+    limit: 2
+  };
+
+  function ensureStageReadingTracker(stageNum) {
+    const stg = Math.max(1, parseInt(stageNum, 10) || 1);
+    if (_stageReadingTracker.stage !== stg) {
+      _stageReadingTracker.stage = stg;
+      _stageReadingTracker.count = 0;
+      _stageReadingTracker.limit = randomInt(2, 3);
+    }
+  }
+
   function randomInt(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
@@ -773,27 +789,35 @@
    */
   function generateEnglishQuestion(stageNum) {
     const stage = Math.max(1, parseInt(stageNum, 10) || 1);
+    ensureStageReadingTracker(stage);
 
-    // Stage 3+: Include Microphone English Pronunciation Questions (~22% of English questions)
-    if (stage >= 3 && Math.random() < 0.22) {
+    // Stage 3+: Include Microphone English Pronunciation Questions (~18% of English questions)
+    if (stage >= 3 && Math.random() < 0.18) {
       return generatePronunciationQuestion(stage);
     }
 
-    // Probability of Everyday Conversational English (생활영어): ~28% -> 42%
-    const dailyExprProb = Math.min(0.42, 0.26 + (stage - 1) * 0.02);
+    // Probability of Everyday Conversational English (생활영어): ~28% -> 40%
+    const dailyExprProb = Math.min(0.40, 0.26 + (stage - 1) * 0.015);
     if (Math.random() < dailyExprProb) {
       return generateDailyEnglishQuestion(stage);
     }
 
-    // Filter pool based on stage (Stage 1~3: level 1, Stage 4~7: level 1-2, Stage 8+: level 1-3)
-    const maxWordLevel = stage <= 3 ? 1 : (stage <= 7 ? 2 : 3);
-    const eligiblePool = ENGLISH_DICTIONARY.filter(function (w) {
-      return w.level <= maxWordLevel;
+    // Progressive word difficulty scaling by stage (continues scaling even after speed reaches 2.5x max!)
+    const maxWordLevel = stage <= 3 ? 1 : (stage <= 7 ? 2 : (stage <= 13 ? 3 : (stage <= 20 ? 4 : 5)));
+    const minWordLevel = stage >= 22 ? 3 : (stage >= 12 ? 2 : 1);
+    let eligiblePool = ENGLISH_DICTIONARY.filter(function (w) {
+      return w.level >= minWordLevel && w.level <= maxWordLevel;
     });
+    if (eligiblePool.length < 6) {
+      eligiblePool = ENGLISH_DICTIONARY.filter(function (w) {
+        return w.level <= maxWordLevel;
+      });
+    }
 
-    // 45% of vocabulary questions are English-to-Korean-Reading ("APPLE" -> "애플")!
+    // Limit English-to-Korean-Reading ("APPLE" -> "애플") to strictly 2~3 questions per stage!
+    const canAskReadingQuiz = _stageReadingTracker.count < _stageReadingTracker.limit;
     const modeRoll = Math.random();
-    const isReadingQuiz = modeRoll < 0.45;
+    const isReadingQuiz = canAskReadingQuiz && (modeRoll < 0.38);
 
     // For reading quiz ("APPLE -> 애플"), prefer words that have a clear Korean phonetic reading
     const readingPool = isReadingQuiz
@@ -823,8 +847,9 @@
     const combinedDistractorPool = shuffleArray(sameThemePool).concat(shuffleArray(otherPool));
     const distractorWords = [combinedDistractorPool[0], combinedDistractorPool[1]];
 
-    // Mode 1: English Word -> Korean Phonetic Reading ("APPLE -> 애플")
+    // Mode 1: English Word -> Korean Phonetic Reading ("APPLE -> 애플") — capped at 2~3 per stage!
     if (isReadingQuiz && targetWord.pron) {
+      _stageReadingTracker.count += 1;
       const upperEn = targetWord.en.toUpperCase();
       const answerStr = targetWord.pron;
       const laneData = buildThreeLaneChoices(
@@ -851,7 +876,7 @@
     }
 
     // Mode 2 & 3: 50% KR -> EN, 50% EN -> KR
-    const isKrToEn = modeRoll < 0.725;
+    const isKrToEn = Math.random() < 0.5;
     const emojiPrefix = targetWord.emoji ? `${targetWord.emoji} ` : '🔤 ';
 
     if (isKrToEn) {
@@ -1245,6 +1270,16 @@
       // Ready to trigger on the very next nextQuestion() call
       _questionsSinceLastReview = REVIEW_INTERVAL;
       return sample;
+    },
+
+    /**
+     * Resets per-stage reading quiz counter (2~3 questions per stage) when starting a stage
+     */
+    resetStageCounters: function (stageNum) {
+      const stg = Math.max(1, parseInt(stageNum, 10) || 1);
+      _stageReadingTracker.stage = stg;
+      _stageReadingTracker.count = 0;
+      _stageReadingTracker.limit = randomInt(2, 3);
     },
 
     /**
