@@ -367,6 +367,17 @@
         </div>
       </div>
 
+      <!-- Failed Questions Review Box on Stage Fail (Answers Hidden until [👀 답 보기] is clicked!) -->
+      <div id="gameover-wrong-section" class="stage-wrong-review-section">
+        <div class="stage-wrong-header">
+          <span class="stage-wrong-title">📝 틀린 문제 리스트 <small>(답 보기를 누르면 정답이 공개돼요!)</small></span>
+          <button id="btn-gameover-reveal-all" type="button" class="btn-reveal-all-ans">👀 전체 답 보기</button>
+        </div>
+        <div id="gameover-wrong-list" class="stage-wrong-list">
+          <!-- Populated dynamically by UIManager -->
+        </div>
+      </div>
+
       <div class="retry-actions">
         <button id="btn-retry-stage" class="btn-primary-cta btn-retry-cta" type="button">
           ⚡ STAGE 1 즉시 재도전 (소윤이 누적 로벅스·오답 기록 유지)
