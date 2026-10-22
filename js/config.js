@@ -355,8 +355,7 @@
       const unpaidJackpot = Math.max(0, jackpotEarned - paidJackpot);
       const totalUnpaidBonuses = unpaidPocket + unpaidAshley + unpaidJackpot;
 
-      const rawPocketName = (saveState.bonusNamePocket && String(saveState.bonusNamePocket).trim()) || '용돈 3,000원';
-      const namePocket = rawPocketName === '용돈 5,000원' ? '용돈 3,000원' : rawPocketName;
+      const namePocket = (saveState.bonusNamePocket && String(saveState.bonusNamePocket).trim()) || '용돈 3,000원';
       const nameAshley = (saveState.bonusNameAshley && String(saveState.bonusNameAshley).trim()) || '애슐리 외식';
       const nameJackpot = (saveState.bonusNameJackpot && String(saveState.bonusNameJackpot).trim()) || '10판 보스 만원 상금';
 
