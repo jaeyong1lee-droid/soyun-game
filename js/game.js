@@ -37,7 +37,8 @@
     isObbyMode: false,
     obbyWavesTotal: 7,
     obbyWavesCleared: 0,
-    orientationMode: 'auto'
+    orientationMode: 'auto',
+    stageWrongQuestions: []
   };
 
   let _speechRec = null;
