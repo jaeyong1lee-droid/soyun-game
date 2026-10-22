@@ -817,7 +817,8 @@
           state.paidJackpotCount = (parseInt(state.paidJackpotCount, 10) || 0) + 1;
         }
       }
-      this.save();
+      _lastLocalSettingsEditAt = Date.now();
+      this.save(true);
       return state;
     },
 
@@ -835,7 +836,8 @@
       } else if (bonusKey === 'jackpot') {
         state.paidJackpotCount = (parseInt(state.paidJackpotCount, 10) || 0) - 1;
       }
-      this.save();
+      _lastLocalSettingsEditAt = Date.now();
+      this.save(true);
       return state;
     },
 
@@ -856,7 +858,8 @@
       } else if (bonusKey === 'jackpot') {
         state.bonusTargetJackpot = target;
       }
-      this.save();
+      _lastLocalSettingsEditAt = Date.now();
+      this.save(true);
       return state;
     },
 
@@ -877,7 +880,8 @@
       } else if (bonusKey === 'jackpot') {
         state.bonusNameJackpot = cleaned;
       }
-      this.save();
+      _lastLocalSettingsEditAt = Date.now();
+      this.save(true);
       return state;
     },
 

@@ -289,8 +289,19 @@
         elMainPetBadge.textContent = `${activePet.shortName || activePet.name}`;
       }
 
-      // Keep Parent Modal in sync if rendered
-      this.renderParentModal(state);
+      // Keep Parent Modal in sync if rendered (unless user is currently typing in an input inside #parent-modal)
+      const parentModalEl = byId('parent-modal');
+      const activeInputEl = document.activeElement;
+      const isEditingParentInput = Boolean(
+        parentModalEl &&
+        !parentModalEl.classList.contains('hidden') &&
+        activeInputEl &&
+        parentModalEl.contains(activeInputEl) &&
+        activeInputEl.tagName === 'INPUT'
+      );
+      if (!isEditingParentInput) {
+        this.renderParentModal(state);
+      }
 
       // Subject Mode Buttons
       const modeContainer = byId('subject-mode-selector');
