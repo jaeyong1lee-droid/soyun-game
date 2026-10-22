@@ -5440,7 +5440,7 @@
       }
 
       // Immediate launch recoil + muzzle blast + 1.35s Boss Camera Spotlight!
-      this.bossSpotlightTimer = 1.35;
+      this.bossSpotlightTimer = Math.max(this.bossSpotlightTimer || 0, 1.35);
       if (this.bossImpactLight) {
         this.bossImpactLight.color.setHex(chosen.type === 'water_gun' ? 0x00e5ff : 0xffe600);
         this.bossImpactLight.intensity = 6.5;
@@ -5622,7 +5622,7 @@
     },
 
     /**
-     * Trigger 5-Second Slow-Motion All-Out Overwhelming Firepower Finisher Barrage on Boss when HP reaches 0!
+     * Trigger 8-Second Slow-Motion All-Out Overwhelming Firepower Finisher Barrage on Boss when HP reaches 0!
      * Fires all 5 special weapons (Ballistic Missiles, Water Gun, Mega Laser, Round Bomb, Meteor) in rapid waves
      * in dramatic cinematic slow-motion (~0.36x time scale), culminating in the massive Boss supernova explosion!
      */
@@ -5630,11 +5630,11 @@
       this._updateBossHpBar(0);
       this.bossDefeating = false;
       this.isVictoryCruise = false;
-      this.bossFinisherSlowMoTimer = 5.0; // Exact 5.0s Slow-Motion Boss Finisher Barrage
-      this.bossSpotlightTimer = 5.0;
-      this.avatarCheerTimer = 5.0;
-      this.petSpinTimer = 5.0;
-      this.boostEffectTimer = 5.0;
+      this.bossFinisherSlowMoTimer = 8.0; // Exact 8.0s Slow-Motion Boss Finisher Barrage
+      this.bossSpotlightTimer = 8.0;
+      this.avatarCheerTimer = 8.0;
+      this.petSpinTimer = 8.0;
+      this.boostEffectTimer = 8.0;
 
       this.bossFinisherQueue = [
         { delay: 0.15, weapon: 'ballistic_missile' },
@@ -5643,9 +5643,15 @@
         { delay: 1.65, weapon: 'round_bomb' },
         { delay: 2.15, weapon: 'meteor_hammer' },
         { delay: 2.65, weapon: 'ballistic_missile' },
-        { delay: 3.10, weapon: 'mega_laser' },
-        { delay: 3.45, weapon: 'round_bomb' },
-        { delay: 3.85, weapon: 'meteor_hammer', isFinale: true }
+        { delay: 3.15, weapon: 'water_gun' },
+        { delay: 3.65, weapon: 'mega_laser' },
+        { delay: 4.15, weapon: 'round_bomb' },
+        { delay: 4.65, weapon: 'meteor_hammer' },
+        { delay: 5.15, weapon: 'ballistic_missile' },
+        { delay: 5.65, weapon: 'water_gun' },
+        { delay: 6.10, weapon: 'mega_laser' },
+        { delay: 6.50, weapon: 'round_bomb' },
+        { delay: 6.85, weapon: 'meteor_hammer', isFinale: true }
       ];
       return this;
     },

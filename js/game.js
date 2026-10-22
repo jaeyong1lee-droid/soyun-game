@@ -787,8 +787,8 @@
               this._bossSpotlightTimer = null;
             }
             this._clearBossFinisherClickPrompt();
-            // 5-Second Slow-Motion Ultimate Firepower Boss Finisher Animation!
-            // Hide question banner, unleash a 5-second slow-motion all-weapons barrage
+            // 8-Second Slow-Motion Ultimate Firepower Boss Finisher Animation!
+            // Hide question banner, unleash an 8-second slow-motion all-weapons barrage
             // (Missiles, Water Gun, Mega Laser, Round Bomb, Meteor), and then wait for 1 click/tap to proceed!
             document.body.classList.add('boss-attack-spotlight-active');
             if (window.Engine3D) {
@@ -801,7 +801,7 @@
             if (window.UIManager && typeof window.UIManager.pushRobloxChat === 'function') {
               window.UIManager.pushRobloxChat(
                 '로블록스TV',
-                '🚨💥 [슬로우모션 초필살 전탄 발사!!] 이소윤 선수의 모든 특수무기(🚀탄도미사일·🔫물총·⚡레이저·💣폭탄·☄️메테오)가 보스를 집중 폭격합니다!!',
+                '🚨💥 [8초 슬로우모션 초필살 전탄 발사!!] 이소윤 선수의 모든 특수무기(🚀탄도미사일·🔫물총·⚡레이저·💣폭탄·☄️메테오)가 보스를 집중 폭격합니다!!',
                 'tv'
               );
             }
@@ -815,7 +815,7 @@
                 return;
               }
               self._showBossFinisherClickPrompt(pointsEarned);
-            }, 5000);
+            }, 8000);
             return;
           } else {
             if (window.UIManager && typeof window.UIManager.pushRobloxChat === 'function') {
