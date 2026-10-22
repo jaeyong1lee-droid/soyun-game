@@ -41,9 +41,12 @@
       paidPocketCount: 0,       // Paid/deleted offset for Bonus 1
       paidAshleyCount: 0,       // Paid/deleted offset for Bonus 2
       paidJackpotCount: 0,      // Paid/deleted offset for 10th-boss Bonus 3
-      bonusNamePocket: '용돈 5,000원',
+      bonusNamePocket: '용돈 3,000원',
       bonusNameAshley: '애슐리 외식',
       bonusNameJackpot: '10판 보스 만원 상금',
+      bonusTargetPocket: 100,   // Target plays (판) for Bonus 1
+      bonusTargetAshley: 1000,  // Target plays (판) for Bonus 2
+      bonusTargetJackpot: 10,   // Target stages (단계) for Boss Bonus 3
       parentPin: '1508',        // Parent PIN for parent control window (1508)
       subjectMode: 'mixed',     // 'mixed' | 'math' | 'english'
       wrongAnswerQueue: [],     // Persistent queue of wrong questions that MUST re-appear!
@@ -78,9 +81,12 @@
       paidPocketCount: parseInt(row.paid_pocket_count, 10) || 0,
       paidAshleyCount: parseInt(row.paid_ashley_count, 10) || 0,
       paidJackpotCount: parseInt(row.paid_jackpot_count, 10) || 0,
-      bonusNamePocket: row.bonus_name_pocket || '용돈 5,000원',
+      bonusNamePocket: (!row.bonus_name_pocket || row.bonus_name_pocket === '용돈 5,000원') ? '용돈 3,000원' : row.bonus_name_pocket,
       bonusNameAshley: row.bonus_name_ashley || '애슐리 외식',
       bonusNameJackpot: row.bonus_name_jackpot || '10판 보스 만원 상금',
+      bonusTargetPocket: Math.max(1, parseInt(row.bonus_target_pocket, 10) || 100),
+      bonusTargetAshley: Math.max(1, parseInt(row.bonus_target_ashley, 10) || 1000),
+      bonusTargetJackpot: Math.max(1, parseInt(row.bonus_target_jackpot, 10) || 10),
       liveUrl: row.live_url || '',
       buildId: row.build_id || '',
       subjectMode: row.subject_mode || 'mixed',
@@ -136,15 +142,19 @@
     const paidPocketCount = parseInt(raw.paidPocketCount, 10) || 0;
     const paidAshleyCount = parseInt(raw.paidAshleyCount, 10) || 0;
     const paidJackpotCount = parseInt(raw.paidJackpotCount, 10) || 0;
-    const bonusNamePocket = (typeof raw.bonusNamePocket === 'string' && raw.bonusNamePocket.trim())
+    const rawPocketName = (typeof raw.bonusNamePocket === 'string' && raw.bonusNamePocket.trim())
       ? raw.bonusNamePocket.trim()
-      : '용돈 5,000원';
+      : '용돈 3,000원';
+    const bonusNamePocket = rawPocketName === '용돈 5,000원' ? '용돈 3,000원' : rawPocketName;
     const bonusNameAshley = (typeof raw.bonusNameAshley === 'string' && raw.bonusNameAshley.trim())
       ? raw.bonusNameAshley.trim()
       : '애슐리 외식';
     const bonusNameJackpot = (typeof raw.bonusNameJackpot === 'string' && raw.bonusNameJackpot.trim())
       ? raw.bonusNameJackpot.trim()
       : '10판 보스 만원 상금';
+    const bonusTargetPocket = Math.max(1, parseInt(raw.bonusTargetPocket, 10) || 100);
+    const bonusTargetAshley = Math.max(1, parseInt(raw.bonusTargetAshley, 10) || 1000);
+    const bonusTargetJackpot = Math.max(1, parseInt(raw.bonusTargetJackpot, 10) || 10);
     const rawPin = typeof raw.parentPin === 'string' ? raw.parentPin.trim() : '';
     const parentPin = (rawPin.length >= 4 && rawPin !== '1234')
       ? rawPin
@@ -185,6 +195,9 @@
       bonusNamePocket: bonusNamePocket,
       bonusNameAshley: bonusNameAshley,
       bonusNameJackpot: bonusNameJackpot,
+      bonusTargetPocket: bonusTargetPocket,
+      bonusTargetAshley: bonusTargetAshley,
+      bonusTargetJackpot: bonusTargetJackpot,
       parentPin: parentPin,
       subjectMode: subjectMode,
       wrongAnswerQueue: wrongAnswerQueue,
@@ -316,9 +329,12 @@
               paidPocketCount: (typeof local.paidPocketCount === 'number' && local.paidPocketCount !== 0) ? local.paidPocketCount : (cloud.paidPocketCount || 0),
               paidAshleyCount: (typeof local.paidAshleyCount === 'number' && local.paidAshleyCount !== 0) ? local.paidAshleyCount : (cloud.paidAshleyCount || 0),
               paidJackpotCount: (typeof local.paidJackpotCount === 'number' && local.paidJackpotCount !== 0) ? local.paidJackpotCount : (cloud.paidJackpotCount || 0),
-              bonusNamePocket: local.bonusNamePocket || cloud.bonusNamePocket || '용돈 5,000원',
+              bonusNamePocket: local.bonusNamePocket || cloud.bonusNamePocket || '용돈 3,000원',
               bonusNameAshley: local.bonusNameAshley || cloud.bonusNameAshley || '애슐리 외식',
               bonusNameJackpot: local.bonusNameJackpot || cloud.bonusNameJackpot || '10판 보스 만원 상금',
+              bonusTargetPocket: local.bonusTargetPocket || cloud.bonusTargetPocket || 100,
+              bonusTargetAshley: local.bonusTargetAshley || cloud.bonusTargetAshley || 1000,
+              bonusTargetJackpot: local.bonusTargetJackpot || cloud.bonusTargetJackpot || 10,
               parentPin: '1508',
               subjectMode: local.subjectMode || cloud.subjectMode || 'mixed',
               wrongAnswerQueue: cloud.totalSolved >= local.totalSolved ? cloud.wrongAnswerQueue : local.wrongAnswerQueue,
@@ -386,9 +402,12 @@
         const paidPocketCount = parseInt(s.paidPocketCount, 10) || 0;
         const paidAshleyCount = parseInt(s.paidAshleyCount, 10) || 0;
         const paidJackpotCount = parseInt(s.paidJackpotCount, 10) || 0;
-        const bonusNamePocket = (typeof s.bonusNamePocket === 'string' && s.bonusNamePocket.trim()) ? s.bonusNamePocket.trim().slice(0, 100) : '용돈 5,000원';
+        const bonusNamePocket = (typeof s.bonusNamePocket === 'string' && s.bonusNamePocket.trim()) ? s.bonusNamePocket.trim().slice(0, 100) : '용돈 3,000원';
         const bonusNameAshley = (typeof s.bonusNameAshley === 'string' && s.bonusNameAshley.trim()) ? s.bonusNameAshley.trim().slice(0, 100) : '애슐리 외식';
         const bonusNameJackpot = (typeof s.bonusNameJackpot === 'string' && s.bonusNameJackpot.trim()) ? s.bonusNameJackpot.trim().slice(0, 100) : '10판 보스 만원 상금';
+        const bonusTargetPocket = Math.max(1, parseInt(s.bonusTargetPocket, 10) || 100);
+        const bonusTargetAshley = Math.max(1, parseInt(s.bonusTargetAshley, 10) || 1000);
+        const bonusTargetJackpot = Math.max(1, parseInt(s.bonusTargetJackpot, 10) || 10);
         const subjectMode = ['mixed', 'math', 'english'].includes(s.subjectMode) ? s.subjectMode : 'mixed';
         const wrongQueueJson = JSON.stringify(Array.isArray(s.wrongAnswerQueue) ? s.wrongAnswerQueue.slice(0, 60) : []);
         const reviewHistoryJson = JSON.stringify(Array.isArray(s.reviewHistory) ? s.reviewHistory.slice(0, 120) : []);
@@ -404,6 +423,7 @@
              paid_pocket_count = $14, paid_ashley_count = $15, paid_jackpot_count = $16,
              bonus_name_pocket = $17, bonus_name_ashley = $18, bonus_name_jackpot = $19,
              subject_mode = $20, wrong_answer_queue = $21::jsonb, review_history = $22::jsonb,
+             bonus_target_pocket = $23, bonus_target_ashley = $24, bonus_target_jackpot = $25,
              updated_at = CURRENT_TIMESTAMP
            WHERE player_id = 'soyun_vip'`,
           [
@@ -411,7 +431,8 @@
             maxSpeed, speedMultiplier, totalSolved, totalCorrect, totalWrong,
             mathCorrect, englishCorrect, bossesDefeated, paidPocketCount, paidAshleyCount,
             paidJackpotCount, bonusNamePocket, bonusNameAshley, bonusNameJackpot,
-            subjectMode, wrongQueueJson, reviewHistoryJson
+            subjectMode, wrongQueueJson, reviewHistoryJson,
+            bonusTargetPocket, bonusTargetAshley, bonusTargetJackpot
           ]
         ).then(function () { return { ok: true }; });
       };
@@ -800,27 +821,21 @@
     },
 
     /**
-     * Directly sets the active (unpaid) achieved bonus count for 'pocket' | 'ashley' | 'jackpot'.
+     * Directly sets the target threshold (달성횟수: 100판 / 1000판 / 10단계) for 'pocket' | 'ashley' | 'jackpot'.
      * @param {string} bonusKey
-     * @param {number} desiredCount
+     * @param {number} desiredTarget
      * @returns {Object} Updated state
      */
-    setBonusAchievedCount: function (bonusKey, desiredCount) {
+    setBonusAchievedCount: function (bonusKey, desiredTarget) {
       const state = this.getState();
-      const target = Math.max(0, Math.min(999, parseInt(desiredCount, 10) || 0));
-      const rewards = (window.GameConfig && typeof window.GameConfig.getRewardStatus === 'function')
-        ? window.GameConfig.getRewardStatus(state.totalCorrect, state.bossesDefeated, state.maxStageReached)
-        : null;
+      const target = Math.max(1, Math.min(99999, parseInt(desiredTarget, 10) || 1));
 
       if (bonusKey === 'pocket') {
-        const earned = rewards ? rewards.pocketMoney.earnedCount : 0;
-        state.paidPocketCount = earned - target;
+        state.bonusTargetPocket = target;
       } else if (bonusKey === 'ashley') {
-        const earned = rewards ? rewards.ashley.earnedCount : 0;
-        state.paidAshleyCount = earned - target;
+        state.bonusTargetAshley = target;
       } else if (bonusKey === 'jackpot') {
-        const earned = rewards ? rewards.bossJackpot.earnedCount : 0;
-        state.paidJackpotCount = earned - target;
+        state.bonusTargetJackpot = target;
       }
       this.save();
       return state;

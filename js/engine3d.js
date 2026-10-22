@@ -539,6 +539,103 @@
       );
       this.textures.skybox = this.skyTextureObj ? this.skyTextureObj.texture : null;
 
+      // 1b. Boss Phase Hell & Erupting Lava Skybox Texture ("지옥에 용암 나오는 배경")
+      if (THREE) {
+        const hellCanvas = document.createElement('canvas');
+        hellCanvas.width = 1024;
+        hellCanvas.height = 512;
+        const hctx = hellCanvas.getContext('2d');
+
+        // Apocalyptic Hell Blood-Red to Molten Magma Sky Gradient
+        const hellGrad = hctx.createLinearGradient(0, 0, 0, 512);
+        hellGrad.addColorStop(0, '#0f0002');
+        hellGrad.addColorStop(0.32, '#3b0006');
+        hellGrad.addColorStop(0.65, '#8f1100');
+        hellGrad.addColorStop(0.88, '#ff3d00');
+        hellGrad.addColorStop(1, '#ffbe0b');
+        hctx.fillStyle = hellGrad;
+        hctx.fillRect(0, 0, 1024, 512);
+
+        // Glowing Hellfire Sun / Magma Core behind Volcano
+        const coreGrad = hctx.createRadialGradient(512, 330, 15, 512, 330, 210);
+        coreGrad.addColorStop(0, '#ffffff');
+        coreGrad.addColorStop(0.25, '#ffee55');
+        coreGrad.addColorStop(0.6, '#ff4500');
+        coreGrad.addColorStop(1, 'rgba(180, 0, 0, 0)');
+        hctx.fillStyle = coreGrad;
+        hctx.beginPath();
+        hctx.arc(512, 330, 210, 0, Math.PI * 2);
+        hctx.fill();
+
+        // Giant Erupting Hell Volcanoes & Jagged Obsidian Peaks
+        const peaks = [
+          { x1: -40, xPeak: 140, x2: 330, yPeak: 190 },
+          { x1: 240, xPeak: 512, x2: 780, yPeak: 125 }, // Center Mega Volcano
+          { x1: 680, xPeak: 890, x2: 1064, yPeak: 180 }
+        ];
+        peaks.forEach((p, idx) => {
+          hctx.fillStyle = '#160204';
+          hctx.beginPath();
+          hctx.moveTo(p.x1, 512);
+          hctx.lineTo(p.xPeak - 36, p.yPeak);
+          hctx.lineTo(p.xPeak + 36, p.yPeak);
+          hctx.lineTo(p.x2, 512);
+          hctx.closePath();
+          hctx.fill();
+
+          // Glowing Molten Lava Crater & Flowing Lava Streams down the Volcano!
+          const lavaGrad = hctx.createLinearGradient(p.xPeak, p.yPeak - 30, p.xPeak, 512);
+          lavaGrad.addColorStop(0, '#fff75e');
+          lavaGrad.addColorStop(0.3, '#ff6d00');
+          lavaGrad.addColorStop(0.75, '#ff1100');
+          lavaGrad.addColorStop(1, '#ff9900');
+          hctx.fillStyle = lavaGrad;
+
+          // Crater Eruption Plume
+          hctx.beginPath();
+          hctx.ellipse(p.xPeak, p.yPeak, idx === 1 ? 52 : 34, 16, 0, 0, Math.PI * 2);
+          hctx.fill();
+
+          // Lava Rivers flowing down volcano slopes
+          hctx.strokeStyle = lavaGrad;
+          hctx.lineWidth = idx === 1 ? 16 : 11;
+          hctx.lineCap = 'round';
+          [-1, 0, 1].forEach((branch) => {
+            hctx.beginPath();
+            hctx.moveTo(p.xPeak + branch * 14, p.yPeak + 4);
+            hctx.quadraticCurveTo(
+              p.xPeak + branch * 55,
+              (p.yPeak + 512) * 0.52,
+              p.xPeak + branch * 95,
+              512
+            );
+            hctx.stroke();
+          });
+        });
+
+        // Flying Volcanic Fireballs, Lava Sparks & Ash Embers in the Hell Sky
+        for (let i = 0; i < 160; i++) {
+          const ex = (i * 89) % 1024;
+          const ey = (i * 47) % 440;
+          const r = (i % 4 === 0) ? 4.2 : 2.0;
+          hctx.fillStyle = (i % 3 === 0) ? '#ffee55' : (i % 2 === 0 ? '#ff5500' : '#ff1100');
+          hctx.beginPath();
+          hctx.arc(ex, ey, r, 0, Math.PI * 2);
+          hctx.fill();
+        }
+
+        // Bottom Molten Sea Horizon Strip
+        const seaGrad = hctx.createLinearGradient(0, 465, 0, 512);
+        seaGrad.addColorStop(0, 'rgba(255, 60, 0, 0)');
+        seaGrad.addColorStop(0.5, '#ff3300');
+        seaGrad.addColorStop(1, '#ffaa00');
+        hctx.fillStyle = seaGrad;
+        hctx.fillRect(0, 465, 1024, 47);
+
+        this.textures.hellSkybox = new THREE.CanvasTexture(hellCanvas);
+        this.textures.hellSkybox.needsUpdate = true;
+      }
+
       // 2. Player Kart Rear VIP License Plate Texture ("👑 SOYUN VIP")
       const carTexObj = createSafeTexture(
         'assets/player_car.png',
@@ -1045,6 +1142,70 @@
             this.roadGroup.add(mtn);
             this.sceneryItems.push(mtn);
           }
+        });
+      }
+
+      // 8. Boss Hell & Erupting Lava Environment Group (Visible during Boss Fights!)
+      this.bossLavaGroup = new THREE.Group();
+      this.bossLavaGroup.visible = false;
+      this.roadGroup.add(this.bossLavaGroup);
+      this.bossLavaGeysers = [];
+
+      const lavaRiverGeo = new THREE.PlaneGeometry(36, 260, 1, 24);
+      this.bossLavaRiverMat = new THREE.MeshBasicMaterial({
+        color: 0xff3300,
+        side: THREE.DoubleSide
+      });
+      const lavaGlowStripGeo = new THREE.PlaneGeometry(8, 260);
+      this.bossLavaCoreMat = new THREE.MeshBasicMaterial({
+        color: 0xffcc00,
+        side: THREE.DoubleSide
+      });
+
+      [-1, 1].forEach((side) => {
+        const river = new THREE.Mesh(lavaRiverGeo, this.bossLavaRiverMat);
+        river.rotation.x = -Math.PI / 2;
+        river.position.set(side * 26.5, -0.02, -85);
+        this.bossLavaGroup.add(river);
+
+        const coreStream = new THREE.Mesh(lavaGlowStripGeo, this.bossLavaCoreMat);
+        coreStream.rotation.x = -Math.PI / 2;
+        coreStream.position.set(side * 13.5, 0.01, -85);
+        this.bossLavaGroup.add(coreStream);
+      });
+
+      // Erupting 3D Lava Geyser Columns & Hellfire Spires along both sides of the road
+      const geyserOuterGeo = new THREE.ConeGeometry(1.8, 12, 7);
+      const geyserInnerGeo = new THREE.ConeGeometry(1.0, 15, 7);
+      const geyserOuterMat = new THREE.MeshBasicMaterial({
+        color: 0xff2a00,
+        transparent: true,
+        opacity: 0.88
+      });
+      const geyserInnerMat = new THREE.MeshBasicMaterial({
+        color: 0xffe600
+      });
+
+      for (let g = 0; g < 12; g++) {
+        const gz = 14 - g * 18;
+        [-1, 1].forEach((side) => {
+          const geyserGroup = new THREE.Group();
+          const gx = side * (11.8 + (g % 3) * 2.4);
+          geyserGroup.position.set(gx, 0, gz);
+
+          const outerCone = new THREE.Mesh(geyserOuterGeo, geyserOuterMat);
+          outerCone.position.y = 5.5;
+          const innerCone = new THREE.Mesh(geyserInnerGeo, geyserInnerMat);
+          innerCone.position.y = 6.8;
+          geyserGroup.add(outerCone, innerCone);
+
+          geyserGroup.userData = {
+            phase: g * 0.85 + (side > 0 ? 1.6 : 0),
+            baseX: gx,
+            side: side
+          };
+          this.bossLavaGroup.add(geyserGroup);
+          this.bossLavaGeysers.push(geyserGroup);
         });
       }
     },
@@ -2062,7 +2223,56 @@
       if (this.retroSunMesh && this.retroSunMesh.material) {
         this.retroSunMesh.material.color.setHex(theme.secondary);
       }
+      if (!this.isBossActive) {
+        if (this.skyBackdropMesh && this.skyBackdropMesh.material && this.textures.skybox) {
+          this.skyBackdropMesh.material.map = this.textures.skybox;
+          this.skyBackdropMesh.material.needsUpdate = true;
+        }
+        if (this.bossLavaGroup) {
+          this.bossLavaGroup.visible = false;
+        }
+      }
       return this;
+    },
+
+    /**
+     * Switches the 3D world into the Apocalyptic Hell & Erupting Lava Environment when a Boss appears!
+     */
+    _applyBossHellEnvironment: function (enable) {
+      if (!this.scene) return;
+      if (enable) {
+        const hellFog = 0x2a0303;
+        this.scene.background.setHex(hellFog);
+        if (this.scene.fog) this.scene.fog.color.setHex(hellFog);
+        if (this.outerGroundMat) this.outerGroundMat.color.setHex(0x881100);
+        if (this.roadSurfaceMat) this.roadSurfaceMat.color.setHex(0x1c0404);
+        if (this.edgeRailMat) this.edgeRailMat.color.setHex(0xff3300);
+        if (this.dashMaterial) this.dashMaterial.color.setHex(0xffaa00);
+        if (this.curbMatA) this.curbMatA.color.setHex(0xff2200);
+        if (this.curbMatB) this.curbMatB.color.setHex(0xffbe0b);
+        if (this.mountainMat) this.mountainMat.color.setHex(0x280303);
+        if (this.mountainWireMat) this.mountainWireMat.color.setHex(0xff4500);
+        if (this.carPointLight) this.carPointLight.color.setHex(0xff4500);
+        if (this.retroSunMesh && this.retroSunMesh.material) {
+          this.retroSunMesh.material.color.setHex(0xff3300);
+        }
+        if (this.skyBackdropMesh && this.skyBackdropMesh.material && this.textures.hellSkybox) {
+          this.skyBackdropMesh.material.map = this.textures.hellSkybox;
+          this.skyBackdropMesh.material.needsUpdate = true;
+        }
+        if (this.bossLavaGroup) {
+          this.bossLavaGroup.visible = true;
+        }
+      } else {
+        if (this.bossLavaGroup) {
+          this.bossLavaGroup.visible = false;
+        }
+        if (this.skyBackdropMesh && this.skyBackdropMesh.material && this.textures.skybox) {
+          this.skyBackdropMesh.material.map = this.textures.skybox;
+          this.skyBackdropMesh.material.needsUpdate = true;
+        }
+        this.setStageTheme(this.currentTheme);
+      }
     },
 
     /**
@@ -2862,6 +3072,9 @@
       this.bossRecoilZ = 0;
       this.bossRecoilPitch = 0;
 
+      // Switch 3D background to Hell & Erupting Lava theme!
+      this._applyBossHellEnvironment(true);
+
       if (this.bossGroup) {
         this.bossGroup.visible = true;
         this.bossGroup.position.set(0, 2.8, getCfg().BOSS_Z - 26);
@@ -2959,6 +3172,7 @@
       if (this.bossGroup) {
         this.bossGroup.visible = false;
       }
+      this._applyBossHellEnvironment(false);
       while (this.activeProjectiles && this.activeProjectiles.length > 0) {
         const p = this.activeProjectiles.pop();
         if (p && p.group && this.scene) {
@@ -3461,6 +3675,31 @@
 
           if (this.bossRing1) this.bossRing1.rotation.z += dt * 3.2;
           if (this.bossRing2) this.bossRing2.rotation.y -= dt * 4.2;
+
+          // Animate Erupting Hell Lava Geysers & Spewing Magma Sparks during Boss Fight!
+          if (this.bossLavaGroup && this.bossLavaGroup.visible) {
+            if (this.bossLavaRiverMat) {
+              const lavaPulse = Math.sin(this.elapsedTime * 6.5) > 0 ? 0xff3300 : 0xff5500;
+              this.bossLavaRiverMat.color.setHex(lavaPulse);
+            }
+            if (Array.isArray(this.bossLavaGeysers)) {
+              for (let g = 0; g < this.bossLavaGeysers.length; g++) {
+                const geyser = this.bossLavaGeysers[g];
+                geyser.position.z += worldUnitsPerSec * dt;
+                if (geyser.position.z > 24) {
+                  geyser.position.z -= 216;
+                }
+                const eruptScale = 0.55 + Math.abs(Math.sin(this.elapsedTime * 5.2 + geyser.userData.phase)) * 1.35;
+                geyser.scale.set(1, eruptScale, 1);
+              }
+            }
+            if (Math.random() < 0.45) {
+              const side = Math.random() < 0.5 ? -1 : 1;
+              const lx = side * (9.5 + Math.random() * 6);
+              const lz = -10 - Math.random() * 65;
+              this._spawnParticleBurst(lx, 1.2, lz, Math.random() < 0.5 ? 0xff4500 : 0xffcc00, 8, 1.25);
+            }
+          }
 
           if (this.bossHitTimer > 0) {
             this.bossHitTimer -= dt;

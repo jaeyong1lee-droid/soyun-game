@@ -40,46 +40,51 @@
     };
   }
 
-  function getRewardInfo(totalCorrect, bossesDefeated, maxStageReached) {
+  function getRewardInfo(totalCorrect, bossesDefeated, maxStageReached, totalWrong) {
     if (window.GameConfig && typeof window.GameConfig.getRewardStatus === 'function') {
-      return window.GameConfig.getRewardStatus(totalCorrect, bossesDefeated, maxStageReached);
+      return window.GameConfig.getRewardStatus(totalCorrect, bossesDefeated, maxStageReached, totalWrong);
     }
     const c = Math.max(0, parseInt(totalCorrect, 10) || 0);
+    const w = Math.max(0, parseInt(totalWrong, 10) || 0);
     const b = Math.max(0, parseInt(bossesDefeated, 10) || 0);
-    const gaugePoints = c + b * 10;
-    const pocketEarned = gaugePoints < 100 ? 0 : 1 + Math.floor((gaugePoints - 100) / 150);
-    const pocketCur = gaugePoints < 100 ? gaugePoints : (gaugePoints - 100) % 150;
-    const pocketTgt = gaugePoints < 100 ? 100 : 150;
+    const gaugePoints = Math.max(0, c - w + b * 10);
+    const pocketEarned = Math.floor(gaugePoints / 100);
+    const pocketCur = gaugePoints % 100;
+    const pocketTgt = 100;
     const ashleyEarned = Math.floor(gaugePoints / 1000);
     const ashleyCur = gaugePoints % 1000;
     const jackpotEarned = Math.floor(b / 10);
     const jackpotCur = b % 10;
     return {
       totalCorrect: c,
+      totalWrong: w,
       bossesDefeated: b,
       gaugePoints: gaugePoints,
       pocketMoney: {
         earnedCount: pocketEarned,
         current: pocketCur,
         target: pocketTgt,
+        unit: '판',
         percent: Math.min(100, Math.round((pocketCur / pocketTgt) * 100)),
-        phaseLabel: gaugePoints < 100 ? '첫 100점 (보스+10)' : `🎉 ${pocketEarned}회 달성 (+150점씩)`
+        phaseLabel: `(0→100판 반복 · 오답 -1)`
       },
       ashley: {
         earnedCount: ashleyEarned,
         current: ashleyCur,
         target: 1000,
+        unit: '판',
         percent: Math.min(100, Math.round((ashleyCur / 1000) * 100)),
-        phaseLabel: ashleyEarned > 0 ? `🎉 ${ashleyEarned}회 달성` : '1,000점 목표 (보스+10)'
+        phaseLabel: `(0→1,000판 반복 · 오답 -1)`
       },
       bossJackpot: {
         earnedCount: jackpotEarned,
         totalWon: jackpotEarned * 10000,
         current: jackpotCur,
         target: 10,
+        unit: '단계',
         remaining: 10 - jackpotCur,
         percent: Math.min(100, Math.round((jackpotCur / 10) * 100)),
-        phaseLabel: jackpotEarned > 0 ? `💴 ${jackpotEarned}회 (만원 상금!)` : '10판 보스마다 만원!'
+        phaseLabel: `(0→10단계 반복)`
       }
     };
   }
@@ -188,7 +193,7 @@
       }
 
       // Render Real-Life Reward Gauges on Dashboard (달성 시 0부터 다시 시작 + 보너스 달성 개수 별도 표시!)
-      const rewards = getRewardInfo(totalCorrect, state.bossesDefeated || 0, maxStageReached);
+      const rewards = getRewardInfo(totalCorrect, state.bossesDefeated || 0, maxStageReached, state.totalWrong || 0);
       const pm = rewards.pocketMoney;
       const ash = rewards.ashley;
       const jp = rewards.bossJackpot;
@@ -203,7 +208,7 @@
         elTotalBonusBadge.classList.toggle('has-bonus', totalUnpaid > 0);
       }
 
-      const pocketTitleText = pm.customName || state.bonusNamePocket || '용돈 5,000원';
+      const pocketTitleText = pm.customName || state.bonusNamePocket || '용돈 3,000원';
       const ashleyTitleText = ash.customName || state.bonusNameAshley || '애슐리 외식';
       const jackpotTitleText = (jp && jp.customName) || state.bonusNameJackpot || '10판 보스 만원 상금';
 
@@ -500,10 +505,13 @@
 
       // 5. Real-Life Reward Gauges on Left Panel (달성 시 0부터 재시작 + 보너스 달성 개수 별도 표시)
       const totalCorrect = typeof data.totalCorrect === 'number' ? data.totalCorrect : 0;
+      const totalWrong = typeof data.totalWrong === 'number'
+        ? data.totalWrong
+        : (window.SaveManager ? (window.SaveManager.getState().totalWrong || 0) : 0);
       const bossesDefeated = typeof data.bossesDefeated === 'number'
         ? data.bossesDefeated
         : (window.SaveManager ? (window.SaveManager.getState().bossesDefeated || 0) : 0);
-      const rewards = getRewardInfo(totalCorrect, bossesDefeated, Math.max(stageNum, data.maxStageReached || stageNum));
+      const rewards = getRewardInfo(totalCorrect, bossesDefeated, Math.max(stageNum, data.maxStageReached || stageNum), totalWrong);
       const pm = rewards.pocketMoney;
       const ash = rewards.ashley;
       const jp = rewards.bossJackpot;
@@ -521,7 +529,7 @@
 
       const elHudPocketName = byId('hud-pocket-name');
       if (elHudPocketName) {
-        elHudPocketName.textContent = String(pm.customName || '용돈 5,000원').replace(/^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\s]+/u, '');
+        elHudPocketName.textContent = String(pm.customName || '용돈 3,000원').replace(/^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\s]+/u, '');
       }
       const elPocketPhase = byId('hud-pocket-phase');
       if (elPocketPhase) {
@@ -1171,14 +1179,19 @@
 
     /**
      * Shows and updates the Roblox Obby 2x Speed Action Mini-Game HUD (#obby-minigame-hud)
+     * Hides the top life panel (#hud-left-panel) and displays #obby-minigame-hud in its exact place!
      * @param {number} clearedWaves
      * @param {number} totalWaves
      */
     showObbyHUD: function (clearedWaves, totalWaves) {
       const obbyHud = byId('obby-minigame-hud');
       const qBanner = byId('question-banner');
+      const leftPanel = byId('hud-left-panel');
       if (qBanner) {
         qBanner.classList.add('hidden');
+      }
+      if (leftPanel) {
+        leftPanel.classList.add('hidden');
       }
       if (obbyHud) {
         obbyHud.classList.remove('hidden');
@@ -1193,6 +1206,10 @@
       if (fillEl) {
         fillEl.style.width = `${pct}%`;
       }
+      const waveEl = byId('obby-wave-counter');
+      if (waveEl) {
+        waveEl.textContent = `장애물 돌파 ${cleared} / ${total}`;
+      }
       const titleEl = byId('obby-hud-title');
       if (titleEl) {
         titleEl.textContent = `🧱 블록 벽은 차선 이동(◀▶) · 🔥 빨간 용암은 점프(⬆️)! (${cleared}/${total})`;
@@ -1200,16 +1217,20 @@
     },
 
     /**
-     * Hides the Roblox Obby Mini-Game HUD and restores the Question Banner
+     * Hides the Roblox Obby Mini-Game HUD and restores the Top Life Panel (#hud-left-panel) & Question Banner
      */
     hideObbyHUD: function () {
       const obbyHud = byId('obby-minigame-hud');
       const qBanner = byId('question-banner');
+      const leftPanel = byId('hud-left-panel');
       if (obbyHud) {
         obbyHud.classList.add('hidden');
       }
       if (qBanner) {
         qBanner.classList.remove('hidden');
+      }
+      if (leftPanel && !document.body.classList.contains('boss-phase-hud-active')) {
+        leftPanel.classList.remove('hidden');
       }
       document.body.classList.remove('obby-mode-active');
     },
@@ -1312,7 +1333,8 @@
       }
 
       // 2. Bonus Payout & Deletion Manager
-      const rewards = getRewardInfo(totalCorrect, bossesDefeated, maxStageReached);
+      const totalWrong = parseInt(state.totalWrong, 10) || 0;
+      const rewards = getRewardInfo(totalCorrect, bossesDefeated, maxStageReached, totalWrong);
       const pm = rewards.pocketMoney;
       const ash = rewards.ashley;
       const jp = rewards.bossJackpot;
@@ -1334,22 +1356,31 @@
         {
           key: 'pocket',
           badgeLabel: '보너스 1',
-          customName: pm.customName || state.bonusNamePocket || '용돈 5,000원',
-          gaugeText: `게이지 ${pm.current}/${pm.target}점`,
+          customName: pm.customName || state.bonusNamePocket || '용돈 3,000원',
+          targetCount: pm.target || 100,
+          currentCount: pm.current || 0,
+          unit: '판',
+          stepSize: 10,
           unpaid: unpaidPocket
         },
         {
           key: 'ashley',
           badgeLabel: '보너스 2',
           customName: ash.customName || state.bonusNameAshley || '애슐리 외식',
-          gaugeText: `게이지 ${ash.current}/${ash.target.toLocaleString()}점`,
+          targetCount: ash.target || 1000,
+          currentCount: ash.current || 0,
+          unit: '판',
+          stepSize: 50,
           unpaid: unpaidAshley
         },
         {
           key: 'jackpot',
           badgeLabel: '10단계 보스',
-          customName: (jp && jp.customName) || state.bonusNameJackpot || '10판 보스 만원',
-          gaugeText: `게이지 ${jp ? jp.current : 0}/${jp ? jp.target : 10}판`,
+          customName: (jp && jp.customName) || state.bonusNameJackpot || '10판 보스 만원 상금',
+          targetCount: (jp && jp.target) ? jp.target : 10,
+          currentCount: (jp && jp.current) ? jp.current : 0,
+          unit: '단계',
+          stepSize: 1,
           unpaid: unpaidJackpot
         }
       ];
@@ -1378,7 +1409,6 @@
               >
                 이름저장
               </button>
-              <span class="compact-gauge-pill">${escapeHtml(item.gaugeText)}</span>
             </div>
 
             <div class="compact-bonus-row2">
@@ -1388,24 +1418,27 @@
                   type="button"
                   class="btn-parent-step"
                   data-action="step-bonus-count"
-                  data-step="-1"
+                  data-step="-${item.stepSize}"
                   data-bonus-key="${item.key}"
                 >
                   ➖
                 </button>
-                <input
-                  type="number"
-                  min="0"
-                  max="999"
-                  class="parent-bonus-count-input"
-                  data-bonus-key="${item.key}"
-                  value="${item.unpaid}"
-                />
+                <div class="parent-count-unit-wrap">
+                  <input
+                    type="number"
+                    min="1"
+                    max="99999"
+                    class="parent-bonus-count-input"
+                    data-bonus-key="${item.key}"
+                    value="${item.targetCount}"
+                  />
+                  <span class="compact-count-unit">${escapeHtml(item.unit)}</span>
+                </div>
                 <button
                   type="button"
                   class="btn-parent-step"
                   data-action="step-bonus-count"
-                  data-step="1"
+                  data-step="${item.stepSize}"
                   data-bonus-key="${item.key}"
                 >
                   ➕
@@ -1419,6 +1452,13 @@
                   횟수저장
                 </button>
               </div>
+            </div>
+
+            <div class="compact-bonus-row3">
+              <span class="compact-gauge-pill">
+                현재 저장 진행: <strong>${item.currentCount}${escapeHtml(item.unit)} / ${item.targetCount}${escapeHtml(item.unit)}</strong>
+                &nbsp;·&nbsp; 미지급 달성: <strong>${item.unpaid}개</strong>
+              </span>
               <button
                 type="button"
                 class="btn-parent-mark-paid"

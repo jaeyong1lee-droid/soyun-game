@@ -263,6 +263,7 @@
         speedMultiplier: state.speedMultiplier,
         totalScore: saveState.totalScore || 0,
         totalCorrect: saveState.totalCorrect || 0,
+        totalWrong: saveState.totalWrong || 0,
         bossesDefeated: saveState.bossesDefeated || 0,
         combo: state.combo,
         reviewCount: wrongQueue.length,
@@ -600,9 +601,15 @@
       const beforeCorrect = (window.SaveManager && window.SaveManager.getState())
         ? (window.SaveManager.getState().totalCorrect || 0)
         : 0;
+      const beforeWrong = (window.SaveManager && window.SaveManager.getState())
+        ? (window.SaveManager.getState().totalWrong || 0)
+        : 0;
       const beforeBosses = (window.SaveManager && window.SaveManager.getState())
         ? (window.SaveManager.getState().bossesDefeated || 0)
         : 0;
+      const beforeMaxStg = (window.SaveManager && window.SaveManager.getState())
+        ? (window.SaveManager.getState().maxStageReached || 1)
+        : 1;
 
       if (window.QuestionEngine && typeof window.QuestionEngine.recordResult === 'function') {
         window.QuestionEngine.recordResult(q, lane);
@@ -622,6 +629,9 @@
       const afterCorrect = (window.SaveManager && window.SaveManager.getState())
         ? (window.SaveManager.getState().totalCorrect || 0)
         : beforeCorrect;
+      const afterWrong = (window.SaveManager && window.SaveManager.getState())
+        ? (window.SaveManager.getState().totalWrong || 0)
+        : beforeWrong;
 
       if (isCorrect) {
         state.combo += 1;
@@ -664,22 +674,25 @@
           );
         }
 
-        // Check if Soyun achieved a Real-Life Reward Gauge Milestone (용돈 5,000원 or 애슐리)!
+        // Check if Soyun achieved a Real-Life Reward Gauge Milestone (용돈 3,000원 or 애슐리)!
         if (window.GameConfig && typeof window.GameConfig.getRewardStatus === 'function') {
-          const prevRew = window.GameConfig.getRewardStatus(beforeCorrect, beforeBosses);
-          const nextRew = window.GameConfig.getRewardStatus(afterCorrect, beforeBosses);
+          const prevRew = window.GameConfig.getRewardStatus(beforeCorrect, beforeBosses, beforeMaxStg, beforeWrong);
+          const nextRew = window.GameConfig.getRewardStatus(afterCorrect, beforeBosses, beforeMaxStg, afterWrong);
+          const curSave = window.SaveManager ? window.SaveManager.getState() : {};
+          const pocketLabel = curSave.bonusNamePocket || '용돈 3,000원';
+          const ashleyLabel = curSave.bonusNameAshley || '애슐리 외식 상품권';
           if (nextRew.pocketMoney.earnedCount > prevRew.pocketMoney.earnedCount) {
             if (window.SoundEngine) window.SoundEngine.playStageClear();
             if (window.UIManager) {
-              window.UIManager.triggerImpactEffect('stageClear', { points: 5000, combo: state.combo });
+              window.UIManager.triggerImpactEffect('stageClear', { points: 3000, combo: state.combo });
               window.UIManager.showFeedbackToast(
                 true,
-                `💵🎊 대박!! 이소윤 선수 [용돈 5,000원] 게이지 100% 달성!! (${nextRew.pocketMoney.earnedCount}회째 달성!)`
+                `💵🎊 대박!! 이소윤 선수 [${pocketLabel}] 게이지 100% 달성!! (${nextRew.pocketMoney.earnedCount}회째 달성!)`
               );
               if (typeof window.UIManager.pushRobloxChat === 'function') {
                 window.UIManager.pushRobloxChat(
                   '시스템',
-                  `💵🎊 축하합니다!! 이소윤 선수 [용돈 5,000원] 상품 게이지 100% 달성!!`,
+                  `💵🎊 축하합니다!! 이소윤 선수 [${pocketLabel}] 상품 게이지 100% 달성!!`,
                   'system'
                 );
               }
@@ -691,12 +704,12 @@
               window.UIManager.triggerImpactEffect('stageClear', { points: 10000, combo: state.combo });
               window.UIManager.showFeedbackToast(
                 true,
-                `🍓🏆 전설 달성!! 이소윤 선수 누적 1,000점 돌파! [애슐리 외식 상품] 100% 달성!!`
+                `🍓🏆 전설 달성!! 이소윤 선수 [${ashleyLabel}] 100% 달성!!`
               );
               if (typeof window.UIManager.pushRobloxChat === 'function') {
                 window.UIManager.pushRobloxChat(
                   '시스템',
-                  `🍓🏆 대박!! 이소윤 선수 [애슐리 외식 상품] 게이지 100% 달성!!`,
+                  `🍓🏆 대박!! 이소윤 선수 [${ashleyLabel}] 게이지 100% 달성!!`,
                   'system'
                 );
               }
@@ -808,7 +821,7 @@
           }
           window.UIManager.showFeedbackToast(
             false,
-            `💪 아차! 괜찮아 소윤아! 정답은 [ ${q.answerText} ] 이었어! 잠시 후 복습할 때 꼭 부숴버리자!`
+            `💪 아차! 오답으로 보너스 점수 -1점! 정답은 [ ${q.answerText} ] 이었어! 잠시 후 복습할 때 꼭 부숴버리자!`
           );
           if (typeof window.UIManager.pushRobloxChat === 'function') {
             const pet = getActivePet();
@@ -846,6 +859,7 @@
 
       const beforeSave = window.SaveManager ? window.SaveManager.getState() : {};
       const beforeCorrect = beforeSave.totalCorrect || 0;
+      const beforeWrong = beforeSave.totalWrong || 0;
       const beforeBosses = beforeSave.bossesDefeated || 0;
       const beforeMaxStg = beforeSave.maxStageReached || 1;
 
@@ -862,22 +876,24 @@
       const afterBosses = afterSave.bossesDefeated || (beforeBosses + 1);
       const afterMaxStg = afterSave.maxStageReached || nextStage;
 
-      // Check if the +10 Boss Defeat Gauge Bonus triggered a Reward Milestone (5,000원 / 애슐리 / 10판 보스 만원)!
+      // Check if the +10 Boss Defeat Gauge Bonus triggered a Reward Milestone (3,000원 / 애슐리 / 10판 보스 만원)!
       if (window.GameConfig && typeof window.GameConfig.getRewardStatus === 'function') {
-        const prevRew = window.GameConfig.getRewardStatus(beforeCorrect, beforeBosses, beforeMaxStg);
-        const nextRew = window.GameConfig.getRewardStatus(beforeCorrect, afterBosses, afterMaxStg);
+        const prevRew = window.GameConfig.getRewardStatus(beforeCorrect, beforeBosses, beforeMaxStg, beforeWrong);
+        const nextRew = window.GameConfig.getRewardStatus(beforeCorrect, afterBosses, afterMaxStg, beforeWrong);
+        const pocketLabel = afterSave.bonusNamePocket || '용돈 3,000원';
+        const ashleyLabel = afterSave.bonusNameAshley || '애슐리 외식 상품권';
 
         if (nextRew.pocketMoney.earnedCount > prevRew.pocketMoney.earnedCount && window.UIManager) {
           window.UIManager.pushRobloxChat(
             '시스템',
-            `💵🎊 보스 격파 +10 게이지 보너스로 [용돈 5,000원] 상품 게이지 100% 달성!! (${nextRew.pocketMoney.earnedCount}회째!)`,
+            `💵🎊 보스 격파 +10 게이지 보너스로 [${pocketLabel}] 상품 게이지 100% 달성!! (${nextRew.pocketMoney.earnedCount}회째!)`,
             'system'
           );
         }
         if (nextRew.ashley.earnedCount > prevRew.ashley.earnedCount && window.UIManager) {
           window.UIManager.pushRobloxChat(
             '시스템',
-            `🍓🏆 보스 격파 +10 게이지 보너스로 [애슐리 외식권] 게이지 100% 달성!!`,
+            `🍓🏆 보스 격파 +10 게이지 보너스로 [${ashleyLabel}] 게이지 100% 달성!!`,
             'system'
           );
         }
@@ -1082,10 +1098,6 @@
         if (typeof window.UIManager.showObbyHUD === 'function') {
           window.UIManager.showObbyHUD(0, state.obbyWavesTotal);
         }
-        window.UIManager.showFeedbackToast(
-          true,
-          '⚡ 로블록스 오비 2배속 액션 미니게임 시작!! 🧱가시벽은 좌우 피하기(◀▶), 🔥빨간 용암은 점프(⬆️ / 스페이스바)!'
-        );
         if (typeof window.UIManager.pushRobloxChat === 'function') {
           window.UIManager.pushRobloxChat(
             '시스템',
@@ -1406,28 +1418,28 @@
 
     setBonusAchievedCount: function (bonusKey, targetCount) {
       if (!window.SaveManager || typeof window.SaveManager.setBonusAchievedCount !== 'function') return;
-      const num = Math.max(0, Math.min(999, parseInt(targetCount, 10) || 0));
+      const num = Math.max(1, Math.min(99999, parseInt(targetCount, 10) || 1));
       if (window.SoundEngine) {
         window.SoundEngine.playCorrect(1);
       }
       const updated = window.SaveManager.setBonusAchievedCount(bonusKey, num);
+      const unitLabel = bonusKey === 'jackpot' ? '단계' : '판';
       if (window.UIManager) {
         window.UIManager.renderParentModal(updated);
         window.UIManager.renderDashboard(updated, state.selectedDashboardStage);
-        window.UIManager.showFeedbackToast(true, `🔢 보너스 달성횟수가 [${num}회]로 수정되었습니다!`);
+        window.UIManager.showFeedbackToast(true, `🔢 보너스 목표 달성횟수가 [${num}${unitLabel}]로 저장되었습니다!`);
       }
       syncHUD();
     },
 
     stepBonusAchievedCount: function (bonusKey, delta) {
-      if (!window.SaveManager || !window.GameConfig) return;
+      if (!window.SaveManager) return;
       const s = window.SaveManager.getState();
-      const rewards = window.GameConfig.getRewardStatus(s.totalCorrect, s.bossesDefeated, s.maxStageReached);
-      let cur = 0;
-      if (bonusKey === 'pocket') cur = rewards.pocketMoney.unpaidCount || 0;
-      else if (bonusKey === 'ashley') cur = rewards.ashley.unpaidCount || 0;
-      else if (bonusKey === 'jackpot') cur = rewards.bossJackpot.unpaidCount || 0;
-      const next = Math.max(0, Math.min(999, cur + (parseInt(delta, 10) || 0)));
+      let cur = 100;
+      if (bonusKey === 'pocket') cur = Math.max(1, parseInt(s.bonusTargetPocket, 10) || 100);
+      else if (bonusKey === 'ashley') cur = Math.max(1, parseInt(s.bonusTargetAshley, 10) || 1000);
+      else if (bonusKey === 'jackpot') cur = Math.max(1, parseInt(s.bonusTargetJackpot, 10) || 10);
+      const next = Math.max(1, Math.min(99999, cur + (parseInt(delta, 10) || 0)));
       this.setBonusAchievedCount(bonusKey, next);
     },
 
@@ -1904,6 +1916,12 @@
       const btnCloseParentBottom = document.getElementById('btn-close-parent-bottom');
       if (btnCloseParentBottom) {
         btnCloseParentBottom.addEventListener('click', function () {
+          self.closeParentModal();
+        });
+      }
+      const btnCloseParentPin = document.getElementById('btn-close-parent-pin');
+      if (btnCloseParentPin) {
+        btnCloseParentPin.addEventListener('click', function () {
           self.closeParentModal();
         });
       }

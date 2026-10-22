@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&family=Press+Start+2P&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
-  <link rel="stylesheet" href="css/style.css?v=20261022_13" />
+  <link rel="stylesheet" href="css/style.css?v=20261022_14" />
 </head>
 <body>
   <!-- 3D WebGL Viewport Container -->
@@ -206,7 +206,7 @@
     <div class="reward-gauge-item reward-gauge-pocket">
       <div id="hud-pocket-fill" class="reward-gauge-fill fill-pocket" style="width: 0%;"></div>
       <div class="reward-gauge-labels">
-        <span id="hud-pocket-name" class="reward-gauge-name">용돈 5,000원</span>
+        <span id="hud-pocket-name" class="reward-gauge-name">용돈 3,000원</span>
         <span id="hud-pocket-bonus-badge" class="hud-bonus-count-pill">0개</span>
       </div>
     </div>
@@ -282,11 +282,11 @@
         <!-- Bonus Achievement Status (별도 창 없이 1행 게이지 안에 글자 1줄 표시) -->
         <section class="main-bonus-panel" aria-label="보너스 달성 현황">
           <div class="main-bonus-grid">
-            <!-- Gauge 1: 용돈 5,000원 -->
+            <!-- Gauge 1: 용돈 3,000원 -->
             <div class="dash-reward-card dash-reward-pocket reward-gauge-item reward-gauge-pocket">
               <div id="dash-pocket-fill" class="reward-gauge-fill fill-pocket" style="width: 0%;"></div>
               <div class="reward-gauge-labels">
-                <span id="dash-pocket-title" class="reward-gauge-name">용돈 5,000원</span>
+                <span id="dash-pocket-title" class="reward-gauge-name">용돈 3,000원</span>
                 <span id="dash-pocket-bonus-pill" class="hud-bonus-count-pill">0개</span>
               </div>
             </div>
@@ -447,15 +447,7 @@
        Protects Speed Controls & Bonus Payout/Deletion from arbitrary changes by Soyun
        ===================================================================== -->
   <div id="parent-modal" class="modal-backdrop hidden">
-    <div class="modal-card parent-card" role="dialog" aria-modal="true" aria-labelledby="parent-modal-title">
-      <div class="review-modal-header">
-        <div>
-          <span class="arcade-title-pill">PARENT ONLY CONTROL CENTER</span>
-          <h2 id="parent-modal-title" class="review-modal-title">🔒 보호자 전용 관리 창 (속도 설정 &amp; 보너스 지급 관리)</h2>
-        </div>
-        <button id="btn-close-parent" class="btn-close-modal" type="button" aria-label="보호자 창 닫기">✕ 닫기</button>
-      </div>
-
+    <div class="modal-card parent-card" role="dialog" aria-modal="true" aria-label="보호자 관리 창">
       <!-- View A: Parent PIN Lock Screen (Prevents Soyun from opening it arbitrarily) -->
       <div id="parent-pin-view" class="parent-pin-view">
         <p class="parent-pin-desc">
@@ -475,6 +467,7 @@
           <button id="btn-verify-parent-pin" type="button" class="btn-primary-cta btn-pin-submit">
             🔓 잠금 해제
           </button>
+          <button id="btn-close-parent" class="btn-close-modal" type="button" aria-label="보호자 창 닫기">닫기</button>
         </div>
         <p id="parent-pin-error" class="parent-pin-error hidden">❌ 비밀번호가 일치하지 않습니다. 다시 확인해 주세요.</p>
       </div>
@@ -652,16 +645,16 @@
   <!-- Three.js r128 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <!-- Nano Banana Generated Retro 3D Assets Bundle (CORS-free on file:// & http://) -->
-  <script src="js/assets_data.js?v=20261022_13"></script>
+  <script src="js/assets_data.js?v=20261022_14"></script>
   <!-- Shared Game Modules -->
-  <script src="js/config.js?v=20261022_13"></script>
-  <script src="js/storage.js?v=20261022_13"></script>
-  <script src="js/questionEngine.js?v=20261022_13"></script>
-  <script src="js/sound.js?v=20261022_13"></script>
-  <script src="js/engine3d.js?v=20261022_13"></script>
+  <script src="js/config.js?v=20261022_14"></script>
+  <script src="js/storage.js?v=20261022_14"></script>
+  <script src="js/questionEngine.js?v=20261022_14"></script>
+  <script src="js/sound.js?v=20261022_14"></script>
+  <script src="js/engine3d.js?v=20261022_14"></script>
   <!-- UI & Game Controller -->
-  <script src="js/ui.js?v=20261022_13"></script>
-  <script src="js/game.js?v=20261022_13"></script>
+  <script src="js/ui.js?v=20261022_14"></script>
+  <script src="js/game.js?v=20261022_14"></script>
 
   <!-- Google Chrome / Mobile PWA Service Worker & One-Click App Install Handler -->
   <script>
@@ -671,7 +664,7 @@
 
       if ('serviceWorker' in navigator && window.location.protocol !== 'file:') {
         window.addEventListener('load', function () {
-          navigator.serviceWorker.register('sw.js?v=20261022_13', { updateViaCache: 'none' }).then(function (reg) {
+          navigator.serviceWorker.register('sw.js?v=20261022_14', { updateViaCache: 'none' }).then(function (reg) {
             reg.update();
           }).catch(function () {});
         });

@@ -40,9 +40,12 @@ async function ensureTable() {
       paid_pocket_count INT DEFAULT 0,
       paid_ashley_count INT DEFAULT 0,
       paid_jackpot_count INT DEFAULT 0,
-      bonus_name_pocket VARCHAR(120) DEFAULT '용돈 5,000원',
+      bonus_name_pocket VARCHAR(120) DEFAULT '용돈 3,000원',
       bonus_name_ashley VARCHAR(120) DEFAULT '애슐리 외식',
       bonus_name_jackpot VARCHAR(120) DEFAULT '10판 보스 만원 상금',
+      bonus_target_pocket INT DEFAULT 100,
+      bonus_target_ashley INT DEFAULT 1000,
+      bonus_target_jackpot INT DEFAULT 10,
       subject_mode VARCHAR(32) DEFAULT 'mixed',
       wrong_answer_queue JSONB DEFAULT '[]'::jsonb,
       review_history JSONB DEFAULT '[]'::jsonb,
@@ -51,9 +54,12 @@ async function ensureTable() {
     ALTER TABLE soyun_roblox_racer_save ADD COLUMN IF NOT EXISTS paid_pocket_count INT DEFAULT 0;
     ALTER TABLE soyun_roblox_racer_save ADD COLUMN IF NOT EXISTS paid_ashley_count INT DEFAULT 0;
     ALTER TABLE soyun_roblox_racer_save ADD COLUMN IF NOT EXISTS paid_jackpot_count INT DEFAULT 0;
-    ALTER TABLE soyun_roblox_racer_save ADD COLUMN IF NOT EXISTS bonus_name_pocket VARCHAR(120) DEFAULT '용돈 5,000원';
+    ALTER TABLE soyun_roblox_racer_save ADD COLUMN IF NOT EXISTS bonus_name_pocket VARCHAR(120) DEFAULT '용돈 3,000원';
     ALTER TABLE soyun_roblox_racer_save ADD COLUMN IF NOT EXISTS bonus_name_ashley VARCHAR(120) DEFAULT '애슐리 외식';
     ALTER TABLE soyun_roblox_racer_save ADD COLUMN IF NOT EXISTS bonus_name_jackpot VARCHAR(120) DEFAULT '10판 보스 만원 상금';
+    ALTER TABLE soyun_roblox_racer_save ADD COLUMN IF NOT EXISTS bonus_target_pocket INT DEFAULT 100;
+    ALTER TABLE soyun_roblox_racer_save ADD COLUMN IF NOT EXISTS bonus_target_ashley INT DEFAULT 1000;
+    ALTER TABLE soyun_roblox_racer_save ADD COLUMN IF NOT EXISTS bonus_target_jackpot INT DEFAULT 10;
     ALTER TABLE soyun_roblox_racer_save ADD COLUMN IF NOT EXISTS live_url VARCHAR(255) DEFAULT '';
     ALTER TABLE soyun_roblox_racer_save ADD COLUMN IF NOT EXISTS build_id VARCHAR(64) DEFAULT '';
   `);
@@ -81,9 +87,12 @@ function rowToState(row) {
     paidPocketCount: parseInt(row.paid_pocket_count, 10) || 0,
     paidAshleyCount: parseInt(row.paid_ashley_count, 10) || 0,
     paidJackpotCount: parseInt(row.paid_jackpot_count, 10) || 0,
-    bonusNamePocket: row.bonus_name_pocket || '용돈 5,000원',
+    bonusNamePocket: (!row.bonus_name_pocket || row.bonus_name_pocket === '용돈 5,000원') ? '용돈 3,000원' : row.bonus_name_pocket,
     bonusNameAshley: row.bonus_name_ashley || '애슐리 외식',
     bonusNameJackpot: row.bonus_name_jackpot || '10판 보스 만원 상금',
+    bonusTargetPocket: Math.max(1, parseInt(row.bonus_target_pocket, 10) || 100),
+    bonusTargetAshley: Math.max(1, parseInt(row.bonus_target_ashley, 10) || 1000),
+    bonusTargetJackpot: Math.max(1, parseInt(row.bonus_target_jackpot, 10) || 10),
     liveUrl: row.live_url || '',
     buildId: row.build_id || '',
     subjectMode: row.subject_mode || 'mixed',
@@ -218,13 +227,16 @@ module.exports = async function handler(req, res) {
       const mathCorrect = Math.max(0, parseInt(s.mathCorrect, 10) || 0);
       const englishCorrect = Math.max(0, parseInt(s.englishCorrect, 10) || 0);
       const bossesDefeated = Math.max(0, parseInt(s.bossesDefeated, 10) || 0);
-      const gaugePoints = totalCorrect + (bossesDefeated * 10);
-      const pocketMoneyCount = gaugePoints < 100 ? 0 : 1 + Math.floor((gaugePoints - 100) / 150);
-      const ashleyCount = Math.floor(gaugePoints / 1000);
+      const bonusTargetPocket = Math.max(1, parseInt(s.bonusTargetPocket, 10) || 100);
+      const bonusTargetAshley = Math.max(1, parseInt(s.bonusTargetAshley, 10) || 1000);
+      const bonusTargetJackpot = Math.max(1, parseInt(s.bonusTargetJackpot, 10) || 10);
+      const gaugePoints = Math.max(0, totalCorrect - totalWrong + (bossesDefeated * 10));
+      const pocketMoneyCount = Math.floor(gaugePoints / bonusTargetPocket);
+      const ashleyCount = Math.floor(gaugePoints / bonusTargetAshley);
       const paidPocketCount = parseInt(s.paidPocketCount, 10) || 0;
       const paidAshleyCount = parseInt(s.paidAshleyCount, 10) || 0;
       const paidJackpotCount = parseInt(s.paidJackpotCount, 10) || 0;
-      const bonusNamePocket = (typeof s.bonusNamePocket === 'string' && s.bonusNamePocket.trim()) ? s.bonusNamePocket.trim().slice(0, 100) : '용돈 5,000원';
+      const bonusNamePocket = (typeof s.bonusNamePocket === 'string' && s.bonusNamePocket.trim()) ? s.bonusNamePocket.trim().slice(0, 100) : '용돈 3,000원';
       const bonusNameAshley = (typeof s.bonusNameAshley === 'string' && s.bonusNameAshley.trim()) ? s.bonusNameAshley.trim().slice(0, 100) : '애슐리 외식';
       const bonusNameJackpot = (typeof s.bonusNameJackpot === 'string' && s.bonusNameJackpot.trim()) ? s.bonusNameJackpot.trim().slice(0, 100) : '10판 보스 만원 상금';
       const subjectMode = ['mixed', 'math', 'english'].includes(s.subjectMode) ? s.subjectMode : 'mixed';
@@ -239,6 +251,7 @@ module.exports = async function handler(req, res) {
           bosses_defeated, pocket_money_count, ashley_count,
           paid_pocket_count, paid_ashley_count, paid_jackpot_count,
           bonus_name_pocket, bonus_name_ashley, bonus_name_jackpot,
+          bonus_target_pocket, bonus_target_ashley, bonus_target_jackpot,
           subject_mode, wrong_answer_queue, review_history, updated_at
         ) VALUES (
           'soyun_vip', '이소윤', $1, $2, $3,
@@ -247,7 +260,8 @@ module.exports = async function handler(req, res) {
           $13, $14, $15,
           $16, $17, $18,
           $19, $20, $21,
-          $22, $23::jsonb, $24::jsonb, CURRENT_TIMESTAMP
+          $22, $23, $24,
+          $25, $26::jsonb, $27::jsonb, CURRENT_TIMESTAMP
         )
         ON CONFLICT (player_id) DO UPDATE SET
           current_stage = CASE
@@ -277,6 +291,9 @@ module.exports = async function handler(req, res) {
           bonus_name_pocket = EXCLUDED.bonus_name_pocket,
           bonus_name_ashley = EXCLUDED.bonus_name_ashley,
           bonus_name_jackpot = EXCLUDED.bonus_name_jackpot,
+          bonus_target_pocket = EXCLUDED.bonus_target_pocket,
+          bonus_target_ashley = EXCLUDED.bonus_target_ashley,
+          bonus_target_jackpot = EXCLUDED.bonus_target_jackpot,
           subject_mode = EXCLUDED.subject_mode,
           wrong_answer_queue = CASE
             WHEN EXCLUDED.total_solved >= soyun_roblox_racer_save.total_solved THEN EXCLUDED.wrong_answer_queue
@@ -310,6 +327,9 @@ module.exports = async function handler(req, res) {
           bonusNamePocket,
           bonusNameAshley,
           bonusNameJackpot,
+          bonusTargetPocket,
+          bonusTargetAshley,
+          bonusTargetJackpot,
           subjectMode,
           wrongQueueJson,
           reviewHistoryJson

@@ -291,15 +291,16 @@
 
     /**
      * Computes Soyun's Real-Life Reward Gauges:
-     * - 일반 문제 정답 시 +1, 보스 격파 시 +10 상금 게이지 상승!
-     * 1) 💵 용돈 5,000원: 1st goal = 100점, then every +150점 thereafter (100, 250, 400, 550...)
-     * 2) 🍓 애슐리 외식권: every 1,000점 (1000, 2000, 3000...)
-     * 3) 💴 10판째 보스 상금 10,000원 (만원): 10판 보스마다 (STAGE 10, 20, 30...) 만원 상금!
+     * - 일반 문제 정답 시 +1, 오답 시 -1 차감, 보스 격파 시 +10 상금 게이지 상승!
+     * 1) 💵 용돈 3,000원 (기본 목표 100판, 보호자 창에서 수정 가능)
+     * 2) 🍓 애슐리 외식 (기본 목표 1,000판, 보호자 창에서 수정 가능)
+     * 3) 💴 10단계 보스 상금 (기본 목표 10단계, 보호자 창에서 수정 가능)
      * @param {number} [totalCorrect]
      * @param {number} [bossesDefeated]
      * @param {number} [maxStageReached]
+     * @param {number} [totalWrong]
      */
-    getRewardStatus: function (totalCorrect, bossesDefeated, maxStageReached) {
+    getRewardStatus: function (totalCorrect, bossesDefeated, maxStageReached, totalWrong) {
       const saveState = (window.SaveManager && typeof window.SaveManager.getState === 'function')
         ? window.SaveManager.getState()
         : {};
@@ -307,6 +308,9 @@
       const rawCorrect = totalCorrect !== undefined
         ? Math.max(0, parseInt(totalCorrect, 10) || 0)
         : Math.max(0, parseInt(saveState.totalCorrect, 10) || 0);
+      const rawWrong = totalWrong !== undefined
+        ? Math.max(0, parseInt(totalWrong, 10) || 0)
+        : Math.max(0, parseInt(saveState.totalWrong, 10) || 0);
       const bosses = bossesDefeated !== undefined
         ? Math.max(0, parseInt(bossesDefeated, 10) || 0)
         : Math.max(0, parseInt(saveState.bossesDefeated, 10) || 0);
@@ -315,45 +319,33 @@
         : Math.max(1, parseInt(saveState.maxStageReached, 10) || 1);
 
       const bossBonusPoints = bosses * 10;
-      const gaugePoints = rawCorrect + bossBonusPoints;
+      // 오답일 경우 -1점씩 보너스 게이지 점수 차감 (최소 0점)
+      const gaugePoints = Math.max(0, rawCorrect - rawWrong + bossBonusPoints);
 
-      // 1. 용돈 5,000원 게이지 (첫 100, 이후 150씩 · 달성 시 다시 0부터 시작!)
-      let pocketEarned = 0;
-      let pocketCurrent = 0;
-      let pocketTarget = 100;
-      let pocketPhaseLabel = '첫 목표 100점';
-
-      if (gaugePoints < 100) {
-        pocketEarned = 0;
-        pocketCurrent = gaugePoints;
-        pocketTarget = 100;
-        pocketPhaseLabel = '첫 100점 (보스+10)';
-      } else {
-        const afterFirst = gaugePoints - 100;
-        pocketEarned = 1 + Math.floor(afterFirst / 150);
-        pocketCurrent = afterFirst % 150;
-        pocketTarget = 150;
-        pocketPhaseLabel = `(0→150점 반복)`;
-      }
+      // 1. 보너스 1 (기본: 용돈 3,000원 · 목표 100판)
+      const pocketTarget = Math.max(1, parseInt(saveState.bonusTargetPocket, 10) || 100);
+      const pocketEarned = Math.floor(gaugePoints / pocketTarget);
+      const pocketCurrent = gaugePoints % pocketTarget;
+      const pocketPhaseLabel = `(0→${pocketTarget}판 반복 · 오답 -1)`;
       const pocketPct = Math.min(100, Math.round((pocketCurrent / pocketTarget) * 100));
 
-      // 2. 애슐리 외식권 게이지 (1,000씩 · 달성 시 다시 0부터 시작!)
-      const ashleyEarned = Math.floor(gaugePoints / 1000);
-      const ashleyCurrent = gaugePoints % 1000;
-      const ashleyTarget = 1000;
+      // 2. 보너스 2 (기본: 애슐리 외식 · 목표 1,000판)
+      const ashleyTarget = Math.max(1, parseInt(saveState.bonusTargetAshley, 10) || 1000);
+      const ashleyEarned = Math.floor(gaugePoints / ashleyTarget);
+      const ashleyCurrent = gaugePoints % ashleyTarget;
       const ashleyPct = Math.min(100, Math.round((ashleyCurrent / ashleyTarget) * 100));
-      const ashleyPhaseLabel = '(0→1,000점 반복)';
+      const ashleyPhaseLabel = `(0→${ashleyTarget.toLocaleString()}판 반복 · 오답 -1)`;
 
-      // 3. 10판째 보스마다 만원(10,000원) 상금 게이지 (달성 시 다시 0부터 시작!)
+      // 3. 10단계 보스 보너스 (기본: 목표 10단계)
+      const jackpotTarget = Math.max(1, parseInt(saveState.bonusTargetJackpot, 10) || 10);
       const effectiveBossClears = Math.max(bosses, Math.max(0, maxStg - 1));
-      const jackpotEarned = Math.floor(effectiveBossClears / 10);
-      const jackpotCurrent = effectiveBossClears % 10;
-      const jackpotTarget = 10;
+      const jackpotEarned = Math.floor(effectiveBossClears / jackpotTarget);
+      const jackpotCurrent = effectiveBossClears % jackpotTarget;
       const jackpotPct = Math.min(100, Math.round((jackpotCurrent / jackpotTarget) * 100));
-      const nextJackpotStage = (jackpotEarned + 1) * 10;
-      const jackpotPhaseLabel = `(0→10판 반복)`;
+      const nextJackpotStage = (jackpotEarned + 1) * jackpotTarget;
+      const jackpotPhaseLabel = `(0→${jackpotTarget}단계 반복)`;
 
-      // 지급 완료(삭제) 또는 보호자 직접 수정 오프셋 반영 -> 현재 달성(미지급) 보너스 횟수 계산
+      // 지급 완료(삭제) 반영 -> 현재 미지급 달성 보너스 개수 계산
       const paidPocket = parseInt(saveState.paidPocketCount, 10) || 0;
       const paidAshley = parseInt(saveState.paidAshleyCount, 10) || 0;
       const paidJackpot = parseInt(saveState.paidJackpotCount, 10) || 0;
@@ -363,12 +355,14 @@
       const unpaidJackpot = Math.max(0, jackpotEarned - paidJackpot);
       const totalUnpaidBonuses = unpaidPocket + unpaidAshley + unpaidJackpot;
 
-      const namePocket = (saveState.bonusNamePocket && String(saveState.bonusNamePocket).trim()) || '용돈 5,000원';
+      const rawPocketName = (saveState.bonusNamePocket && String(saveState.bonusNamePocket).trim()) || '용돈 3,000원';
+      const namePocket = rawPocketName === '용돈 5,000원' ? '용돈 3,000원' : rawPocketName;
       const nameAshley = (saveState.bonusNameAshley && String(saveState.bonusNameAshley).trim()) || '애슐리 외식';
       const nameJackpot = (saveState.bonusNameJackpot && String(saveState.bonusNameJackpot).trim()) || '10판 보스 만원 상금';
 
       return {
         totalCorrect: rawCorrect,
+        totalWrong: rawWrong,
         bossesDefeated: bosses,
         bossBonusPoints: bossBonusPoints,
         gaugePoints: gaugePoints,
@@ -381,9 +375,10 @@
           earnedCount: pocketEarned,
           paidCount: Math.max(0, paidPocket),
           unpaidCount: unpaidPocket,
-          totalWon: unpaidPocket * 5000,
+          totalWon: unpaidPocket * 3000,
           current: pocketCurrent,
           target: pocketTarget,
+          unit: '판',
           remaining: pocketTarget - pocketCurrent,
           percent: pocketPct,
           phaseLabel: pocketPhaseLabel
@@ -398,6 +393,7 @@
           unpaidCount: unpaidAshley,
           current: ashleyCurrent,
           target: ashleyTarget,
+          unit: '판',
           remaining: ashleyTarget - ashleyCurrent,
           percent: ashleyPct,
           phaseLabel: ashleyPhaseLabel
@@ -413,6 +409,7 @@
           totalWon: unpaidJackpot * 10000,
           current: jackpotCurrent,
           target: jackpotTarget,
+          unit: '단계',
           remaining: jackpotTarget - jackpotCurrent,
           nextJackpotStage: nextJackpotStage,
           percent: jackpotPct,
