@@ -3787,7 +3787,8 @@
         : ['block', 'hurdle', 'coin'];
 
       const waveGroup = new THREE.Group();
-      waveGroup.position.set(0, 0, -82);
+      const startZ = (waveConfig && typeof waveConfig.z === 'number') ? waveConfig.z : -82;
+      waveGroup.position.set(0, 0, startZ);
 
       const disposables = {
         geometries: [],
@@ -6019,6 +6020,14 @@
           }
         }
 
+        // Auto spring-jump when the player steers into a low hurdle lane right before reaching it!
+        if (!wave.passed && wave.group.position.z >= passZ - 6.0 && wave.group.position.z < passZ - 0.8) {
+          const approachLane = this.targetLane;
+          if (wave.lanes[approachLane] === 'hurdle' && !this.isCarJumping) {
+            this.jump();
+          }
+        }
+
         if (!wave.passed && wave.group.position.z >= passZ - 0.8) {
           wave.passed = true;
           const playerLane = this.targetLane;
@@ -6027,24 +6036,25 @@
 
           let cleared = true;
           let actionType = 'dodge';
+          let outcome = 'coin';
 
           if (laneType === 'block') {
             cleared = false;
             actionType = 'hit_block';
+            outcome = 'hit_block';
             this.triggerDamageEffect(laneX);
           } else if (laneType === 'hurdle') {
-            if (this.carJumpY >= 0.65) {
-              cleared = true;
-              actionType = 'jumped_hurdle';
-              this.triggerCorrectEffect(laneX);
-            } else {
-              cleared = false;
-              actionType = 'hit_hurdle';
-              this.triggerDamageEffect(laneX);
+            if (!this.isCarJumping && this.carJumpY < 0.65) {
+              this.jump();
             }
+            cleared = true;
+            actionType = 'jumped_hurdle';
+            outcome = 'jump_clear';
+            this.triggerCorrectEffect(laneX);
           } else {
             cleared = true;
             actionType = 'collected_coin';
+            outcome = 'coin';
             this.spawnBrickExplosion(laneX, 1.5, passZ - 1, 20, false);
             this._spawnParticleBurst(laneX, 1.5, passZ - 1, 0x00ff88, 28, 1.1);
           }
@@ -6053,6 +6063,7 @@
             this.onObbyWavePass({
               cleared: cleared,
               actionType: actionType,
+              outcome: outcome,
               laneType: laneType,
               lane: playerLane,
               waveIndex: wave.waveIndex,
