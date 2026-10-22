@@ -6068,29 +6068,80 @@
             if (cb) cb();
           }
         } else {
-          // Recover from knockback recoil smoothly
+          // Recover from knockback recoil, air-pop, yaw spin, and roll stagger smoothly
           this.bossRecoilZ += (0 - this.bossRecoilZ) * Math.min(1, dt * 6.5);
+          this.bossRecoilY += (0 - this.bossRecoilY) * Math.min(1, dt * 8.0);
           this.bossRecoilPitch += (0 - this.bossRecoilPitch) * Math.min(1, dt * 7.5);
+          this.bossRecoilYaw += (0 - this.bossRecoilYaw) * Math.min(1, dt * 7.0);
+          this.bossRecoilRoll += (0 - this.bossRecoilRoll) * Math.min(1, dt * 7.5);
+
+          // Elastic Squash-and-Stretch Deformation when Boss takes a hit!
+          if (this.bossSquashTimer > 0) {
+            this.bossSquashTimer = Math.max(0, this.bossSquashTimer - dt);
+            const sqWave = Math.sin(this.bossSquashTimer * 26) * (this.bossSquashTimer * 0.72);
+            this.bossGroup.scale.set(
+              Math.max(0.65, 1 + sqWave),
+              Math.max(0.65, 1 - sqWave * 0.85),
+              Math.max(0.65, 1 + sqWave)
+            );
+          } else {
+            this.bossGroup.scale.set(1, 1, 1);
+          }
+
+          // Process queued multi-stage chain detonations on Boss shoulders & hammer!
+          if (Array.isArray(this.bossChainExplosions) && this.bossChainExplosions.length > 0) {
+            for (let c = this.bossChainExplosions.length - 1; c >= 0; c--) {
+              const chain = this.bossChainExplosions[c];
+              chain.delay -= dt;
+              if (chain.delay <= 0) {
+                this.bossChainExplosions.splice(c, 1);
+                if (global.THREE) {
+                  const cPos = new global.THREE.Vector3(
+                    this.bossGroup.position.x + (chain.offsetX || 0),
+                    this.bossGroup.position.y + (chain.offsetY || 0),
+                    this.bossGroup.position.z + (chain.offsetZ || 1.2)
+                  );
+                  this._triggerBombBossImpact(cPos, chain.attackType, true);
+                }
+              }
+            }
+          }
 
           // Dynamic lunging, weaving across all 3 lanes, and energetic bobbing!
           const lungeOffset = Math.sin(this.elapsedTime * 3.1) * 2.8;
           const targetBossZ = cfg.BOSS_Z + lungeOffset + this.bossRecoilZ;
-          this.bossGroup.position.z += (targetBossZ - this.bossGroup.position.z) * Math.min(1, dt * 7);
+          this.bossGroup.position.z += (targetBossZ - this.bossGroup.position.z) * Math.min(1, dt * 8.5);
           this.bossGroup.position.x = Math.sin(this.elapsedTime * 1.95) * 5.4;
-          this.bossGroup.position.y = 2.8 + Math.sin(this.elapsedTime * 4.2) * 0.68;
-          this.bossGroup.rotation.z = Math.cos(this.elapsedTime * 1.95) * -0.15;
+          this.bossGroup.position.y = 2.8 + Math.sin(this.elapsedTime * 4.2) * 0.68 + this.bossRecoilY;
+          this.bossGroup.rotation.z = Math.cos(this.elapsedTime * 1.95) * -0.15 + this.bossRecoilRoll;
           this.bossGroup.rotation.x = this.bossRecoilPitch + Math.sin(this.elapsedTime * 3.1) * 0.08;
+          this.bossGroup.rotation.y = this.bossRecoilYaw;
 
-          // Swing the giant Roblox Ban-Hammer rapidly and dynamically!
-          if (this.bossRightArm) {
-            this.bossRightArm.rotation.x = 0.55 + Math.sin(this.elapsedTime * 6.8) * 0.85;
+          // Swing the giant Roblox Ban-Hammer rapidly — or flail wildly when hit!
+          if (this.bossHitTimer > 0) {
+            const flail = Math.sin(this.elapsedTime * 48) * 1.15;
+            if (this.bossRightArm) {
+              this.bossRightArm.rotation.x = -1.25 + flail;
+              this.bossRightArm.rotation.z = -0.55 + Math.cos(this.elapsedTime * 42) * 0.45;
+            }
+            if (this.bossLeftArm) {
+              this.bossLeftArm.rotation.x = -1.15 - flail;
+              this.bossLeftArm.rotation.z = 0.55 - Math.cos(this.elapsedTime * 42) * 0.45;
+            }
+            if (this.bossRing1) this.bossRing1.rotation.z += dt * 19.0;
+            if (this.bossRing2) this.bossRing2.rotation.y -= dt * 22.0;
+          } else {
+            if (this.bossRightArm) {
+              this.bossRightArm.rotation.x = 0.55 + Math.sin(this.elapsedTime * 6.8) * 0.85;
+              this.bossRightArm.rotation.z = 0;
+            }
+            if (this.bossLeftArm) {
+              this.bossLeftArm.rotation.x = Math.PI / 3 + Math.cos(this.elapsedTime * 5.4) * 0.45;
+              this.bossLeftArm.rotation.z = 0;
+            }
+            if (this.bossRing1) this.bossRing1.rotation.z += dt * 3.2;
+            if (this.bossRing2) this.bossRing2.rotation.y -= dt * 4.2;
           }
-          if (this.bossLeftArm) {
-            this.bossLeftArm.rotation.x = Math.PI / 3 + Math.cos(this.elapsedTime * 5.4) * 0.45;
-          }
-
-          if (this.bossRing1) this.bossRing1.rotation.z += dt * 3.2;
-          if (this.bossRing2) this.bossRing2.rotation.y -= dt * 4.2;
 
           // Animate Erupting Hell Lava Geysers & Spewing Magma Sparks during Boss Fight!
           if (this.bossLavaGroup && this.bossLavaGroup.visible) {
@@ -6119,10 +6170,13 @@
 
           if (this.bossHitTimer > 0) {
             this.bossHitTimer -= dt;
-            this.bossGroup.position.x += (Math.random() - 0.5) * 1.4;
+            this.bossGroup.position.x += (Math.random() - 0.5) * 2.35;
+            this.bossGroup.position.y += (Math.random() - 0.5) * 1.15;
             if (this.bossArmorMat) {
-              this.bossArmorMat.emissive.setHex(0xffffff);
-              this.bossArmorMat.emissiveIntensity = 2.0;
+              const strobePhase = Math.floor(this.bossHitTimer * 32) % 3;
+              const strobeHex = strobePhase === 0 ? 0xffffff : (strobePhase === 1 ? 0x00f3ff : 0xff0044);
+              this.bossArmorMat.emissive.setHex(strobeHex);
+              this.bossArmorMat.emissiveIntensity = 2.6;
             }
           } else if (this.bossArmorMat) {
             this.bossArmorMat.emissive.setHex(this.currentTheme.secondary);
@@ -6131,7 +6185,7 @@
         }
       }
 
-      // 6b. Update Flying 3D Bomb Projectiles arcing toward the Boss!
+      // 6b. Update Flying 3D Projectiles (Bombs, Ballistic Missiles, Water Globes, Meteors) arcing toward the Boss!
       for (let i = this.activeProjectiles.length - 1; i >= 0; i--) {
         const proj = this.activeProjectiles[i];
         proj.age += dt;
@@ -6146,8 +6200,9 @@
           );
         }
 
-        // Parabolic arc interpolation
-        const curX = proj.startPos.x + (proj.endPos.x - proj.startPos.x) * t;
+        // 3D Parabolic + Lateral Curve interpolation
+        const sideCurve = Math.sin(t * Math.PI) * (proj.sideArcX || 0);
+        const curX = proj.startPos.x + (proj.endPos.x - proj.startPos.x) * t + sideCurve;
         const curZ = proj.startPos.z + (proj.endPos.z - proj.startPos.z) * t;
         const baseLinearY = proj.startPos.y + (proj.endPos.y - proj.startPos.y) * t;
         const arcY = Math.sin(t * Math.PI) * (proj.arcHeight || 5.5);
@@ -6155,23 +6210,27 @@
 
         proj.group.position.set(curX, curY, curZ);
 
-        // Orient bomb nose along trajectory tangent & spin barrel
-        const nextT = Math.min(1, t + 0.05);
-        const nextX = proj.startPos.x + (proj.endPos.x - proj.startPos.x) * nextT;
+        // Orient projectile nose along 3D trajectory tangent & spin barrel
+        const nextT = Math.min(1, t + 0.04);
+        const nextSideCurve = Math.sin(nextT * Math.PI) * (proj.sideArcX || 0);
+        const nextX = proj.startPos.x + (proj.endPos.x - proj.startPos.x) * nextT + nextSideCurve;
         const nextZ = proj.startPos.z + (proj.endPos.z - proj.startPos.z) * nextT;
         const nextY = proj.startPos.y + (proj.endPos.y - proj.startPos.y) * nextT + Math.sin(nextT * Math.PI) * (proj.arcHeight || 5.5);
         proj.group.lookAt(nextX, nextY, nextZ);
-        proj.group.rotation.z += dt * 22;
+        proj.group.rotation.z += dt * (proj.spinSpeed || 22);
 
-        // Emit fiery rocket trail particles along the bomb's flight path
-        if (Math.random() < 0.85) {
-          this._spawnParticleBurst(curX, curY, curZ + 0.6, proj.isPrimaryBomb ? 0xff9900 : 0xff2a85, 5, 0.45);
+        // Emit weapon-specific contrail particles along the flight path
+        if (Math.random() < 0.92) {
+          const tCol = proj.trailColor || (proj.isPrimaryBomb ? 0xff9900 : 0xff2a85);
+          this._spawnParticleBurst(curX, curY, curZ + 0.6, tCol, 6, 0.52);
         }
 
         if (t >= 1) {
-          // Bomb slams into Boss!
+          // Projectile slams into Boss!
           if (proj.isPrimaryBomb) {
-            this._triggerBombBossImpact(proj.endPos.clone());
+            this._triggerBombBossImpact(proj.endPos.clone(), proj.attackType, false);
+          } else {
+            this._spawnParticleBurst(proj.endPos.x, proj.endPos.y, proj.endPos.z, proj.trailColor || 0xffe600, 28, 1.5);
           }
           if (proj.group && this.scene) {
             this.scene.remove(proj.group);
