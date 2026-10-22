@@ -2656,7 +2656,7 @@ body.obby-mode-active .touch-jump-btn {
   }
 
   .question-prompt {
-    font-size: clamp(24px, 6.6vw, 33px) !important;
+    font-size: clamp(25.2px, 6.93vw, 34.65px) !important;
     padding: 2px 6px;
     line-height: 1.18;
   }
@@ -2816,7 +2816,7 @@ body.obby-mode-active .touch-jump-btn {
   }
 
   .question-prompt {
-    font-size: clamp(21px, 3.6vw, 30px) !important;
+    font-size: clamp(22.05px, 3.78vw, 31.5px) !important;
     padding: 2px 6px;
   }
 
@@ -4590,15 +4590,38 @@ body.boss-phase-hud-active::after {
   width: auto !important;
   max-width: 650px !important;
   margin: 0 !important;
-  padding: 6px 10px !important;
+  padding: 5px 10px !important;
+  gap: 8px !important;
+  border-radius: 13px !important;
   z-index: 50 !important;
   background: linear-gradient(135deg, rgba(64, 8, 4, 0.95), rgba(32, 4, 12, 0.95)) !important;
   border: 2px solid #ff4500 !important;
   box-shadow: 0 0 26px rgba(255, 69, 0, 0.75), inset 0 0 14px rgba(255, 140, 0, 0.3) !important;
 }
 
-body.boss-phase-hud-active #hud-center-panel.hud-center-panel {
-  top: calc(max(6px, env(safe-area-inset-top, 6px)) + 74px) !important;
+#boss-hud.boss-hud .boss-portrait-frame {
+  width: 38px !important;
+  height: 38px !important;
+}
+
+#boss-hud.boss-hud .boss-name {
+  font-size: clamp(13px, 3.2vw, 15px) !important;
+  line-height: 1.15 !important;
+}
+
+#boss-hud.boss-hud .boss-subtitle,
+#boss-hud.boss-hud .boss-instruction {
+  display: none !important;
+}
+
+#boss-hud.boss-hud .boss-hp-bar-outer {
+  height: 15px !important;
+}
+
+body.boss-phase-hud-active #hud-center-panel.hud-center-panel,
+body.boss-phase-hud-active.view-mode-portrait #hud-center-panel.hud-center-panel,
+body.boss-phase-hud-active.view-mode-landscape #hud-center-panel.hud-center-panel {
+  top: calc(max(6px, env(safe-area-inset-top, 6px)) + 60px) !important;
 }
 
 /* 5. Parent Control Modal: Scrollable & 3-Row Bonus Card Layout (No Horizontal Overflow!) */
