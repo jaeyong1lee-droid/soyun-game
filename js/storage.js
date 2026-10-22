@@ -485,7 +485,7 @@
           .catch(function () {});
       };
 
-      if (forceReset) {
+      if (forceReset || immediate) {
         doPush();
       } else {
         _cloudSyncTimer = window.setTimeout(doPush, 300);
@@ -513,7 +513,8 @@
       const validModes = ['mixed', 'math', 'english'];
       if (validModes.includes(mode)) {
         state.subjectMode = mode;
-        this.save();
+        _lastLocalSettingsEditAt = Date.now();
+        this.save(true);
       }
       return state.subjectMode;
     },
@@ -528,7 +529,8 @@
       const parsed = parseFloat(mult);
       if (!isNaN(parsed)) {
         state.speedMultiplier = Math.max(0.4, Math.min(2.0, Math.round(parsed * 100) / 100));
-        this.save();
+        _lastLocalSettingsEditAt = Date.now();
+        this.save(true);
       }
       return state.speedMultiplier;
     },
