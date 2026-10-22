@@ -1483,6 +1483,150 @@
           </div>
         `;
       }).join('');
+    },
+
+    /**
+     * Shows or hides the Confirm Exit Game Modal (#exit-confirm-modal)
+     */
+    showExitConfirmModal: function () {
+      const modal = byId('exit-confirm-modal');
+      if (modal) {
+        modal.classList.remove('hidden');
+      }
+    },
+
+    hideExitConfirmModal: function () {
+      const modal = byId('exit-confirm-modal');
+      if (modal) {
+        modal.classList.add('hidden');
+      }
+    },
+
+    /**
+     * Boss Clear Step 1: Shows the Center Reward Status Popup (#boss-reward-modal) with full gauges
+     * @param {number} clearedStage
+     * @param {Object} [saveState]
+     */
+    showBossRewardModal: function (clearedStage, saveState) {
+      const modal = byId('boss-reward-modal');
+      if (!modal) return;
+
+      const state = saveState || (window.SaveManager ? window.SaveManager.getState() : {});
+      const stg = Math.max(1, parseInt(clearedStage, 10) || 1);
+      const isJackpot = (stg % 10 === 0);
+      const totalCorrect = parseInt(state.totalCorrect, 10) || 0;
+      const totalWrong = parseInt(state.totalWrong, 10) || 0;
+      const bossesDefeated = parseInt(state.bossesDefeated, 10) || 0;
+      const maxStageReached = Math.max(stg + 1, parseInt(state.maxStageReached, 10) || (stg + 1));
+
+      const rewards = getRewardInfo(totalCorrect, bossesDefeated, maxStageReached, totalWrong);
+      const pm = rewards.pocketMoney;
+      const ash = rewards.ashley;
+      const jp = rewards.bossJackpot;
+
+      const unpaidPocket = typeof pm.unpaidCount === 'number' ? pm.unpaidCount : pm.earnedCount;
+      const unpaidAshley = typeof ash.unpaidCount === 'number' ? ash.unpaidCount : ash.earnedCount;
+      const unpaidJackpot = jp ? (typeof jp.unpaidCount === 'number' ? jp.unpaidCount : jp.earnedCount) : 0;
+
+      const pocketName = String(pm.customName || state.bonusNamePocket || '용돈 3,000원').replace(/^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\s]+/u, '');
+      const ashleyName = String(ash.customName || state.bonusNameAshley || '애슐리 외식').replace(/^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\s]+/u, '');
+      const jackpotName = String((jp && jp.customName) || state.bonusNameJackpot || '10판 보스 만원 상금').replace(/^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\s]+/u, '');
+
+      const titleEl = byId('boss-reward-title');
+      if (titleEl) {
+        titleEl.textContent = isJackpot
+          ? `💴 STAGE ${stg} 10판 보스 격파 완료!!`
+          : `🎉 STAGE ${stg} 보스 격파 완료!`;
+      }
+      const subEl = byId('boss-reward-subtitle');
+      if (subEl) {
+        subEl.innerHTML = isJackpot
+          ? `🏆 초대박!! 10판 보스 격파로 <strong>[${escapeHtml(jackpotName)}]</strong> 달성 + <strong>상금 게이지 +10점</strong> 상승!`
+          : `보스 격파 보너스로 <strong>상금 게이지 +10점</strong>이 올라갔어요! 현재 보상 현황입니다.`;
+      }
+
+      const elPName = byId('boss-pop-pocket-name');
+      if (elPName) elPName.textContent = `💵 ${pocketName}`;
+      const elPBadge = byId('boss-pop-pocket-badge');
+      if (elPBadge) elPBadge.textContent = `달성 ${unpaidPocket}개`;
+      const elPFill = byId('boss-pop-pocket-fill');
+      if (elPFill) elPFill.style.width = `${pm.percent}%`;
+      const elPScore = byId('boss-pop-pocket-score');
+      if (elPScore) elPScore.textContent = `${pm.current} / ${pm.target}점`;
+      const elPPct = byId('boss-pop-pocket-pct');
+      if (elPPct) elPPct.textContent = `${pm.percent}%`;
+
+      const elAName = byId('boss-pop-ashley-name');
+      if (elAName) elAName.textContent = `🍓 ${ashleyName}`;
+      const elABadge = byId('boss-pop-ashley-badge');
+      if (elABadge) elABadge.textContent = `달성 ${unpaidAshley}개`;
+      const elAFill = byId('boss-pop-ashley-fill');
+      if (elAFill) elAFill.style.width = `${ash.percent}%`;
+      const elAScore = byId('boss-pop-ashley-score');
+      if (elAScore) elAScore.textContent = `${ash.current} / ${ash.target.toLocaleString()}점`;
+      const elAPct = byId('boss-pop-ashley-pct');
+      if (elAPct) elAPct.textContent = `${ash.percent}%`;
+
+      if (jp) {
+        const elJName = byId('boss-pop-jackpot-name');
+        if (elJName) elJName.textContent = `💴 ${jackpotName}`;
+        const elJBadge = byId('boss-pop-jackpot-badge');
+        if (elJBadge) elJBadge.textContent = `달성 ${unpaidJackpot}개`;
+        const elJFill = byId('boss-pop-jackpot-fill');
+        if (elJFill) elJFill.style.width = `${jp.percent}%`;
+        const elJScore = byId('boss-pop-jackpot-score');
+        if (elJScore) elJScore.textContent = `${jp.current} / ${jp.target}단계`;
+        const elJPct = byId('boss-pop-jackpot-pct');
+        if (elJPct) elJPct.textContent = `${jp.percent}%`;
+      }
+
+      modal.classList.remove('hidden');
+    },
+
+    hideBossRewardModal: function () {
+      const modal = byId('boss-reward-modal');
+      if (modal) {
+        modal.classList.add('hidden');
+      }
+    },
+
+    /**
+     * Boss Clear Step 2: Shows the Next Stage Confirmation Popup (#next-stage-modal)
+     * @param {number} nextStage
+     * @param {Object} [nextStageConfig]
+     */
+    showNextStageModal: function (nextStage, nextStageConfig) {
+      const modal = byId('next-stage-modal');
+      if (!modal) return;
+
+      const stg = Math.max(1, parseInt(nextStage, 10) || 2);
+      const cfg = nextStageConfig || ((window.GameConfig && window.GameConfig.getStageConfig) ? window.GameConfig.getStageConfig(stg) : { title: `STAGE ${stg}` });
+
+      const titleEl = byId('next-stage-title');
+      if (titleEl) {
+        titleEl.textContent = `🚀 STAGE ${stg}(으)로 이동할까요?`;
+      }
+      const badgeEl = byId('next-stage-badge');
+      if (badgeEl) {
+        badgeEl.textContent = `🏁 STAGE ${stg}`;
+      }
+      const nameEl = byId('next-stage-name');
+      if (nameEl) {
+        nameEl.textContent = cfg.title || `STAGE ${stg}`;
+      }
+      const yesBtn = byId('btn-next-stage-yes');
+      if (yesBtn) {
+        yesBtn.textContent = `🚀 네! STAGE ${stg} 출발하기!`;
+      }
+
+      modal.classList.remove('hidden');
+    },
+
+    hideNextStageModal: function () {
+      const modal = byId('next-stage-modal');
+      if (modal) {
+        modal.classList.add('hidden');
+      }
     }
   };
 
