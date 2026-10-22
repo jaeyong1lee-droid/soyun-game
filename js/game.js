@@ -203,7 +203,7 @@
     const bossFactor = (!state.isObbyMode && state.isBossPhase)
       ? ((window.GameConfig && window.GameConfig.BOSS_SPEED_MULTIPLIER) ? window.GameConfig.BOSS_SPEED_MULTIPLIER : 1.5)
       : 1.0;
-    const cap = state.isObbyMode ? 240 : (state.isBossPhase ? 160 : 120);
+    const cap = state.isObbyMode ? 320 : (state.isBossPhase ? 260 : 200);
     return Math.max(14, Math.min(cap, Math.round((state.speed || 36) * (state.speedMultiplier || 1.0) * obbyFactor * bossFactor)));
   }
 

@@ -198,7 +198,7 @@
     const validModes = ['mixed', 'math', 'english'];
     const subjectMode = validModes.includes(raw.subjectMode) ? raw.subjectMode : 'mixed';
     const parsedMult = parseFloat(raw.speedMultiplier);
-    const speedMultiplier = (!isNaN(parsedMult) && parsedMult >= 0.3 && parsedMult <= 2.5)
+    const speedMultiplier = (!isNaN(parsedMult) && parsedMult >= 1.0 && parsedMult <= 2.5)
       ? Math.round(parsedMult * 100) / 100
       : 1.0;
 
@@ -677,7 +677,7 @@
       const state = this.getState();
       const parsed = parseFloat(mult);
       if (!isNaN(parsed)) {
-        state.speedMultiplier = Math.max(0.4, Math.min(2.0, Math.round(parsed * 100) / 100));
+        state.speedMultiplier = Math.max(1.0, Math.min(2.5, Math.round(parsed * 100) / 100));
         _lastLocalSettingsEditAt = Date.now();
         this.save(true);
       }

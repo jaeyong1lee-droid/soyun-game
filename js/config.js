@@ -190,13 +190,13 @@
     }
   ];
 
-  // 속도 조절 프리셋 (기본 1.0x = 이전 속도의 절반인 55 KM/H 기준!)
+  // 속도 조절 프리셋 (1.3x ~ 2.5x)
   const SPEED_MULTIPLIERS = [
-    { mult: 0.6, label: '🐢 0.6x 아주 천천히', shortLabel: '0.6x' },
-    { mult: 0.8, label: '🐣 0.8x 천천히', shortLabel: '0.8x' },
-    { mult: 1.0, label: '🚗 1.0x 기본 (추천)', shortLabel: '1.0x' },
-    { mult: 1.3, label: '🚀 1.3x 약간 빠르게', shortLabel: '1.3x' },
-    { mult: 1.6, label: '⚡ 1.6x 빠르게', shortLabel: '1.6x' }
+    { mult: 1.3, label: '🚗 1.3x 기본', shortLabel: '1.3x' },
+    { mult: 1.6, label: '🚀 1.6x 약간 빠르게', shortLabel: '1.6x' },
+    { mult: 1.9, label: '⚡ 1.9x 빠르게', shortLabel: '1.9x' },
+    { mult: 2.2, label: '🔥 2.2x 아주 빠르게', shortLabel: '2.2x' },
+    { mult: 2.5, label: '👑 2.5x 초고속', shortLabel: '2.5x' }
   ];
 
   const ROBLOX_PETS = [
