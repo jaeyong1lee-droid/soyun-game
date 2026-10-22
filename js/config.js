@@ -470,6 +470,110 @@
         isJackpotStage: isJackpotStage,
         jackpotPrizeWon: isJackpotStage ? 10000 : 0
       };
+    },
+
+    /**
+     * Returns World Country / Kingdom Summary info for the Sky-Ascending Stage Tree Map ("1단계는 어느나라 - 2단계는 어느나라")
+     * @param {number} stageNumber
+     */
+    getStageWorldInfo: function (stageNumber) {
+      const s = Math.max(1, parseInt(stageNumber, 10) || 1);
+      const isJackpot = (s % 10 === 0);
+      const worlds = [
+        {
+          icon: '🏞️',
+          country: '에메랄드 대자연의 나라',
+          summary: '알프스 만년설 산맥 · 에메랄드 강변 · 푸른 소나무 숲',
+          zone: '대자연 지구 (1,000m)',
+          color: '#00e676',
+          bg: 'linear-gradient(135deg, rgba(13,71,161,0.55) 0%, rgba(27,94,32,0.75) 100%)'
+        },
+        {
+          icon: '☁️',
+          country: '천공의 구름 왕국',
+          summary: '하늘 위 뭉게구름 바다 · 쌍무지개 다리 · 황금 구름 신전',
+          zone: '구름 하늘층 (2,000m)',
+          color: '#00e5ff',
+          bg: 'linear-gradient(135deg, rgba(2,119,189,0.6) 0%, rgba(0,229,255,0.45) 100%)'
+        },
+        {
+          icon: '🐠',
+          country: '신비한 바닷속 해저왕국',
+          summary: '아틀란티스 산호초 · 둥실 해파리 · 바닷속 물방울 길',
+          zone: '신비의 해저층 (3,000m)',
+          color: '#00f5d4',
+          bg: 'linear-gradient(135deg, rgba(0,29,61,0.75) 0%, rgba(0,180,216,0.55) 100%)'
+        },
+        {
+          icon: '🌋',
+          country: '불타는 화산 용암의 나라',
+          summary: '끓어오르는 마그마 협곡 · 폭발 화산섬 · 불꽃 크리스탈',
+          zone: '마그마 화산층 (4,000m)',
+          color: '#ff6d00',
+          bg: 'linear-gradient(135deg, rgba(60,9,0,0.8) 0%, rgba(255,61,0,0.55) 100%)'
+        },
+        {
+          icon: '🎠',
+          country: '상상의 마법 동화나라',
+          summary: '캔디 원더랜드 · 거대 마법버섯 · 롤리팝 사탕성',
+          zone: '동화 마법층 (5,000m)',
+          color: '#ff70a6',
+          bg: 'linear-gradient(135deg, rgba(60,9,108,0.75) 0%, rgba(255,112,166,0.55) 100%)'
+        },
+        {
+          icon: '🌸',
+          country: '분홍빛 벚꽃 호수의 나라',
+          summary: '봄날의 산악 계곡 · 거울 호수 · 흩날리는 분홍 벚꽃길',
+          zone: '하늘 정원층 (6,000m)',
+          color: '#ff8fab',
+          bg: 'linear-gradient(135deg, rgba(59,28,50,0.75) 0%, rgba(255,143,171,0.55) 100%)'
+        },
+        {
+          icon: '❄️',
+          country: '오로라 얼음 설산의 나라',
+          summary: '알래스카 눈 덮인 설산 · 빙하 강물 · 밤하늘 오로라',
+          zone: '성층권 오로라 (7,000m)',
+          color: '#64ffda',
+          bg: 'linear-gradient(135deg, rgba(2,17,36,0.8) 0%, rgba(0,150,199,0.55) 100%)'
+        },
+        {
+          icon: '🌈',
+          country: '사이버 은하수 환상의 나라',
+          summary: '네온 별빛 은하수 · 레트로 태양 · 사이버 미래도시',
+          zone: '은하수 환상층 (8,000m)',
+          color: '#e040fb',
+          bg: 'linear-gradient(135deg, rgba(25,5,53,0.8) 0%, rgba(255,0,127,0.5) 100%)'
+        }
+      ];
+
+      const base = worlds[(s - 1) % worlds.length];
+      if (isJackpot) {
+        return {
+          stage: s,
+          icon: '👑',
+          country: `황금 천공 제국 · 만원 보스 왕국 (${base.country})`,
+          shortCountry: `👑 황금 천공 만원 보스 왕국`,
+          summary: `💴 ${s}단계 보스 격파 시 [10,000원 만원 상금] 보너스 달성! (${base.summary})`,
+          altitudeMeters: s * 1000,
+          altitudeLabel: `☁️ 상공 ${(s * 1000).toLocaleString()}m · 💴 만원 보스 정상!`,
+          color: '#ffd700',
+          bg: 'linear-gradient(135deg, rgba(80,45,0,0.88) 0%, rgba(217,119,6,0.72) 100%)',
+          isJackpot: true
+        };
+      }
+
+      return {
+        stage: s,
+        icon: base.icon,
+        country: base.country,
+        shortCountry: `${base.icon} ${base.country}`,
+        summary: base.summary,
+        altitudeMeters: s * 1000,
+        altitudeLabel: `☁️ 상공 ${(s * 1000).toLocaleString()}m`,
+        color: base.color,
+        bg: base.bg,
+        isJackpot: false
+      };
     }
   };
 
