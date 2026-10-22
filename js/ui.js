@@ -651,7 +651,7 @@
       const layer = byId('impact-fx-layer');
 
       // 1. Trigger Screen Shake on Body
-      const isHeavy = type === 'boss' || type === 'stageClear' || (opts.combo && opts.combo >= 3);
+      const isHeavy = type === 'boss' || type === 'stageClear' || type === 'obby_hurt' || (opts.combo && opts.combo >= 3);
       document.body.classList.remove('screen-shake-hit', 'screen-shake-heavy');
       void document.body.offsetWidth;
       document.body.classList.add(isHeavy ? 'screen-shake-heavy' : 'screen-shake-hit');
