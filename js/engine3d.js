@@ -5552,6 +5552,7 @@
       this.bossRecoilRoll = 0;
       this.bossSquashTimer = 0;
       this.bossFinisherSlowMoTimer = 0;
+      this.isVictoryCruise = false;
       this.bossFinisherQueue = [];
       this.bossChainExplosions = [];
 
