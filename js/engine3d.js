@@ -5107,6 +5107,82 @@
         }
       }
 
+      // 1b. Animate Roaming 3D Biome Animals beside the track (Lions walking in Jungle, Camels + Foxes roaming in Desert, Penguins waddling on Glacier, Dinosaurs stomping in Jurassic!)
+      if (Array.isArray(this.roamingAnimals)) {
+        for (let i = 0; i < this.roamingAnimals.length; i++) {
+          const cluster = this.roamingAnimals[i];
+          const u = cluster.userData || {};
+          const phase = u.phase || 0;
+          const side = u.side || 1;
+          // Animals walk forward/backward along the roadside while the world scrolls
+          const roamSpeed = Math.sin(this.elapsedTime * 0.9 + phase) * 2.8;
+          cluster.position.z += (worldUnitsPerSec + roamSpeed) * dt;
+          if (cluster.position.z > 28) {
+            cluster.position.z -= 196;
+          }
+          const curveX = this._getRoadCurveX(cluster.position.z) * 0.88;
+          const wanderX = Math.cos(this.elapsedTime * 1.35 + phase) * 1.15;
+          cluster.position.x = (u.baseX || side * 10.8) + curveX + wanderX;
+          // Gentle turning yaw as animal wanders along the road
+          cluster.rotation.y = Math.sin(this.elapsedTime * 1.35 + phase) * 0.28;
+        }
+      }
+
+      if (Array.isArray(this.biomeAnimalVariants)) {
+        for (let i = 0; i < this.biomeAnimalVariants.length; i++) {
+          const av = this.biomeAnimalVariants[i];
+          const phase = i * 0.95;
+          const walkCycle = this.elapsedTime * 9.5 + phase;
+          const legSwing = Math.sin(walkCycle) * 0.55;
+          const headBob = Math.cos(walkCycle * 0.5) * 0.08;
+
+          if (Array.isArray(av.primaryWalkers)) {
+            for (let w = 0; w < av.primaryWalkers.length; w++) {
+              const walker = av.primaryWalkers[w];
+              if (!walker || !walker.parent || !walker.parent.visible) continue;
+              const wu = walker.userData;
+              if (wu && Array.isArray(wu.legs) && wu.legs.length >= 2) {
+                wu.legs[0].rotation.x = legSwing;
+                wu.legs[1].rotation.x = -legSwing;
+                if (wu.legs[2]) wu.legs[2].rotation.x = -legSwing;
+                if (wu.legs[3]) wu.legs[3].rotation.x = legSwing;
+              }
+              if (wu && wu.headGroup) {
+                wu.headGroup.rotation.x = headBob;
+                wu.headGroup.rotation.y = Math.sin(this.elapsedTime * 2.2 + phase) * 0.18;
+              }
+              if (wu && wu.tail) {
+                wu.tail.rotation.z = Math.sin(this.elapsedTime * 7.5 + phase) * 0.32;
+              }
+            }
+          }
+
+          if (Array.isArray(av.companions)) {
+            for (let c = 0; c < av.companions.length; c++) {
+              const comp = av.companions[c];
+              if (!comp || !comp.parent || !comp.parent.visible) continue;
+              const cPhase = phase + c * 1.7;
+              const orbitAng = this.elapsedTime * 1.85 + cPhase;
+              // Companion animals (Fennec Fox, Gazelle, Monkey, Penguin, Bunny) trot & hop around the main animal!
+              comp.position.x = (c % 2 === 0 ? 2.1 : -1.75) + Math.cos(orbitAng) * 0.75;
+              comp.position.z = (c % 2 === 0 ? -1.2 : 1.75) + Math.sin(orbitAng) * 0.95;
+              comp.position.y = Math.abs(Math.sin(this.elapsedTime * 6.8 + cPhase)) * 0.36;
+              comp.rotation.y = -orbitAng + Math.PI * 0.5;
+              // Penguin side-to-side waddle
+              comp.rotation.z = Math.sin(this.elapsedTime * 8.5 + cPhase) * 0.14;
+              const cu = comp.userData;
+              if (cu && Array.isArray(cu.legs) && cu.legs.length >= 2) {
+                const cLeg = Math.sin(this.elapsedTime * 12 + cPhase) * 0.6;
+                cu.legs[0].rotation.x = cLeg;
+                cu.legs[1].rotation.x = -cLeg;
+                if (cu.legs[2]) cu.legs[2].rotation.x = -cLeg;
+                if (cu.legs[3]) cu.legs[3].rotation.x = cLeg;
+              }
+            }
+          }
+        }
+      }
+
       // 2. Soyun's Roblox Super Kart, 3D Blocky Avatar & Floating Cube Pet Physics
       if (this.carGroup) {
         const targetX = lanes[this.targetLane] !== undefined ? lanes[this.targetLane] : 0;
