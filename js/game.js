@@ -658,13 +658,13 @@
       if (isCorrect) {
         state.combo += 1;
 
-        // Increase speed gently, strictly capped so solving time never drops below 6.47s (2x old time)
+        // Increase speed gently, strictly capped at 2.5x of Stage 1 speed (90)
         const speedInc = (window.GameConfig && window.GameConfig.SPEED_INCREMENT_PER_CORRECT)
           ? window.GameConfig.SPEED_INCREMENT_PER_CORRECT
-          : 0.5;
+          : 0.15;
         const maxSpeedCap = (window.GameConfig && window.GameConfig.MAX_SPEED_CAP)
           ? window.GameConfig.MAX_SPEED_CAP
-          : 53;
+          : 90;
         state.speed = Math.min(maxSpeedCap, state.speed + speedInc);
 
         if (window.Engine3D) {
@@ -779,9 +779,10 @@
               clearTimeout(this._bossSpotlightTimer);
               this._bossSpotlightTimer = null;
             }
-            // 5-Second Ultimate Firepower Boss Finisher Animation!
-            // Hide question banner, keep car racing fast, and unleash a 5-second non-stop all-weapons barrage
-            // (Missiles, Water Gun, Mega Laser, Round Bomb, Meteor) before opening the Boss Clear popup!
+            this._clearBossFinisherClickPrompt();
+            // 5-Second Slow-Motion Ultimate Firepower Boss Finisher Animation!
+            // Hide question banner, unleash a 5-second slow-motion all-weapons barrage
+            // (Missiles, Water Gun, Mega Laser, Round Bomb, Meteor), and then wait for 1 click/tap to proceed!
             document.body.classList.add('boss-attack-spotlight-active');
             if (window.Engine3D) {
               window.Engine3D.clearActiveGates();
@@ -793,7 +794,7 @@
             if (window.UIManager && typeof window.UIManager.pushRobloxChat === 'function') {
               window.UIManager.pushRobloxChat(
                 '로블록스TV',
-                '🚨💥 [초필살 전탄 발사!!] 이소윤 선수의 모든 특수무기(🚀탄도미사일·🔫물총·⚡레이저·💣폭탄·☄️메테오)가 보스를 집중 폭격합니다!!',
+                '🚨💥 [슬로우모션 초필살 전탄 발사!!] 이소윤 선수의 모든 특수무기(🚀탄도미사일·🔫물총·⚡레이저·💣폭탄·☄️메테오)가 보스를 집중 폭격합니다!!',
                 'tv'
               );
             }
@@ -802,9 +803,11 @@
             const self = this;
             this._bossSpotlightTimer = setTimeout(function () {
               self._bossSpotlightTimer = null;
-              document.body.classList.remove('boss-attack-spotlight-active');
-              if (!state.isPlaying || state.isGameOver) return;
-              self.handleBossDefeated(pointsEarned);
+              if (!state.isPlaying || state.isGameOver) {
+                document.body.classList.remove('boss-attack-spotlight-active');
+                return;
+              }
+              self._showBossFinisherClickPrompt(pointsEarned);
             }, 5000);
             return;
           } else {
@@ -951,6 +954,73 @@
     },
 
     /**
+     * Removes any active post-5s Boss finisher click-to-continue prompt & listeners.
+     */
+    _clearBossFinisherClickPrompt: function () {
+      if (this._bossFinisherClickCleanup) {
+        try {
+          this._bossFinisherClickCleanup();
+        } catch (_e) {}
+        this._bossFinisherClickCleanup = null;
+      }
+      const existing = document.getElementById('boss-finisher-click-prompt');
+      if (existing && existing.parentNode) {
+        existing.parentNode.removeChild(existing);
+      }
+    },
+
+    /**
+     * Shows a full-screen clickable prompt after the 5-second slow-motion Boss finisher animation
+     * so the player clicks/taps once to proceed to the Boss Clear Reward Modal.
+     */
+    _showBossFinisherClickPrompt: function (pointsEarned) {
+      this._clearBossFinisherClickPrompt();
+      const self = this;
+
+      const overlay = document.createElement('div');
+      overlay.id = 'boss-finisher-click-prompt';
+      overlay.className = 'boss-finisher-click-prompt';
+      overlay.innerHTML =
+        '<div class="boss-finisher-click-pill">' +
+          '<span class="boss-finisher-click-icon">🎬💥</span>' +
+          '<span class="boss-finisher-click-text">보스 격파 완료! <strong>화면을 한 번 클릭(터치)</strong>하면 넘어갑니다!</span>' +
+          '<span class="boss-finisher-click-arrow">👆 클릭!</span>' +
+        '</div>';
+      document.body.appendChild(overlay);
+
+      let triggered = false;
+      function onProceed(ev) {
+        if (triggered) return;
+        if (ev && typeof ev.preventDefault === 'function' && ev.type === 'keydown') {
+          if (ev.key !== 'Enter' && ev.key !== ' ') return;
+          ev.preventDefault();
+        }
+        triggered = true;
+        self._clearBossFinisherClickPrompt();
+        document.body.classList.remove('boss-attack-spotlight-active');
+        if (window.SoundEngine && typeof window.SoundEngine.playClick === 'function') {
+          window.SoundEngine.playClick();
+        }
+        if (!state.isPlaying || state.isGameOver) return;
+        self.handleBossDefeated(pointsEarned);
+      }
+
+      // Small 120ms guard so an accidental tap at 4.99s doesn't skip before the prompt is seen
+      const bindTimer = setTimeout(function () {
+        overlay.addEventListener('pointerdown', onProceed, { once: true });
+        overlay.addEventListener('click', onProceed, { once: true });
+        window.addEventListener('keydown', onProceed);
+      }, 120);
+
+      this._bossFinisherClickCleanup = function () {
+        clearTimeout(bindTimer);
+        overlay.removeEventListener('pointerdown', onProceed);
+        overlay.removeEventListener('click', onProceed);
+        window.removeEventListener('keydown', onProceed);
+      };
+    },
+
+    /**
      * Handles Boss defeat:
      * - Advances cumulative stage in SaveManager (+1 bossesDefeated = +10 Reward Gauge Bonus!)
      * - Awards 10,000원 (만원) Jackpot Prize on every 10th Stage Boss!
@@ -958,6 +1028,8 @@
      * @param {number} [lastShotPoints]
      */
     handleBossDefeated: function (lastShotPoints) {
+      this._clearBossFinisherClickPrompt();
+      document.body.classList.remove('boss-attack-spotlight-active');
       const clearedStage = state.stage;
       const isTenStageJackpot = (clearedStage % 10 === 0);
       const bossClearBonus = (window.GameConfig && window.GameConfig.SCORE_BOSS_CLEAR)
