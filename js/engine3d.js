@@ -6250,8 +6250,8 @@
         }
       }
 
-      // 5b. Update 3-Lane Roblox Obby Action Mini-Game Obstacle Waves (2x Speed!)
-      const obbySpeedUnitsPerSec = gateSpeedUnitsPerSec * 1.45;
+      // 5b. Update 3-Lane Roblox Obby Action Mini-Game Obstacle Waves (1.2x of Current Speed!)
+      const obbySpeedUnitsPerSec = gateSpeedUnitsPerSec;
       for (let i = this.activeObbyWaves.length - 1; i >= 0; i--) {
         const wave = this.activeObbyWaves[i];
         wave.group.position.z += obbySpeedUnitsPerSec * dt;
