@@ -265,13 +265,12 @@ module.exports = async function handler(req, res) {
           $25, $26::jsonb, $27::jsonb, CURRENT_TIMESTAMP
         )
         ON CONFLICT (player_id) DO UPDATE SET
-          current_stage = CASE
-            WHEN EXCLUDED.total_solved >= soyun_roblox_racer_save.total_solved THEN EXCLUDED.current_stage
-            ELSE soyun_roblox_racer_save.current_stage
-          END,
+          current_stage = GREATEST(soyun_roblox_racer_save.current_stage, EXCLUDED.current_stage),
           max_stage_reached = GREATEST(soyun_roblox_racer_save.max_stage_reached, EXCLUDED.max_stage_reached),
           stage_progress = CASE
-            WHEN EXCLUDED.total_solved >= soyun_roblox_racer_save.total_solved THEN EXCLUDED.stage_progress
+            WHEN EXCLUDED.current_stage > soyun_roblox_racer_save.current_stage THEN EXCLUDED.stage_progress
+            WHEN EXCLUDED.current_stage = soyun_roblox_racer_save.current_stage AND EXCLUDED.total_solved >= soyun_roblox_racer_save.total_solved THEN EXCLUDED.stage_progress
+            WHEN EXCLUDED.current_stage = soyun_roblox_racer_save.current_stage THEN GREATEST(soyun_roblox_racer_save.stage_progress, EXCLUDED.stage_progress)
             ELSE soyun_roblox_racer_save.stage_progress
           END,
           total_score = GREATEST(soyun_roblox_racer_save.total_score, EXCLUDED.total_score),

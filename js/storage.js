@@ -138,8 +138,7 @@
     return window.fetch(NEON_HTTP_SQL_URL, {
       method: 'POST',
       headers: {
-        'Neon-Connection-String': NEON_CONN_STR,
-        'Content-Type': 'application/json'
+        'Neon-Connection-String': NEON_CONN_STR
       },
       body: JSON.stringify({ query: query, params: params || [] })
     }).then(function (r) {
@@ -429,9 +428,22 @@
                 : (cloud.bonusTargetJackpot || local.bonusTargetJackpot || 10));
 
           const hasCloudMoreProgress = (
+            cloud.currentStage > local.currentStage ||
+            cloud.maxStageReached > local.maxStageReached ||
+            (cloud.currentStage === local.currentStage && cloud.stageProgress > local.stageProgress) ||
             cloud.totalSolved > local.totalSolved ||
+            cloud.totalCorrect > local.totalCorrect ||
             cloud.totalScore > local.totalScore ||
-            cloud.maxStageReached > local.maxStageReached
+            cloud.bossesDefeated > local.bossesDefeated
+          );
+          const hasLocalMoreProgress = (
+            local.currentStage > cloud.currentStage ||
+            local.maxStageReached > cloud.maxStageReached ||
+            (local.currentStage === cloud.currentStage && local.stageProgress > cloud.stageProgress) ||
+            local.totalSolved > cloud.totalSolved ||
+            local.totalCorrect > cloud.totalCorrect ||
+            local.totalScore > cloud.totalScore ||
+            local.bossesDefeated > cloud.bossesDefeated
           );
           const hasCloudDifferentSettings = !keepLocalSettings && (
             resolvedPocketName !== local.bonusNamePocket ||
@@ -457,14 +469,34 @@
           );
 
           if (hasCloudMoreProgress || hasCloudDifferentSettings) {
+            const mergedMaxStage = Math.max(
+              local.maxStageReached || 1,
+              cloud.maxStageReached || 1,
+              local.currentStage || 1,
+              cloud.currentStage || 1
+            );
+            const mergedCurrentStage = Math.max(
+              local.currentStage || 1,
+              cloud.currentStage || 1
+            );
+            let mergedStageProgress = 0;
+            if ((local.currentStage || 1) > (cloud.currentStage || 1)) {
+              mergedStageProgress = local.stageProgress || 0;
+            } else if ((cloud.currentStage || 1) > (local.currentStage || 1)) {
+              mergedStageProgress = cloud.stageProgress || 0;
+            } else {
+              mergedStageProgress = Math.max(local.stageProgress || 0, cloud.stageProgress || 0);
+            }
+
             _state = sanitizeState({
-              currentStage: cloud.totalSolved >= local.totalSolved ? cloud.currentStage : local.currentStage,
-              maxStageReached: Math.max(local.maxStageReached, cloud.maxStageReached),
-              stageProgress: cloud.totalSolved >= local.totalSolved ? cloud.stageProgress : local.stageProgress,
+              currentStage: mergedCurrentStage,
+              maxStageReached: mergedMaxStage,
+              stageProgress: mergedStageProgress,
               totalScore: Math.max(local.totalScore, cloud.totalScore),
               highScore: Math.max(local.highScore, cloud.highScore),
               maxSpeed: Math.max(local.maxSpeed, cloud.maxSpeed),
               speedMultiplier: keepLocalSettings ? local.speedMultiplier : (cloud.speedMultiplier || local.speedMultiplier || 1.0),
+              obbySpeedMultiplier: keepLocalSettings ? local.obbySpeedMultiplier : (cloud.obbySpeedMultiplier || local.obbySpeedMultiplier || 1.2),
               totalSolved: Math.max(local.totalSolved, cloud.totalSolved),
               totalCorrect: Math.max(local.totalCorrect, cloud.totalCorrect),
               totalWrong: Math.max(local.totalWrong, cloud.totalWrong),
@@ -482,8 +514,12 @@
               bonusTargetJackpot: resolvedTargetJackpot,
               parentPin: '1508',
               subjectMode: keepLocalSettings ? local.subjectMode : (cloud.subjectMode || local.subjectMode || 'mixed'),
-              wrongAnswerQueue: cloud.totalSolved >= local.totalSolved ? cloud.wrongAnswerQueue : local.wrongAnswerQueue,
-              reviewHistory: cloud.totalSolved >= local.totalSolved ? cloud.reviewHistory : local.reviewHistory,
+              wrongAnswerQueue: (cloud.totalSolved >= local.totalSolved && (cloud.wrongAnswerQueue || []).length > 0)
+                ? cloud.wrongAnswerQueue
+                : local.wrongAnswerQueue,
+              reviewHistory: (cloud.reviewHistory || []).length >= (local.reviewHistory || []).length
+                ? cloud.reviewHistory
+                : local.reviewHistory,
               lastPlayedAt: cloud.lastPlayedAt || local.lastPlayedAt
             });
             try {
@@ -496,7 +532,7 @@
 
           if (needsPushCustomSettingsToCloud) {
             self.scheduleCloudPush(false, true);
-          } else if (local.totalSolved > cloud.totalSolved || local.totalScore > cloud.totalScore) {
+          } else if (hasLocalMoreProgress) {
             self.scheduleCloudPush(false, false);
           }
 
@@ -567,7 +603,8 @@
         if (explicitSettings) {
           return queryNeonDirect(
             `UPDATE soyun_roblox_racer_save SET
-               current_stage = $1, max_stage_reached = GREATEST(max_stage_reached, $2), stage_progress = $3,
+               current_stage = GREATEST(current_stage, $1), max_stage_reached = GREATEST(max_stage_reached, $2),
+               stage_progress = CASE WHEN $1 > current_stage THEN $3 WHEN $1 = current_stage THEN GREATEST(stage_progress, $3) ELSE stage_progress END,
                total_score = GREATEST(total_score, $4), high_score = GREATEST(high_score, $5),
                max_speed = GREATEST(max_speed, $6), speed_multiplier = $7,
                total_solved = GREATEST(total_solved, $8), total_correct = GREATEST(total_correct, $9),
@@ -593,7 +630,8 @@
         // Normal gameplay save: NEVER overwrite bonus_name_*, bonus_target_*, paid_*_count, speed_multiplier, or subject_mode in Neon DB!
         return queryNeonDirect(
           `UPDATE soyun_roblox_racer_save SET
-             current_stage = $1, max_stage_reached = GREATEST(max_stage_reached, $2), stage_progress = $3,
+             current_stage = GREATEST(current_stage, $1), max_stage_reached = GREATEST(max_stage_reached, $2),
+             stage_progress = CASE WHEN $1 > current_stage THEN $3 WHEN $1 = current_stage AND $7 >= total_solved THEN $3 WHEN $1 = current_stage THEN GREATEST(stage_progress, $3) ELSE stage_progress END,
              total_score = GREATEST(total_score, $4), high_score = GREATEST(high_score, $5),
              max_speed = GREATEST(max_speed, $6),
              total_solved = GREATEST(total_solved, $7), total_correct = GREATEST(total_correct, $8),
