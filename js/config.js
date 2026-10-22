@@ -272,9 +272,9 @@
 
     BASE_SPEED: 36,
     MIN_SPEED_CAP: 18,
-    MAX_SPEED_CAP: 45, // 단계가 올라가도 최대 속도 상한선(45) 유지 (충분한 풀이 시간 보장!)
-    SPEED_INCREMENT_PER_CORRECT: 0.08, // 문제 정답 시 아주 미세하게만 가속
-    SPEED_STAGE_BONUS: 0.5, // 스테이지 상승 시 +0.5씩 아주 미세하게만 가속
+    MAX_SPEED_CAP: 90, // 1단계 속도(36)의 2.5배(90)가 최대 속도 상한선! 그 이후 단계는 단어·문제 난이도만 상승!
+    SPEED_INCREMENT_PER_CORRECT: 0.15, // 문제 정답 시 소폭 가속 (최대 90 상한선 준수)
+    SPEED_STAGE_BONUS: 3.0, // 단계 상승 시 +3.0씩 점진 가속 (1단계 속도의 2.5배인 90 도달 후 속도 고정)
     SPEED_STEP_BUTTON: 6, // [ - / + ] 속도 조절 버튼 클릭 시 증감 폭
     SPEED_MULTIPLIERS: SPEED_MULTIPLIERS,
 
@@ -495,8 +495,8 @@
         bossName: baseBossName,
         bossTitle: baseBossTitle,
         bossHp: Math.min(18, 9 + Math.floor((s - 1) * 0.5)),
-        baseSpeed: Math.min(45, +(36 + (s - 1) * 0.5).toFixed(1)),
-        gateSolveSeconds: Math.max(7.6, +(9.5 - (s - 1) * 0.1).toFixed(1)),
+        baseSpeed: Math.min(90, +(36 + (s - 1) * 3.0).toFixed(1)),
+        gateSolveSeconds: Math.max(3.8, +(9.5 / (Math.min(90, 36 + (s - 1) * 3.0) / 36)).toFixed(1)),
         themeColor: isJackpotStage ? '#ffd700' : tpl.themeColor,
         roadColor: tpl.roadColor,
         skyColor: tpl.skyColor,

@@ -5551,6 +5551,8 @@
       this.bossRecoilYaw = 0;
       this.bossRecoilRoll = 0;
       this.bossSquashTimer = 0;
+      this.bossFinisherSlowMoTimer = 0;
+      this.bossFinisherQueue = [];
       this.bossChainExplosions = [];
 
       // Switch 3D background to Hell & Erupting Lava theme!
