@@ -4189,7 +4189,11 @@
       const gateSpeedUnitsPerSec = this.currentSpeed * 0.24;
       const worldUnitsPerSec = gateSpeedUnitsPerSec * 2.1;
 
-      // 1. Scroll Road Lane Dashes, Studded Curbs & Roadside Obby Scenery (with tapered road width!)
+      // Advance S-Curve phase so the road winds smoothly left and right as Soyun drives!
+      this.roadCurvePhase = (this.roadCurvePhase || 0) + dt * 0.54;
+      this._updateRoadCurveGeometry();
+
+      // 1. Scroll Road Lane Dashes, Studded Curbs & Roadside Multi-Biome Scenery (following the curving road!)
       for (let i = 0; i < this.laneDashMeshes.length; i++) {
         const dash = this.laneDashMeshes[i];
         dash.position.z += worldUnitsPerSec * dt;
@@ -4197,8 +4201,12 @@
           dash.position.z -= 240;
         }
         if (dash.userData && typeof dash.userData.baseX === 'number') {
-          const wf = 1 + Math.max(0, (8 - dash.position.z) * 0.0175);
-          dash.position.x = dash.userData.baseX * wf;
+          const z = dash.position.z;
+          const wf = 1 + Math.max(0, (8 - z) * 0.0175);
+          const curveX = this._getRoadCurveX(z);
+          const slope = this._getRoadCurveSlope(z);
+          dash.position.x = dash.userData.baseX * wf + curveX;
+          dash.rotation.z = -Math.atan(dash.userData.baseX * 0.0175 + slope);
         }
       }
 
@@ -4209,8 +4217,12 @@
           curb.position.z -= 240;
         }
         if (curb.userData && typeof curb.userData.baseX === 'number') {
-          const wf = 1 + Math.max(0, (8 - curb.position.z) * 0.0175);
-          curb.position.x = curb.userData.baseX * wf;
+          const z = curb.position.z;
+          const wf = 1 + Math.max(0, (8 - z) * 0.0175);
+          const curveX = this._getRoadCurveX(z);
+          const slope = this._getRoadCurveSlope(z);
+          curb.position.x = curb.userData.baseX * wf + curveX;
+          curb.rotation.y = -Math.atan(curb.userData.baseX * 0.0175 + slope);
         }
       }
 
@@ -4220,9 +4232,14 @@
         if (item.position.z > 28) {
           item.position.z -= 216;
         }
-        if (item.userData && typeof item.userData.baseY === 'number') {
-          item.position.y =
-            item.userData.baseY + Math.sin(this.elapsedTime * 2.6 + item.userData.phase) * 0.35;
+        if (item.userData) {
+          if (typeof item.userData.baseX === 'number') {
+            item.position.x = item.userData.baseX + this._getRoadCurveX(item.position.z) * 0.88;
+          }
+          if (typeof item.userData.baseY === 'number') {
+            item.position.y =
+              item.userData.baseY + Math.sin(this.elapsedTime * 2.6 + item.userData.phase) * 0.35;
+          }
         }
       }
 
