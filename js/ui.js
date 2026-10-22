@@ -713,8 +713,34 @@
       } else if (type === 'stageClear') {
         spawnBadge(`👑 BOSS KO!! 상금 게이지 +10 상승!`, 'impact-boss', 0, -22);
         spawnBadge(`🎉 보스 클리어 보너스 +${pts} R$!`, 'impact-combo', 0, 26);
+      } else if (type === 'obby_hurt') {
+        const isFire = opts.outcome === 'hit_fire' || opts.waveType === 'fire_pit';
+        spawnBadge(
+          isFire ? `🔥💥 앗 뜨거!! 불구덩이 추락! (-1 ❤️)` : `🧱💥 콰직!! 아야! 블록 충돌! (-1 ❤️)`,
+          'impact-wrong',
+          0,
+          0
+        );
+        const hpBox = byId('hp-container') || byId('hp-hearts');
+        if (hpBox) {
+          hpBox.classList.remove('hp-hurt-shake');
+          void hpBox.offsetWidth;
+          hpBox.classList.add('hp-hurt-shake');
+          window.setTimeout(function () {
+            hpBox.classList.remove('hp-hurt-shake');
+          }, 600);
+        }
       } else if (type === 'wrong') {
         spawnBadge(`💢 OOF!! 함정 블록 충돌! (-1 ❤️)`, 'impact-wrong', 0, 0);
+        const hpBox = byId('hp-container') || byId('hp-hearts');
+        if (hpBox) {
+          hpBox.classList.remove('hp-hurt-shake');
+          void hpBox.offsetWidth;
+          hpBox.classList.add('hp-hurt-shake');
+          window.setTimeout(function () {
+            hpBox.classList.remove('hp-hurt-shake');
+          }, 600);
+        }
       } else {
         spawnBadge(`💥 블록 격파!! +${pts} R$`, 'impact-correct', 0, combo >= 2 ? -20 : 0);
         if (combo >= 2) {
@@ -878,6 +904,31 @@
       if (bossHud) {
         bossHud.classList.add('hidden'); document.body.classList.remove('boss-phase-hud-active'); const _lp = byId('hud-left-panel'); if (_lp) _lp.classList.remove('hidden');
       }
+    },
+
+    /**
+     * Updates the Top Banner for the 3-Wave Obby Action Mini-Game (Obstacle Wall vs Fire Pit)
+     */
+    showObbyHUD: function (waveIndex, totalWaves, waveType) {
+      document.body.classList.add('obby-mode-active');
+      const idx = Math.max(1, Math.min(totalWaves || 3, waveIndex || 1));
+      const tot = totalWaves || 3;
+      const catBadge = byId('question-category-badge');
+      const promptEl = byId('question-prompt');
+      if (catBadge) {
+        catBadge.textContent = waveType === 'fire_pit'
+          ? `🔥 오비 미니게임 (${idx} / ${tot}) · 불구덩이 건너기`
+          : `🧱 오비 미니게임 (${idx} / ${tot}) · 장애물 넘기`;
+      }
+      if (promptEl) {
+        promptEl.textContent = waveType === 'fire_pit'
+          ? `🔥 불구덩이 건너기! (${idx}/${tot})`
+          : `🧱 장애물 넘기! (${idx}/${tot})`;
+      }
+    },
+
+    hideObbyHUD: function () {
+      document.body.classList.remove('obby-mode-active');
     },
 
     /**
