@@ -4871,349 +4871,209 @@ body.boss-phase-hud-active #hud-center-panel.hud-center-panel {
   100% { transform: scale(1.01); box-shadow: 0 0 18px rgba(0, 255, 136, 0.65); }
 }
 
-/* Boss Clear Step 2 & Pre-Start: Sky-Ascending World Tree Map Popup (#next-stage-modal) */
+/* Boss Clear Step 2 & Pre-Start: Visual Treasure-Island World Adventure Map (#next-stage-modal) */
 #next-stage-modal {
-  z-index: 89 !important;
+  z-index: 1450 !important;
 }
 
 .sky-treemap-card {
-  width: min(95vw, 540px) !important;
-  max-height: 92vh !important;
-  padding: 14px 14px !important;
+  width: min(96vw, 560px) !important;
+  max-height: 94vh !important;
+  padding: 12px 12px !important;
   display: flex !important;
   flex-direction: column !important;
   gap: 8px !important;
-  background: linear-gradient(180deg, rgba(6, 12, 38, 0.98) 0%, rgba(15, 28, 68, 0.98) 55%, rgba(16, 48, 42, 0.98) 100%) !important;
-  border: 2.5px solid #00f5ff !important;
-  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.9), 0 0 32px rgba(0, 245, 255, 0.35) !important;
+  background: linear-gradient(180deg, #5c3615 0%, #3d210b 100%) !important;
+  border: 4px solid #854d1e !important;
+  border-radius: 20px !important;
+  box-shadow: 0 20px 55px rgba(0, 0, 0, 0.92), inset 0 2px 6px rgba(255, 224, 150, 0.35) !important;
 }
 
-.sky-treemap-header {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  text-align: center;
-}
-
-.sky-treemap-pill-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.sky-altitude-badge {
-  padding: 3px 10px;
-  border-radius: 999px;
-  background: linear-gradient(90deg, #ffe600, #ff9100);
-  color: #140826;
-  font-size: 11.5px;
-  font-weight: 900;
-  box-shadow: 0 0 10px rgba(255, 230, 0, 0.45);
-}
-
-.sky-treemap-title {
-  font-size: clamp(16px, 4.3vw, 20px) !important;
-  margin: 0 !important;
-}
-
-.sky-treemap-subtitle {
-  margin: 0;
-  font-size: 12px;
-  font-weight: 800;
-  color: #bae6fd;
-  line-height: 1.35;
-}
-
-/* Vertical Sky-Climbing Tree Map Viewport */
+/* Vintage Parchment Treasure Map Board */
 .sky-treemap-scroll {
   position: relative;
   width: 100%;
-  height: clamp(230px, 44vh, 360px);
+  height: clamp(340px, 68vh, 540px);
   overflow-y: auto;
   overflow-x: hidden;
   border-radius: 14px;
-  padding: 14px 10px;
+  padding: 6px 4px;
   background:
-    radial-gradient(circle at 20% 12%, rgba(255, 230, 0, 0.16) 0%, transparent 32%),
-    radial-gradient(circle at 82% 28%, rgba(0, 245, 255, 0.18) 0%, transparent 38%),
-    linear-gradient(
-      180deg,
-      #090420 0%,
-      #160b3a 18%,
-      #023e8a 42%,
-      #0077b6 66%,
-      #29b6f6 84%,
-      #1b5e20 100%
-    );
-  border: 1.5px solid rgba(128, 255, 219, 0.45);
-  box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.65);
+    radial-gradient(circle at 50% 45%, #fff5db 0%, #f5deb3 55%, #e1bd82 100%);
+  border: 3px solid #784419;
+  box-shadow:
+    inset 0 0 28px rgba(102, 54, 14, 0.48),
+    0 4px 14px rgba(0, 0, 0, 0.55);
   scroll-behavior: smooth;
 }
 
 .sky-treemap-list {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 6px 2px;
+  width: 100%;
+  min-height: 880px;
+  display: block;
 }
 
-/* Central Glowing Sky Beanstalk / Rainbow Tree Trunk Line */
-.sky-treemap-list::before {
-  content: '';
+.treasure-map-svg-bg {
   position: absolute;
-  top: 18px;
-  bottom: 18px;
-  left: 26px;
-  width: 6px;
-  border-radius: 999px;
-  background: linear-gradient(
-    180deg,
-    #ffd700 0%,
-    #ff007f 25%,
-    #00f5ff 55%,
-    #00e676 100%
-  );
-  box-shadow: 0 0 14px rgba(0, 245, 255, 0.75);
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
   z-index: 1;
 }
 
-.sky-tree-node {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  z-index: 2;
-  transition: transform 0.2s ease;
-}
-
-.sky-tree-node.is-selectable {
-  cursor: pointer;
-}
-
-.sky-tree-node.is-selectable:hover {
-  transform: translateX(3px);
-}
-
-/* Circular Tree Branch Node Badge on the Left Trunk */
-.sky-tree-dot {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  flex-shrink: 0;
+/* Individual Floating Island Stop on the Parchment Map */
+.island-map-node {
+  position: absolute;
+  transform: translate(-50%, -50%);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-arcade);
-  font-size: 11px;
-  font-weight: 900;
-  color: #ffffff;
-  background: #1e293b;
-  border: 2.5px solid rgba(255, 255, 255, 0.35);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
+  z-index: 3;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), filter 0.2s ease;
+}
+
+.island-map-node:hover,
+.island-map-node:active {
+  transform: translate(-50%, -54%) scale(1.06);
+  filter: drop-shadow(0 8px 14px rgba(92, 54, 21, 0.45));
+}
+
+.island-map-node.is-locked {
+  opacity: 0.78;
+  filter: saturate(0.75);
+}
+
+.island-map-node.is-current {
+  z-index: 6;
+  filter: drop-shadow(0 0 16px rgba(255, 193, 7, 0.85));
+}
+
+.island-svg-wrap {
+  width: clamp(114px, 28vw, 142px);
+  height: clamp(86px, 21vw, 108px);
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.sky-tree-node.is-cleared .sky-tree-dot {
-  background: linear-gradient(135deg, #00c853, #00e676);
-  color: #041f0e;
+.island-svg-wrap svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* 3D Pearl / Silver / Gold Stepping-Stone Sphere on the Dashed Trail */
+.island-step-orb {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  margin-top: -10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-arcade);
+  font-size: 13px;
+  font-weight: 900;
+  color: #3b2310;
+  background: radial-gradient(circle at 32% 28%, #ffffff 0%, #e2e8f0 45%, #94a3b8 85%, #475569 100%);
+  border: 2.5px solid #5c3615;
+  box-shadow: 0 5px 10px rgba(60, 32, 10, 0.48), inset 0 2px 4px rgba(255, 255, 255, 0.9);
+  position: relative;
+  z-index: 4;
+}
+
+.island-map-node.is-cleared .island-step-orb {
+  background: radial-gradient(circle at 32% 28%, #fffbeb 0%, #fde047 45%, #f59e0b 85%, #b45309 100%);
+  color: #3b1806;
   border-color: #ffffff;
-  box-shadow: 0 0 14px rgba(0, 230, 118, 0.75);
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.75), 0 4px 8px rgba(60, 32, 10, 0.45);
 }
 
-.sky-tree-node.is-current .sky-tree-dot {
-  background: linear-gradient(135deg, #ffe600, #ff2a85);
+.island-map-node.is-current .island-step-orb {
+  width: 40px;
+  height: 40px;
+  font-size: 15px;
+  background: radial-gradient(circle at 32% 28%, #ffffff 0%, #ffe600 40%, #ff2a85 88%, #9d174d 100%);
   color: #ffffff;
-  border-color: #ffffff;
-  box-shadow: 0 0 20px rgba(255, 230, 0, 0.95);
-  animation: pulseCurrentDot 0.9s ease-in-out infinite alternate;
+  border: 3px solid #ffffff;
+  box-shadow: 0 0 20px rgba(255, 42, 133, 0.95), 0 5px 12px rgba(0, 0, 0, 0.6);
+  animation: pulseIslandOrb 0.85s ease-in-out infinite alternate;
 }
 
-.sky-tree-node.is-jackpot .sky-tree-dot {
-  border-color: #ffd700;
-  box-shadow: 0 0 18px rgba(255, 215, 0, 0.85);
-}
-
-@keyframes pulseCurrentDot {
+@keyframes pulseIslandOrb {
   0% { transform: scale(1); }
   100% { transform: scale(1.14); }
 }
 
-/* World Country Summary Card ("1단계는 어느나라 - 2단계는 어느나라") */
-.sky-tree-card {
-  flex: 1;
-  min-width: 0;
-  padding: 9px 11px;
-  border-radius: 12px;
-  border: 1.5px solid rgba(255, 255, 255, 0.22);
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  position: relative;
-  backdrop-filter: blur(6px);
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.42);
-}
-
-.sky-tree-node.is-cleared .sky-tree-card {
-  border-color: rgba(0, 230, 118, 0.72);
-}
-
-.sky-tree-node.is-current .sky-tree-card {
-  border: 2.5px solid #ffe600;
-  box-shadow: 0 0 22px rgba(255, 230, 0, 0.55), inset 0 0 14px rgba(255, 230, 0, 0.18);
-}
-
-.sky-tree-node.is-locked .sky-tree-card {
-  opacity: 0.72;
-  filter: saturate(0.75);
-}
-
-.sky-tree-card-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.sky-tree-stage-country {
-  font-size: 13.5px;
-  font-weight: 900;
-  color: #ffffff;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.85);
-}
-
-.sky-tree-status-pill {
-  padding: 2px 8px;
+/* Minimal Icon + Number Tag under Orb (Minimal text!) */
+.island-mini-tag {
+  margin-top: 2px;
+  padding: 1px 7px;
   border-radius: 999px;
+  background: rgba(68, 36, 12, 0.84);
+  border: 1px solid rgba(255, 228, 168, 0.65);
+  color: #fff8e7;
   font-size: 10.5px;
   font-weight: 900;
   white-space: nowrap;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.35);
 }
 
-.sky-tree-status-pill.status-cleared {
-  background: rgba(0, 230, 118, 0.25);
-  border: 1px solid #00e676;
-  color: #80ffdb;
+.island-map-node.is-current .island-mini-tag {
+  background: linear-gradient(90deg, #ff2a85, #ff6d00);
+  border-color: #ffe600;
+  color: #ffffff;
+  font-size: 11.5px;
 }
 
-.sky-tree-status-pill.status-current {
-  background: linear-gradient(90deg, #ffe600, #ff6d00);
+/* Bouncing Soyun Avatar Crown Pin on the Current Island */
+.island-soyun-pin {
+  position: absolute;
+  top: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ffe600 0%, #ff2a85 100%);
+  border: 2.5px solid #ffffff;
   color: #140826;
-  box-shadow: 0 0 10px rgba(255, 230, 0, 0.7);
-}
-
-.sky-tree-status-pill.status-unlocked {
-  background: rgba(0, 229, 255, 0.22);
-  border: 1px solid #00e5ff;
-  color: #80d8ff;
-}
-
-.sky-tree-status-pill.status-locked {
-  background: rgba(15, 23, 42, 0.65);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  color: #cbd5e1;
-}
-
-.sky-tree-summary-text {
-  font-size: 11.5px;
-  font-weight: 700;
-  color: #e2e8f0;
-  line-height: 1.3;
-}
-
-/* Animated Bouncing Soyun Avatar Pin on Current Stage */
-.sky-soyun-here-banner {
-  margin-top: 3px;
-  padding: 4px 9px;
-  border-radius: 8px;
-  background: linear-gradient(90deg, rgba(255, 42, 133, 0.92), rgba(114, 9, 183, 0.92));
-  border: 1.5px solid #ffe600;
-  color: #ffffff;
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 900;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  align-self: flex-start;
-  animation: bounceSoyunPin 0.85s ease-in-out infinite alternate;
+  white-space: nowrap;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.55), 0 0 16px rgba(255, 230, 0, 0.95);
+  z-index: 8;
+  animation: bounceIslandPin 0.75s ease-in-out infinite alternate;
 }
 
-@keyframes bounceSoyunPin {
-  0% { transform: translateY(0px); }
-  100% { transform: translateY(-3px); }
-}
-
-/* Animated Sky-Climbing Arrow Between Cleared Stage & New Stage */
-.sky-climb-transition-row {
-  margin-left: 44px;
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: linear-gradient(90deg, #00ff88, #00e5ff);
-  color: #04121c;
-  font-size: 11.5px;
-  font-weight: 900;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  align-self: flex-start;
-  box-shadow: 0 0 14px rgba(0, 255, 136, 0.75);
-  animation: climbArrowPulse 0.7s ease-in-out infinite alternate;
-}
-
-@keyframes climbArrowPulse {
-  0% { transform: translateY(2px) scale(0.98); }
-  100% { transform: translateY(-3px) scale(1.03); }
-}
-
-.next-stage-preview-box {
-  width: 100%;
-  padding: 9px 12px;
-  border-radius: 12px;
-  background: rgba(8, 14, 38, 0.94);
-  border: 1.5px solid rgba(0, 245, 255, 0.52);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-}
-
-.next-stage-preview-top {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.next-stage-badge {
-  padding: 3px 10px;
-  border-radius: 999px;
-  background: linear-gradient(90deg, #00f5ff, #00ff88);
-  color: #04121c;
-  font-family: var(--font-arcade);
-  font-size: 11.5px;
-  font-weight: 900;
-}
-
-.next-stage-name {
-  font-size: 14.5px;
-  font-weight: 900;
-  color: #ffffff;
-}
-
-.next-stage-bonus-note {
-  font-size: 11.5px;
-  font-weight: 800;
-  color: #ffe66d;
+@keyframes bounceIslandPin {
+  0% { transform: translate(-50%, 0px) scale(1); }
+  100% { transform: translate(-50%, -6px) scale(1.06); }
 }
 
 .sky-treemap-actions {
-  gap: 6px !important;
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 8px !important;
+  margin-top: 2px !important;
+}
+
+.sky-treemap-actions .btn-confirm-yes {
+  flex: 1 1 auto !important;
+  padding: 13px 16px !important;
+  font-size: 16px !important;
+}
+
+.sky-treemap-actions .btn-confirm-no {
+  flex: 0 0 auto !important;
+  width: auto !important;
+  padding: 13px 16px !important;
+  font-size: 14px !important;
 }
 
 /* ============================================================================
