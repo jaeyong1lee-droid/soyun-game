@@ -2111,6 +2111,24 @@
         });
 
         parentBonusContainer.addEventListener('change', function (e) {
+          const nameInput = e.target.closest('.parent-bonus-name-input');
+          if (nameInput) {
+            const key = nameInput.getAttribute('data-bonus-key');
+            const val = String(nameInput.value || '').trim();
+            if (key && val) {
+              self.setBonusName(key, val);
+            }
+            return;
+          }
+          const countInput = e.target.closest('.parent-bonus-count-input');
+          if (countInput) {
+            const key = countInput.getAttribute('data-bonus-key');
+            const num = parseInt(countInput.value, 10);
+            if (key && !isNaN(num) && num >= 1) {
+              self.setBonusAchievedCount(key, num);
+            }
+            return;
+          }
           const sel = e.target.closest('.parent-payout-select');
           if (!sel) return;
           const key = sel.getAttribute('data-bonus-key');
