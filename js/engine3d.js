@@ -4526,51 +4526,56 @@
     },
 
     /**
-     * Builds a 3D Blocky Super Bomb / Mega Missile Mesh with glowing warhead, fins, and thruster flame!
+     * 1) Builds a 3D Giant Round Super Bomb (동그란 폭탄) with spherical core, top fuse cap, burning spark, and hazard ring!
      */
     _createBombProjectileMesh: function (scale, mainColorHex) {
       const THREE = global.THREE;
       const bombGroup = new THREE.Group();
       const s = scale || 1.0;
 
-      // 1. Bomb Spherical Core Body
-      const coreGeo = new THREE.SphereGeometry(0.78 * s, 14, 14);
+      // 1. Round Bomb Spherical Core Body
+      const coreGeo = new THREE.SphereGeometry(0.88 * s, 16, 16);
       const coreMat = new THREE.MeshStandardMaterial({
-        color: 0x1a1428,
+        color: 0x161224,
         emissive: mainColorHex || 0xff1e42,
-        emissiveIntensity: 0.65,
-        roughness: 0.25,
-        metalness: 0.65
+        emissiveIntensity: 0.68,
+        roughness: 0.22,
+        metalness: 0.72
       });
       const coreMesh = new THREE.Mesh(coreGeo, coreMat);
       bombGroup.add(coreMesh);
 
-      // 2. Glowing Warhead Nose Cone pointing forward (-Z)
-      const noseGeo = new THREE.ConeGeometry(0.58 * s, 0.95 * s, 12);
-      noseGeo.rotateX(-Math.PI / 2);
-      const noseMat = new THREE.MeshBasicMaterial({ color: 0xffe600 });
-      const noseMesh = new THREE.Mesh(noseGeo, noseMat);
-      noseMesh.position.set(0, 0, -0.82 * s);
-      bombGroup.add(noseMesh);
+      // 2. Top Cylindrical Fuse Cap & Glowing Spark Ball
+      const capGeo = new THREE.CylinderGeometry(0.28 * s, 0.34 * s, 0.35 * s, 12);
+      const capMat = new THREE.MeshBasicMaterial({ color: 0xffd54f });
+      const capMesh = new THREE.Mesh(capGeo, capMat);
+      capMesh.position.set(0, 0.88 * s, 0);
+      bombGroup.add(capMesh);
+
+      const sparkGeo = new THREE.SphereGeometry(0.32 * s, 10, 10);
+      const sparkMat = new THREE.MeshBasicMaterial({ color: 0xffe600 });
+      const sparkMesh = new THREE.Mesh(sparkGeo, sparkMat);
+      sparkMesh.position.set(0, 1.22 * s, 0);
+      bombGroup.add(sparkMesh);
 
       // 3. Glowing Hazard Ring around Bomb Equator
-      const ringGeo = new THREE.TorusGeometry(0.84 * s, 0.12 * s, 8, 20);
-      const ringMat = new THREE.MeshBasicMaterial({ color: 0x00f3ff });
+      const ringGeo = new THREE.TorusGeometry(0.92 * s, 0.13 * s, 8, 22);
+      const ringMat = new THREE.MeshBasicMaterial({ color: 0xffe600 });
       const ringMesh = new THREE.Mesh(ringGeo, ringMat);
       bombGroup.add(ringMesh);
 
-      // 4. 4 Cross Tail Fins
-      const finGeo = new THREE.BoxGeometry(1.65 * s, 0.14 * s, 0.55 * s);
+      // 4. 4 Cross Tail Stabilizer Fins
+      const finGeo = new THREE.BoxGeometry(1.7 * s, 0.16 * s, 0.58 * s);
       const finMat = new THREE.MeshBasicMaterial({ color: mainColorHex || 0xff1e42 });
       const finA = new THREE.Mesh(finGeo, finMat);
-      finA.position.set(0, 0, 0.55 * s);
+      finA.position.set(0, 0, 0.62 * s);
       const finB = new THREE.Mesh(finGeo, finMat);
       finB.rotation.z = Math.PI / 2;
-      finB.position.set(0, 0, 0.55 * s);
+      finB.position.set(0, 0, 0.62 * s);
       bombGroup.add(finA, finB);
 
       // 5. Blazing Rear Rocket Thruster Flame Cone (+Z)
-      const flameGeo = new THREE.ConeGeometry(0.52 * s, 1.65 * s, 10);
+      const flameGeo = new THREE.ConeGeometry(0.54 * s, 1.75 * s, 10);
       flameGeo.rotateX(Math.PI / 2);
       const flameMat = new THREE.MeshBasicMaterial({
         color: 0xff9900,
@@ -4578,32 +4583,276 @@
         opacity: 0.95
       });
       const flameMesh = new THREE.Mesh(flameGeo, flameMat);
-      flameMesh.position.set(0, 0, 1.25 * s);
+      flameMesh.position.set(0, 0, 1.32 * s);
       bombGroup.add(flameMesh);
 
       return {
         group: bombGroup,
-        disposables: [coreGeo, coreMat, noseGeo, noseMat, ringGeo, ringMat, finGeo, finMat, flameGeo, flameMat]
+        disposables: [coreGeo, coreMat, capGeo, capMat, sparkGeo, sparkMat, ringGeo, ringMat, finGeo, finMat, flameGeo, flameMat]
       };
     },
 
     /**
-     * Triggers the massive explosion at the Boss when a 3D Bomb slams into it!
+     * 2) Builds a 3D Supersonic Ballistic Cruise Missile (탄도미사일) with long cylindrical fuselage,
+     * sharp conical warhead, hazard bands, 4 swept delta fins + canards, and roaring afterburner jet!
      */
-    _triggerBombBossImpact: function (impactPos) {
+    _createBallisticMissileMesh: function (scale, bodyColorHex, noseColorHex) {
+      const THREE = global.THREE;
+      const missileGroup = new THREE.Group();
+      const s = scale || 1.0;
+
+      // 1. Sleek Cylindrical Missile Fuselage along Z axis
+      const bodyGeo = new THREE.CylinderGeometry(0.32 * s, 0.36 * s, 2.9 * s, 14);
+      bodyGeo.rotateX(Math.PI / 2);
+      const bodyMat = new THREE.MeshStandardMaterial({
+        color: bodyColorHex || 0xf8fafc,
+        emissive: bodyColorHex || 0x38bdf8,
+        emissiveIntensity: 0.45,
+        roughness: 0.2,
+        metalness: 0.78
+      });
+      const bodyMesh = new THREE.Mesh(bodyGeo, bodyMat);
+      missileGroup.add(bodyMesh);
+
+      // 2. Sharp Pointed Warhead Nose Cone (-Z)
+      const noseGeo = new THREE.ConeGeometry(0.34 * s, 1.25 * s, 14);
+      noseGeo.rotateX(-Math.PI / 2);
+      const noseMat = new THREE.MeshBasicMaterial({ color: noseColorHex || 0xff1744 });
+      const noseMesh = new THREE.Mesh(noseGeo, noseMat);
+      noseMesh.position.set(0, 0, -2.02 * s);
+      missileGroup.add(noseMesh);
+
+      // 3. Tactical Hazard Stripe Band
+      const bandGeo = new THREE.CylinderGeometry(0.375 * s, 0.375 * s, 0.45 * s, 14);
+      bandGeo.rotateX(Math.PI / 2);
+      const bandMat = new THREE.MeshBasicMaterial({ color: 0xffe600 });
+      const bandMesh = new THREE.Mesh(bandGeo, bandMat);
+      bandMesh.position.set(0, 0, -0.75 * s);
+      missileGroup.add(bandMesh);
+
+      // 4. 4 Rear Delta Tail Fins + 4 Forward Canard Fins
+      const tailFinGeo = new THREE.BoxGeometry(1.65 * s, 0.1 * s, 0.78 * s);
+      const canardGeo = new THREE.BoxGeometry(0.95 * s, 0.08 * s, 0.38 * s);
+      const finMat = new THREE.MeshBasicMaterial({ color: noseColorHex || 0xff1744 });
+
+      const tailA = new THREE.Mesh(tailFinGeo, finMat);
+      tailA.position.set(0, 0, 1.05 * s);
+      const tailB = new THREE.Mesh(tailFinGeo, finMat);
+      tailB.rotation.z = Math.PI / 2;
+      tailB.position.set(0, 0, 1.05 * s);
+
+      const canardA = new THREE.Mesh(canardGeo, bandMat);
+      canardA.position.set(0, 0, -1.05 * s);
+      const canardB = new THREE.Mesh(canardGeo, bandMat);
+      canardB.rotation.z = Math.PI / 2;
+      canardB.position.set(0, 0, -1.05 * s);
+      missileGroup.add(tailA, tailB, canardA, canardB);
+
+      // 5. Roaring Dual-Stage Supersonic Afterburner Plume (+Z)
+      const outerFlameGeo = new THREE.ConeGeometry(0.38 * s, 2.35 * s, 12);
+      outerFlameGeo.rotateX(Math.PI / 2);
+      const outerFlameMat = new THREE.MeshBasicMaterial({
+        color: 0xff6d00,
+        transparent: true,
+        opacity: 0.92
+      });
+      const outerFlame = new THREE.Mesh(outerFlameGeo, outerFlameMat);
+      outerFlame.position.set(0, 0, 2.45 * s);
+
+      const innerFlameGeo = new THREE.ConeGeometry(0.22 * s, 1.55 * s, 10);
+      innerFlameGeo.rotateX(Math.PI / 2);
+      const innerFlameMat = new THREE.MeshBasicMaterial({ color: 0x00f3ff });
+      const innerFlame = new THREE.Mesh(innerFlameGeo, innerFlameMat);
+      innerFlame.position.set(0, 0, 2.05 * s);
+      missileGroup.add(outerFlame, innerFlame);
+
+      return {
+        group: missileGroup,
+        disposables: [bodyGeo, bodyMat, noseGeo, noseMat, bandGeo, bandMat, tailFinGeo, canardGeo, finMat, outerFlameGeo, outerFlameMat, innerFlameGeo, innerFlameMat]
+      };
+    },
+
+    /**
+     * 3) Builds a 3D Pressurized Hydro Water Bomb / Splash Globe (슈퍼 물총 물폭탄)
+     * with translucent aqua sphere, inner white foam bubble core, and swirling water splash rings!
+     */
+    _createWaterBalloonMesh: function (scale) {
+      const THREE = global.THREE;
+      const waterGroup = new THREE.Group();
+      const s = scale || 1.0;
+
+      // 1. Outer Glossy Aqua Water Sphere
+      const outerGeo = new THREE.SphereGeometry(0.86 * s, 16, 16);
+      const outerMat = new THREE.MeshStandardMaterial({
+        color: 0x00e5ff,
+        emissive: 0x0096c7,
+        emissiveIntensity: 0.78,
+        roughness: 0.08,
+        metalness: 0.25,
+        transparent: true,
+        opacity: 0.88
+      });
+      const outerMesh = new THREE.Mesh(outerGeo, outerMat);
+      waterGroup.add(outerMesh);
+
+      // 2. Inner White/Cyan Pressurized Bubble Core
+      const innerGeo = new THREE.SphereGeometry(0.52 * s, 12, 12);
+      const innerMat = new THREE.MeshBasicMaterial({ color: 0xe0f7fa });
+      const innerMesh = new THREE.Mesh(innerGeo, innerMat);
+      waterGroup.add(innerMesh);
+
+      // 3. Swirling Aqua Splash Rings
+      const ringGeo = new THREE.TorusGeometry(0.98 * s, 0.13 * s, 8, 22);
+      const ringMat = new THREE.MeshBasicMaterial({
+        color: 0x80ffdb,
+        transparent: true,
+        opacity: 0.92
+      });
+      const ringA = new THREE.Mesh(ringGeo, ringMat);
+      const ringB = new THREE.Mesh(ringGeo, ringMat);
+      ringB.rotation.x = Math.PI / 2;
+      waterGroup.add(ringA, ringB);
+
+      // 4. Pressurized Water Jet Tail Cone (+Z)
+      const jetGeo = new THREE.ConeGeometry(0.55 * s, 1.85 * s, 10);
+      jetGeo.rotateX(Math.PI / 2);
+      const jetMat = new THREE.MeshBasicMaterial({
+        color: 0x48cae4,
+        transparent: true,
+        opacity: 0.9
+      });
+      const jetMesh = new THREE.Mesh(jetGeo, jetMat);
+      jetMesh.position.set(0, 0, 1.3 * s);
+      waterGroup.add(jetMesh);
+
+      return {
+        group: waterGroup,
+        disposables: [outerGeo, outerMat, innerGeo, innerMat, ringGeo, ringMat, jetGeo, jetMat]
+      };
+    },
+
+    /**
+     * 4) Builds a 3D Supernova Star Meteor (초신성 불꽃 메테오) with crystalline magma core and dual plasma rings!
+     */
+    _createMeteorProjectileMesh: function (scale) {
+      const THREE = global.THREE;
+      const meteorGroup = new THREE.Group();
+      const s = scale || 1.0;
+
+      const rockGeo = new THREE.IcosahedronGeometry(0.94 * s, 0);
+      const rockMat = new THREE.MeshStandardMaterial({
+        color: 0xffbe0b,
+        emissive: 0xff0055,
+        emissiveIntensity: 0.85,
+        roughness: 0.3,
+        metalness: 0.5
+      });
+      const rockMesh = new THREE.Mesh(rockGeo, rockMat);
+      meteorGroup.add(rockMesh);
+
+      const ringGeo = new THREE.TorusGeometry(1.18 * s, 0.13 * s, 8, 24);
+      const ring1Mat = new THREE.MeshBasicMaterial({ color: 0xffe600 });
+      const ring2Mat = new THREE.MeshBasicMaterial({ color: 0x00f3ff });
+      const ring1 = new THREE.Mesh(ringGeo, ring1Mat);
+      const ring2 = new THREE.Mesh(ringGeo, ring2Mat);
+      ring2.rotation.y = Math.PI / 2;
+      meteorGroup.add(ring1, ring2);
+
+      return {
+        group: meteorGroup,
+        disposables: [rockGeo, rockMat, ringGeo, ring1Mat, ring2Mat]
+      };
+    },
+
+    /**
+     * Spawns a giant 3D Crossed Comic Hit-Marker (X-Burst) right on the Boss's chest on impact!
+     */
+    _spawnBossCrossHitMarker: function (pos, colorHex) {
+      const THREE = global.THREE;
+      if (!THREE || !this.scene) return;
+      const barGeo = new THREE.BoxGeometry(4.2, 0.42, 0.42);
+      const barMat = new THREE.MeshBasicMaterial({
+        color: colorHex || 0xffe600,
+        transparent: true,
+        opacity: 0.98
+      });
+
+      const bar1 = new THREE.Mesh(barGeo, barMat);
+      bar1.position.copy(pos);
+      bar1.position.z += 1.2;
+      bar1.rotation.z = Math.PI / 4;
+      this.scene.add(bar1);
+
+      const bar2 = new THREE.Mesh(barGeo.clone(), barMat.clone());
+      bar2.position.copy(pos);
+      bar2.position.z += 1.2;
+      bar2.rotation.z = -Math.PI / 4;
+      this.scene.add(bar2);
+
+      this.activeLasers.push(
+        { mesh: bar1, geo: barGeo, mat: barMat, isShockwave: true, age: 0, maxAge: 0.36 },
+        { mesh: bar2, geo: bar2.geometry, mat: bar2.material, isShockwave: true, age: 0, maxAge: 0.36 }
+      );
+    },
+
+    /**
+     * Triggers a massive weapon-themed explosion + violent 3D stagger/squash/recoil when an attack slams into the Boss!
+     */
+    _triggerBombBossImpact: function (impactPos, attackType, isSecondaryChain) {
       const THREE = global.THREE;
       if (!THREE || !this.scene) return;
 
+      const atkType = attackType || (this.lastBossAttackInfo && this.lastBossAttackInfo.type) || 'round_bomb';
       const pos = impactPos || (this.bossGroup
         ? new THREE.Vector3(this.bossGroup.position.x, this.bossGroup.position.y + 0.5, this.bossGroup.position.z + 1.8)
         : new THREE.Vector3(0, 3.3, -36));
 
-      // Expanding 3D Fireball Shockwave Sphere + Blast Ring
-      const shockGeo = new THREE.SphereGeometry(2.2, 16, 16);
+      // Weapon-specific palette for Shockwave Sphere, Blast Rings, and Particles
+      let sphereColor = 0xffaa00;
+      let ring1Color = 0x00f3ff;
+      let ring2Color = 0xff2a85;
+      let pCol1 = 0xff5500;
+      let pCol2 = 0xffe600;
+      let pCol3 = 0x00f3ff;
+
+      if (atkType === 'water_gun') {
+        sphereColor = 0x00e5ff;
+        ring1Color = 0xe0f7fa;
+        ring2Color = 0x00b4d8;
+        pCol1 = 0x00e5ff;
+        pCol2 = 0x90e0ef;
+        pCol3 = 0xffffff;
+      } else if (atkType === 'mega_laser') {
+        sphereColor = 0x00f3ff;
+        ring1Color = 0xff007f;
+        ring2Color = 0xffe600;
+        pCol1 = 0x00f3ff;
+        pCol2 = 0xff007f;
+        pCol3 = 0xffffff;
+      } else if (atkType === 'ballistic_missile') {
+        sphereColor = 0xffea00;
+        ring1Color = 0xff1744;
+        ring2Color = 0xffffff;
+        pCol1 = 0xff1744;
+        pCol2 = 0xffea00;
+        pCol3 = 0xffffff;
+      } else if (atkType === 'meteor_hammer') {
+        sphereColor = 0xff007f;
+        ring1Color = 0xffe600;
+        ring2Color = 0x00f3ff;
+        pCol1 = 0xff007f;
+        pCol2 = 0xffe600;
+        pCol3 = 0x80ffdb;
+      }
+
+      const scaleFactor = isSecondaryChain ? 0.72 : 1.15;
+
+      // 1. Expanding 3D Shockwave Sphere
+      const shockGeo = new THREE.SphereGeometry(2.4 * scaleFactor, 16, 16);
       const shockMat = new THREE.MeshBasicMaterial({
-        color: 0xffaa00,
+        color: sphereColor,
         transparent: true,
-        opacity: 0.92
+        opacity: 0.94
       });
       const shockMesh = new THREE.Mesh(shockGeo, shockMat);
       shockMesh.position.copy(pos);
@@ -4615,53 +4864,149 @@
         mat: shockMat,
         isShockwave: true,
         age: 0,
-        maxAge: 0.42
+        maxAge: isSecondaryChain ? 0.34 : 0.46
       });
 
-      const ringGeo = new THREE.TorusGeometry(2.6, 0.35, 10, 28);
-      const ringMat = new THREE.MeshBasicMaterial({
-        color: 0x00f3ff,
+      // 2. Dual Perpendicular Expanding Blast Rings
+      const ringGeo1 = new THREE.TorusGeometry(2.8 * scaleFactor, 0.38 * scaleFactor, 10, 28);
+      const ringMat1 = new THREE.MeshBasicMaterial({
+        color: ring1Color,
         transparent: true,
-        opacity: 0.95
+        opacity: 0.96
       });
-      const ringMesh = new THREE.Mesh(ringGeo, ringMat);
-      ringMesh.position.copy(pos);
-      this.scene.add(ringMesh);
+      const ringMesh1 = new THREE.Mesh(ringGeo1, ringMat1);
+      ringMesh1.position.copy(pos);
+      this.scene.add(ringMesh1);
 
-      this.activeLasers.push({
-        mesh: ringMesh,
-        geo: ringGeo,
-        mat: ringMat,
-        isShockwave: true,
-        age: 0,
-        maxAge: 0.45
+      const ringGeo2 = new THREE.TorusGeometry(2.5 * scaleFactor, 0.32 * scaleFactor, 10, 28);
+      const ringMat2 = new THREE.MeshBasicMaterial({
+        color: ring2Color,
+        transparent: true,
+        opacity: 0.94
       });
+      const ringMesh2 = new THREE.Mesh(ringGeo2, ringMat2);
+      ringMesh2.position.copy(pos);
+      ringMesh2.rotation.x = Math.PI / 2.4;
+      ringMesh2.rotation.y = Math.PI / 5;
+      this.scene.add(ringMesh2);
 
-      // Violent Boss Knockback Recoil + 52+ Exploding Roblox Bricks off Boss Armor!
-      this.bossHitTimer = 0.55;
-      this.bossRecoilZ = -9.5;
-      this.bossRecoilPitch = -0.68;
-      this.shakeIntensity = 0.85;
-      this.shakeTimer = 0.42;
-      this.cameraZoomPunch = 14.5;
+      this.activeLasers.push(
+        { mesh: ringMesh1, geo: ringGeo1, mat: ringMat1, isShockwave: true, age: 0, maxAge: 0.48 },
+        { mesh: ringMesh2, geo: ringGeo2, mat: ringMat2, isShockwave: true, age: 0, maxAge: 0.45 }
+      );
 
-      this.spawnBrickExplosion(pos.x, pos.y, pos.z, 52, true);
-      this._spawnParticleBurst(pos.x, pos.y, pos.z, 0xff5500, 60, 2.0);
-      this._spawnParticleBurst(pos.x, pos.y, pos.z, 0xffe600, 48, 1.8);
-      this._spawnParticleBurst(pos.x, pos.y, pos.z, 0x00f3ff, 40, 1.6);
+      // 3. 3D Crossed X Hit-Marker on Boss
+      this._spawnBossCrossHitMarker(pos, ring1Color);
+
+      // 4. Violent 3D Boss Stagger, Knockback, Air-Pop, Spin-Yaw, Roll & Elastic Squash-and-Stretch!
+      const sideSign = Math.random() < 0.5 ? 1 : -1;
+      this.bossHitTimer = isSecondaryChain ? Math.max(this.bossHitTimer, 0.48) : 0.72;
+      this.bossSquashTimer = isSecondaryChain ? Math.max(this.bossSquashTimer, 0.36) : 0.54;
+      this.bossRecoilZ = isSecondaryChain ? Math.min(this.bossRecoilZ, -9.5) : -13.5;
+      this.bossRecoilY = isSecondaryChain ? Math.max(this.bossRecoilY, 2.0) : 3.2;
+      this.bossRecoilPitch = isSecondaryChain ? -0.65 : -0.92;
+      this.bossRecoilYaw = sideSign * (isSecondaryChain ? 0.65 : 1.05);
+      this.bossRecoilRoll = -sideSign * (isSecondaryChain ? 0.38 : 0.58);
+
+      this.shakeIntensity = isSecondaryChain ? 0.78 : 1.08;
+      this.shakeTimer = isSecondaryChain ? 0.32 : 0.48;
+      this.cameraZoomPunch = isSecondaryChain ? 12.0 : 17.5;
+
+      // 5. Exploding Roblox Bricks & High-Velocity Particle Fountain!
+      const brickCnt = isSecondaryChain ? 28 : 64;
+      this.spawnBrickExplosion(pos.x, pos.y, pos.z, brickCnt, true);
+      this._spawnParticleBurst(pos.x, pos.y, pos.z, pCol1, isSecondaryChain ? 36 : 72, 2.2);
+      this._spawnParticleBurst(pos.x, pos.y, pos.z, pCol2, isSecondaryChain ? 28 : 56, 1.9);
+      this._spawnParticleBurst(pos.x, pos.y, pos.z, pCol3, isSecondaryChain ? 24 : 48, 1.7);
+
+      // 6. Queue 2 secondary chain-detonations on the Boss's shoulders/hammer for BOOM-BOOM-BOOM impact!
+      if (!isSecondaryChain && Array.isArray(this.bossChainExplosions)) {
+        this.bossChainExplosions.push(
+          { delay: 0.11, offsetX: -3.2, offsetY: 1.4, offsetZ: 0.6, attackType: atkType },
+          { delay: 0.23, offsetX: 3.4, offsetY: -0.6, offsetZ: 1.0, attackType: atkType }
+        );
+      }
 
       if (global.SoundEngine && typeof global.SoundEngine.playBossHit === 'function') {
-        global.SoundEngine.playBossHit();
+        global.SoundEngine.playBossHit(atkType);
       }
     },
 
     /**
-     * Launch Giant 3D Super Bomb + Companion Pet Bomb flying in a high parabolic arc
-     * and slamming directly into the Boss, accompanied by Twin Target Lock Lasers!
+     * Multi-Weapon Boss Attack Arsenal!
+     * Cycles through:
+     * 1) 🚀 Supersonic Ballistic Missile Salvo (초음속 다탄두 탄도미사일)
+     * 2) 🔫💦 Super Soaker Hydro Water Gun Cannon (초강력 슈퍼 물총 대포)
+     * 3) ⚡ Hyper Mega Plasma Laser Cannon & Orbital Strike (하이퍼 메가 레이저 캐논)
+     * 4) 💣 Giant Round Super Bomb (특대형 동그란 슈퍼 폭탄)
+     * 5) ☄️ Supernova Star Meteor Cannon (초신성 불꽃 메테오 캐논)
      */
-    _fireLaserAtBoss: function () {
+    _fireLaserAtBoss: function (forcedType) {
       const THREE = global.THREE;
       if (!THREE || !this.scene || !this.bossGroup || !this.carGroup) return;
+
+      const ARSENAL = [
+        {
+          type: 'ballistic_missile',
+          name: '초음속 다탄두 탄도미사일',
+          icon: '🚀💥',
+          badgeTitle: '🚀 초음속 탄도미사일 보스 직격!! KABOOM!!',
+          badgeSub: '🔥 3연장 다탄두 미사일 정밀 폭격!!',
+          toastTitle: '🚀💥 초음속 다탄두 탄도미사일 발사 & 보스 직격!! KABOOM!!',
+          tvMsg: '🚀 슈우웅―콰앙!! 이소윤 선수의 3연장 초음속 탄도미사일이 높은 궤적을 그리며 보스를 정밀 폭격했습니다!!'
+        },
+        {
+          type: 'water_gun',
+          name: '초강력 슈퍼 물총 대포',
+          icon: '🔫💦🌊',
+          badgeTitle: '🔫💦 초강력 슈퍼 물총 대포 강타!! SPLASH!!',
+          badgeSub: '🌊 초고압 물줄기 & 특대형 물폭탄 직격!!',
+          toastTitle: '🔫💦 초강력 슈퍼 물총 대포 발사 & 보스 물벼락 직격!! SPLASH!!',
+          tvMsg: '🔫💦 쏴아아아―첨벙!! 이소윤 선수의 초고압 슈퍼 물총 대포와 특대형 물폭탄이 보스를 시원하게 날려버렸습니다!!'
+        },
+        {
+          type: 'mega_laser',
+          name: '하이퍼 메가 레이저 캐논',
+          icon: '⚡🔦💥',
+          badgeTitle: '⚡ 하이퍼 메가 레이저 보스 관통!! ZZZAP!!',
+          badgeSub: '🔦 초고출력 플라즈마 & 우주 궤도 레이저!!',
+          toastTitle: '⚡💥 하이퍼 메가 레이저 캐논 발사 & 보스 장갑 관통!! ZZZAP!!',
+          tvMsg: '⚡ 지이이잉―번쩍!! 이소윤 선수의 초고출력 하이퍼 메가 레이저와 우주 궤도 광선이 보스를 뚫어버렸습니다!!'
+        },
+        {
+          type: 'round_bomb',
+          name: '특대형 동그란 슈퍼 폭탄',
+          icon: '💣💥',
+          badgeTitle: '💣 특대형 동그란 폭탄 보스 명중!! BOOM!!',
+          badgeSub: '🔥 묵직한 초대형 화염 폭탄 대폭발!!',
+          toastTitle: '💣💥 특대형 동그란 슈퍼 폭탄 투하 & 보스 명중!! BOOM!!',
+          tvMsg: '💣 BOOM!! 이소윤 선수의 특대형 동그란 슈퍼 폭탄이 보스에게 정확히 박혀 대폭발을 일으켰습니다!!'
+        },
+        {
+          type: 'meteor_hammer',
+          name: '초신성 불꽃 메테오 캐논',
+          icon: '☄️🌟💥',
+          badgeTitle: '☄️ 초신성 불꽃 메테오 보스 강타!! CRASH!!',
+          badgeSub: '🌟 우주 초신성 운석 폭격 대성공!!',
+          toastTitle: '☄️💥 초신성 불꽃 메테오 발사 & 보스 대폭발!! CRASH!!',
+          tvMsg: '☄️ 쿠구구궁!! 하늘에서 소환된 이소윤 선수의 초신성 불꽃 메테오가 보스를 정면으로 덮쳤습니다!!'
+        }
+      ];
+
+      let chosen = null;
+      if (forcedType) {
+        chosen = ARSENAL.find((a) => a.type === forcedType) || null;
+      }
+      if (!chosen) {
+        const idx = (this.bossAttackCycleIndex || 0) % ARSENAL.length;
+        chosen = ARSENAL[idx];
+        this.bossAttackCycleIndex = idx + 1;
+      }
+      this.lastBossAttackInfo = chosen;
+
+      // Make Soyun cheer & Pet spin on every boss attack launch!
+      this.avatarCheerTimer = 0.85;
+      this.petSpinTimer = 0.85;
 
       const kartStart = new THREE.Vector3(
         this.carGroup.position.x,
@@ -4679,75 +5024,293 @@
         this.bossGroup.position.z + 1.8
       );
 
-      // 1. Launch Giant 3D Bomb Projectile from Soyun's Kart + Companion Bomb from Cube Pet!
-      const mainBomb = this._createBombProjectileMesh(1.35, 0xff1e42);
-      mainBomb.group.position.copy(kartStart);
-      this.scene.add(mainBomb.group);
-
-      this.activeProjectiles.push({
-        group: mainBomb.group,
-        disposables: mainBomb.disposables,
-        startPos: kartStart.clone(),
-        endPos: endPos.clone(),
-        arcHeight: 6.2,
-        age: 0,
-        duration: 0.34,
-        isPrimaryBomb: true
-      });
-
-      const petBomb = this._createBombProjectileMesh(0.85, 0xff2a85);
-      petBomb.group.position.copy(petStart);
-      this.scene.add(petBomb.group);
-
-      this.activeProjectiles.push({
-        group: petBomb.group,
-        disposables: petBomb.disposables,
-        startPos: petStart.clone(),
-        endPos: endPos.clone(),
-        arcHeight: 4.8,
-        age: 0,
-        duration: 0.36,
-        isPrimaryBomb: false
-      });
-
-      // 2. Twin Target-Lock Laser Beams from Kart & Pet
-      const beams = [
-        { start: kartStart, color: 0x00f3ff, r1: 0.22, r2: 0.38 },
-        { start: petStart, color: 0xff2a85, r1: 0.18, r2: 0.30 }
-      ];
-
-      beams.forEach((b) => {
-        const dist = b.start.distanceTo(endPos);
-        const beamGeo = new THREE.CylinderGeometry(b.r1, b.r2, dist, 10);
+      // Helper to spawn a 3D beam cylinder from startVec to targetVec
+      const spawnBeam = (startVec, targetVec, colorHex, r1, r2, opacity, maxAge) => {
+        const dist = startVec.distanceTo(targetVec);
+        const beamGeo = new THREE.CylinderGeometry(r1, r2, dist, 12);
         beamGeo.rotateX(Math.PI / 2);
         const beamMat = new THREE.MeshBasicMaterial({
-          color: b.color,
+          color: colorHex,
           transparent: true,
-          opacity: 0.88
+          opacity: opacity || 0.9
         });
         const beamMesh = new THREE.Mesh(beamGeo, beamMat);
-        beamMesh.position.copy(b.start).lerp(endPos, 0.5);
-        beamMesh.lookAt(endPos);
+        beamMesh.position.copy(startVec).lerp(targetVec, 0.5);
+        beamMesh.lookAt(targetVec);
         this.scene.add(beamMesh);
-
         this.activeLasers.push({
           mesh: beamMesh,
           geo: beamGeo,
           mat: beamMat,
           age: 0,
-          maxAge: 0.32
+          maxAge: maxAge || 0.36
         });
-      });
+      };
 
-      // 3. Immediate launch feedback + initial recoil (followed by huge bomb impact at t=0.34s!)
-      this.bossHitTimer = 0.48;
-      this.bossRecoilZ = -5.5;
-      this.bossRecoilPitch = -0.38;
-      this.shakeIntensity = 0.58;
-      this.shakeTimer = 0.32;
+      if (chosen.type === 'ballistic_missile') {
+        // 🚀 WEAPON 1: 3-Warhead Supersonic Ballistic Cruise Missile Salvo (High ICBM Arc + Left/Right Flanking Missiles)
+        const mainMissile = this._createBallisticMissileMesh(1.48, 0xf8fafc, 0xff1744);
+        mainMissile.group.position.copy(kartStart);
+        this.scene.add(mainMissile.group);
+        this.activeProjectiles.push({
+          group: mainMissile.group,
+          disposables: mainMissile.disposables,
+          startPos: kartStart.clone(),
+          endPos: endPos.clone(),
+          arcHeight: 14.5,
+          sideArcX: 0,
+          spinSpeed: 10,
+          trailColor: 0xffaa00,
+          attackType: 'ballistic_missile',
+          age: 0,
+          duration: 0.40,
+          isPrimaryBomb: true
+        });
 
-      this.spawnBrickExplosion(endPos.x, endPos.y, endPos.z, 28, true);
-      this._spawnParticleBurst(kartStart.x, kartStart.y, kartStart.z, 0xffe600, 24, 1.2);
+        const leftMissile = this._createBallisticMissileMesh(1.05, 0x00f3ff, 0xffe600);
+        leftMissile.group.position.copy(kartStart);
+        this.scene.add(leftMissile.group);
+        this.activeProjectiles.push({
+          group: leftMissile.group,
+          disposables: leftMissile.disposables,
+          startPos: kartStart.clone(),
+          endPos: endPos.clone().add(new THREE.Vector3(-1.8, 0.6, 0)),
+          arcHeight: 9.8,
+          sideArcX: -6.5,
+          spinSpeed: 14,
+          trailColor: 0x00f3ff,
+          attackType: 'ballistic_missile',
+          age: 0,
+          duration: 0.44,
+          isPrimaryBomb: false
+        });
+
+        const rightMissile = this._createBallisticMissileMesh(1.05, 0xff2a85, 0xffe600);
+        rightMissile.group.position.copy(petStart);
+        this.scene.add(rightMissile.group);
+        this.activeProjectiles.push({
+          group: rightMissile.group,
+          disposables: rightMissile.disposables,
+          startPos: petStart.clone(),
+          endPos: endPos.clone().add(new THREE.Vector3(1.8, 0.6, 0)),
+          arcHeight: 9.8,
+          sideArcX: 6.5,
+          spinSpeed: 14,
+          trailColor: 0xff2a85,
+          attackType: 'ballistic_missile',
+          age: 0,
+          duration: 0.46,
+          isPrimaryBomb: false
+        });
+
+        // Red Target-Lock Designator Laser
+        spawnBeam(kartStart, endPos, 0xff1744, 0.12, 0.22, 0.85, 0.34);
+      } else if (chosen.type === 'water_gun') {
+        // 🔫💦 WEAPON 2: Super Soaker Hydro Water Cannon Stream + 3 Giant Aqua Water Bombs!
+        spawnBeam(kartStart, endPos, 0xffffff, 0.28, 0.48, 0.96, 0.46);
+        spawnBeam(kartStart, endPos, 0x00e5ff, 0.62, 1.15, 0.78, 0.50);
+        spawnBeam(petStart, endPos, 0x80ffdb, 0.32, 0.58, 0.88, 0.46);
+
+        // 6 Swirling Water Vortex Rings along the pressurized hydro stream
+        for (let r = 1; r <= 6; r++) {
+          const frac = r / 7;
+          const ringPos = kartStart.clone().lerp(endPos, frac);
+          const wRingGeo = new THREE.TorusGeometry(0.65 + frac * 1.1, 0.16, 8, 20);
+          const wRingMat = new THREE.MeshBasicMaterial({
+            color: r % 2 === 0 ? 0xffffff : 0x00e5ff,
+            transparent: true,
+            opacity: 0.92
+          });
+          const wRingMesh = new THREE.Mesh(wRingGeo, wRingMat);
+          wRingMesh.position.copy(ringPos);
+          wRingMesh.lookAt(endPos);
+          this.scene.add(wRingMesh);
+          this.activeLasers.push({
+            mesh: wRingMesh,
+            geo: wRingGeo,
+            mat: wRingMat,
+            isShockwave: true,
+            age: 0,
+            maxAge: 0.42
+          });
+        }
+
+        // 3-Salvo Giant Aqua Water Balloons
+        const mainWater = this._createWaterBalloonMesh(1.45);
+        mainWater.group.position.copy(kartStart);
+        this.scene.add(mainWater.group);
+        this.activeProjectiles.push({
+          group: mainWater.group,
+          disposables: mainWater.disposables,
+          startPos: kartStart.clone(),
+          endPos: endPos.clone(),
+          arcHeight: 4.8,
+          sideArcX: 0,
+          spinSpeed: 18,
+          trailColor: 0x00e5ff,
+          attackType: 'water_gun',
+          age: 0,
+          duration: 0.30,
+          isPrimaryBomb: true
+        });
+
+        [-3.8, 3.8].forEach((sideX, idx) => {
+          const subWater = this._createWaterBalloonMesh(1.05);
+          subWater.group.position.copy(idx === 0 ? kartStart : petStart);
+          this.scene.add(subWater.group);
+          this.activeProjectiles.push({
+            group: subWater.group,
+            disposables: subWater.disposables,
+            startPos: (idx === 0 ? kartStart : petStart).clone(),
+            endPos: endPos.clone(),
+            arcHeight: 6.2,
+            sideArcX: sideX,
+            spinSpeed: 20,
+            trailColor: 0x90e0ef,
+            attackType: 'water_gun',
+            age: 0,
+            duration: 0.36 + idx * 0.04,
+            isPrimaryBomb: false
+          });
+        });
+      } else if (chosen.type === 'mega_laser') {
+        // ⚡ WEAPON 3: Hyper Mega Plasma Laser Cannon + Vertical Sky Orbital Ion Pillar!
+        spawnBeam(kartStart, endPos, 0xffffff, 0.45, 0.62, 0.98, 0.52);
+        spawnBeam(kartStart, endPos, 0x00f3ff, 1.05, 1.45, 0.72, 0.56);
+        spawnBeam(petStart, endPos, 0xff007f, 0.52, 0.78, 0.90, 0.52);
+
+        // Sky-to-Boss Vertical Orbital Satellite Laser Pillar!
+        const skyTop = new THREE.Vector3(endPos.x, endPos.y + 26, endPos.z);
+        spawnBeam(skyTop, endPos, 0xffffff, 0.65, 0.85, 0.98, 0.50);
+        spawnBeam(skyTop, endPos, 0x00ffcc, 1.55, 2.1, 0.68, 0.55);
+
+        // 7 Expanding Plasma Accelerator Rings along the Mega Laser shaft
+        for (let r = 1; r <= 7; r++) {
+          const frac = r / 8;
+          const ringPos = kartStart.clone().lerp(endPos, frac);
+          const lRingGeo = new THREE.TorusGeometry(0.85 + frac * 1.2, 0.2, 8, 24);
+          const lRingMat = new THREE.MeshBasicMaterial({
+            color: r % 3 === 0 ? 0xffe600 : (r % 2 === 0 ? 0xff007f : 0x00f3ff),
+            transparent: true,
+            opacity: 0.95
+          });
+          const lRingMesh = new THREE.Mesh(lRingGeo, lRingMat);
+          lRingMesh.position.copy(ringPos);
+          lRingMesh.lookAt(endPos);
+          this.scene.add(lRingMesh);
+          this.activeLasers.push({
+            mesh: lRingMesh,
+            geo: lRingGeo,
+            mat: lRingMat,
+            isShockwave: true,
+            age: 0,
+            maxAge: 0.46
+          });
+        }
+
+        // Laser hits at light speed! Trigger immediate full Boss Impact!
+        this._triggerBombBossImpact(endPos.clone(), 'mega_laser', false);
+      } else if (chosen.type === 'meteor_hammer') {
+        // ☄️ WEAPON 5: Supernova Star Meteor Cannon hurled from high above!
+        const highStart = kartStart.clone().add(new THREE.Vector3(0, 3.8, 1.5));
+        const mainMeteor = this._createMeteorProjectileMesh(1.52);
+        mainMeteor.group.position.copy(highStart);
+        this.scene.add(mainMeteor.group);
+        this.activeProjectiles.push({
+          group: mainMeteor.group,
+          disposables: mainMeteor.disposables,
+          startPos: highStart,
+          endPos: endPos.clone(),
+          arcHeight: 11.2,
+          sideArcX: 0,
+          spinSpeed: 28,
+          trailColor: 0xffe600,
+          attackType: 'meteor_hammer',
+          age: 0,
+          duration: 0.36,
+          isPrimaryBomb: true
+        });
+
+        [-4.5, 4.5].forEach((sideX, idx) => {
+          const subMeteor = this._createMeteorProjectileMesh(0.95);
+          subMeteor.group.position.copy(petStart);
+          this.scene.add(subMeteor.group);
+          this.activeProjectiles.push({
+            group: subMeteor.group,
+            disposables: subMeteor.disposables,
+            startPos: petStart.clone(),
+            endPos: endPos.clone(),
+            arcHeight: 8.5,
+            sideArcX: sideX,
+            spinSpeed: 32,
+            trailColor: 0xff007f,
+            attackType: 'meteor_hammer',
+            age: 0,
+            duration: 0.40 + idx * 0.04,
+            isPrimaryBomb: false
+          });
+        });
+
+        spawnBeam(kartStart, endPos, 0xffbe0b, 0.22, 0.38, 0.85, 0.34);
+      } else {
+        // 💣 WEAPON 4: Classic Giant Round Super Bomb + Pet Round Bomb!
+        const mainBomb = this._createBombProjectileMesh(1.48, 0xff1e42);
+        mainBomb.group.position.copy(kartStart);
+        this.scene.add(mainBomb.group);
+
+        this.activeProjectiles.push({
+          group: mainBomb.group,
+          disposables: mainBomb.disposables,
+          startPos: kartStart.clone(),
+          endPos: endPos.clone(),
+          arcHeight: 7.2,
+          sideArcX: 0,
+          spinSpeed: 24,
+          trailColor: 0xff9900,
+          attackType: 'round_bomb',
+          age: 0,
+          duration: 0.34,
+          isPrimaryBomb: true
+        });
+
+        const petBomb = this._createBombProjectileMesh(0.95, 0xff2a85);
+        petBomb.group.position.copy(petStart);
+        this.scene.add(petBomb.group);
+
+        this.activeProjectiles.push({
+          group: petBomb.group,
+          disposables: petBomb.disposables,
+          startPos: petStart.clone(),
+          endPos: endPos.clone(),
+          arcHeight: 5.4,
+          sideArcX: 2.6,
+          spinSpeed: 26,
+          trailColor: 0xff2a85,
+          attackType: 'round_bomb',
+          age: 0,
+          duration: 0.37,
+          isPrimaryBomb: false
+        });
+
+        spawnBeam(kartStart, endPos, 0x00f3ff, 0.20, 0.34, 0.85, 0.30);
+        spawnBeam(petStart, endPos, 0xff2a85, 0.16, 0.28, 0.85, 0.30);
+      }
+
+      // Immediate launch recoil + muzzle blast!
+      this.bossHitTimer = Math.max(this.bossHitTimer, 0.55);
+      this.bossSquashTimer = Math.max(this.bossSquashTimer, 0.32);
+      this.bossRecoilZ = Math.min(this.bossRecoilZ, -7.2);
+      this.bossRecoilY = Math.max(this.bossRecoilY, 1.4);
+      this.bossRecoilPitch = -0.48;
+      this.bossRecoilYaw = (Math.random() < 0.5 ? 1 : -1) * 0.52;
+      this.shakeIntensity = Math.max(this.shakeIntensity, 0.72);
+      this.shakeTimer = Math.max(this.shakeTimer, 0.36);
+      this.cameraZoomPunch = Math.max(this.cameraZoomPunch, 12.5);
+
+      this.spawnBrickExplosion(endPos.x, endPos.y, endPos.z, 34, true);
+      this._spawnParticleBurst(kartStart.x, kartStart.y, kartStart.z, chosen.type === 'water_gun' ? 0x00e5ff : 0xffe600, 32, 1.35);
+
+      return chosen;
     },
 
     /**
@@ -4818,7 +5381,12 @@
       this.bossHpRatio = 1.0;
       this.bossHitTimer = 0;
       this.bossRecoilZ = 0;
+      this.bossRecoilY = 0;
       this.bossRecoilPitch = 0;
+      this.bossRecoilYaw = 0;
+      this.bossRecoilRoll = 0;
+      this.bossSquashTimer = 0;
+      this.bossChainExplosions = [];
 
       // Switch 3D background to Hell & Erupting Lava theme!
       this._applyBossHellEnvironment(true);
@@ -4846,7 +5414,7 @@
     },
 
     /**
-     * Damage the active Stage Boss and fire player + pet twin mega laser
+     * Damage the active Stage Boss and fire multi-weapon attack arsenal
      */
     damageBoss: function (newHpRatio) {
       if (!this.isBossActive && this.bossGroup) {
@@ -4866,7 +5434,7 @@
       if (now - this.lastAutoLaserTime > 120) {
         this._fireLaserAtBoss();
       } else {
-        this.bossHitTimer = 0.42;
+        this.bossHitTimer = Math.max(this.bossHitTimer, 0.58);
       }
       return this;
     },
@@ -4893,20 +5461,21 @@
       this.bossDefeating = true;
       this.bossDefeatTimer = 0;
       this.bossDefeatCallback = typeof onComplete === 'function' ? onComplete : null;
+      this.bossChainExplosions = [];
 
       if (this.bossGroup) {
         const bx = this.bossGroup.position.x;
         const by = this.bossGroup.position.y;
         const bz = this.bossGroup.position.z;
-        this.spawnBrickExplosion(bx, by + 1, bz + 2, 60, true);
-        this._spawnParticleBurst(bx, by, bz, 0xff0055, 70, 2.2);
-        this._spawnParticleBurst(bx - 3, by + 1, bz + 2, 0xffe600, 55, 1.9);
-        this._spawnParticleBurst(bx + 3, by - 1, bz + 2, 0x00f3ff, 55, 1.9);
+        this.spawnBrickExplosion(bx, by + 1, bz + 2, 72, true);
+        this._spawnParticleBurst(bx, by, bz, 0xff0055, 80, 2.3);
+        this._spawnParticleBurst(bx - 3, by + 1, bz + 2, 0xffe600, 65, 2.0);
+        this._spawnParticleBurst(bx + 3, by - 1, bz + 2, 0x00f3ff, 65, 2.0);
       }
 
-      this.shakeIntensity = 0.65;
-      this.shakeTimer = 0.55;
-      this.cameraZoomPunch = 12.0;
+      this.shakeIntensity = 0.85;
+      this.shakeTimer = 0.65;
+      this.cameraZoomPunch = 15.0;
       return this;
     },
 
@@ -4917,6 +5486,7 @@
       this.isBossActive = false;
       this.bossDefeating = false;
       this.bossDefeatCallback = null;
+      this.bossChainExplosions = [];
       if (this.bossGroup) {
         this.bossGroup.visible = false;
       }
