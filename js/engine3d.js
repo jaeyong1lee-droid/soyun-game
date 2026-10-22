@@ -471,6 +471,8 @@
     petLeftWing: null,
     petRightWing: null,
     petSpinTimer: 0,
+    carHurtTimer: 0,
+    carHurtType: 'block',
 
     roadGroup: null,
     laneDashMeshes: [],
