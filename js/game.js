@@ -768,8 +768,33 @@
               clearTimeout(this._bossSpotlightTimer);
               this._bossSpotlightTimer = null;
             }
-            document.body.classList.remove('boss-attack-spotlight-active');
-            this.handleBossDefeated(pointsEarned);
+            // 5-Second Ultimate Firepower Boss Finisher Animation!
+            // Hide question banner, keep car racing fast, and unleash a 5-second non-stop all-weapons barrage
+            // (Missiles, Water Gun, Mega Laser, Round Bomb, Meteor) before opening the Boss Clear popup!
+            document.body.classList.add('boss-attack-spotlight-active');
+            if (window.Engine3D) {
+              window.Engine3D.clearActiveGates();
+              window.Engine3D.setSpeed(getEffectiveSpeed() * 1.25);
+              if (typeof window.Engine3D.triggerBossFinisherBarrage === 'function') {
+                window.Engine3D.triggerBossFinisherBarrage();
+              }
+            }
+            if (window.UIManager && typeof window.UIManager.pushRobloxChat === 'function') {
+              window.UIManager.pushRobloxChat(
+                '로블록스TV',
+                '🚨💥 [초필살 전탄 발사!!] 이소윤 선수의 모든 특수무기(🚀탄도미사일·🔫물총·⚡레이저·💣폭탄·☄️메테오)가 보스를 집중 폭격합니다!!',
+                'tv'
+              );
+            }
+            syncHUD();
+
+            const self = this;
+            this._bossSpotlightTimer = setTimeout(function () {
+              self._bossSpotlightTimer = null;
+              document.body.classList.remove('boss-attack-spotlight-active');
+              if (!state.isPlaying || state.isGameOver) return;
+              self.handleBossDefeated(pointsEarned);
+            }, 5000);
             return;
           } else {
             if (window.UIManager && typeof window.UIManager.pushRobloxChat === 'function') {

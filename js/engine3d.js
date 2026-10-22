@@ -6356,6 +6356,29 @@
             this.bossImpactLight.intensity = Math.max(0, this.bossImpactLight.intensity - dt * 12);
           }
 
+          // Process 5-second All-Out Boss Finisher Barrage Queue!
+          if (Array.isArray(this.bossFinisherQueue) && this.bossFinisherQueue.length > 0) {
+            for (let fq = this.bossFinisherQueue.length - 1; fq >= 0; fq--) {
+              const fItem = this.bossFinisherQueue[fq];
+              fItem.delay -= dt;
+              if (fItem.delay <= 0) {
+                this.bossFinisherQueue.splice(fq, 1);
+                this._fireLaserAtBoss(fItem.weapon);
+                if (global.SoundEngine && typeof global.SoundEngine.playLaserShot === 'function') {
+                  global.SoundEngine.playLaserShot(fItem.weapon);
+                }
+                if (global.UIManager && typeof global.UIManager.triggerImpactEffect === 'function') {
+                  global.UIManager.triggerImpactEffect('boss', {
+                    attackInfo: { type: fItem.weapon }
+                  });
+                }
+                if (fItem.isFinale) {
+                  this.defeatBoss();
+                }
+              }
+            }
+          }
+
           // Process queued multi-stage chain detonations on Boss shoulders & hammer!
           if (Array.isArray(this.bossChainExplosions) && this.bossChainExplosions.length > 0) {
             for (let c = this.bossChainExplosions.length - 1; c >= 0; c--) {
