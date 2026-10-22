@@ -412,11 +412,15 @@
         clearTimeout(this._bossSpotlightTimer);
         this._bossSpotlightTimer = null;
       }
+      if (this._obbyWaveTimer) {
+        clearTimeout(this._obbyWaveTimer);
+        this._obbyWaveTimer = null;
+      }
       this._clearBossFinisherClickPrompt();
       document.body.classList.remove('boss-attack-spotlight-active');
 
       if (window.QuestionEngine && typeof window.QuestionEngine.resetStageCounters === 'function') {
-        window.QuestionEngine.resetStageCounters(targetStage);
+        window.QuestionEngine.resetStageCounters(state.stage || 1);
       }
 
       if (window.UIManager) {
@@ -2035,11 +2039,15 @@
         clearTimeout(this._bossSpotlightTimer);
         this._bossSpotlightTimer = null;
       }
+      if (this._obbyWaveTimer) {
+        clearTimeout(this._obbyWaveTimer);
+        this._obbyWaveTimer = null;
+      }
       this._clearBossFinisherClickPrompt();
       document.body.classList.remove('boss-attack-spotlight-active');
 
       if (window.QuestionEngine && typeof window.QuestionEngine.resetStageCounters === 'function') {
-        window.QuestionEngine.resetStageCounters(targetStage);
+        window.QuestionEngine.resetStageCounters(state.stage || 1);
       }
 
       if (window.Engine3D) {
