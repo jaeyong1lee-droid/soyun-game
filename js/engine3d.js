@@ -4415,10 +4415,11 @@
           this.camera.updateProjectionMatrix();
         }
 
-        this.camera.lookAt(this.carGroup.position.x * (0.2 + pf * 0.12), 1.8 - pf * 0.35, -30);
+        const lookCurveX = this._getRoadCurveX(-26) * 0.22;
+        this.camera.lookAt(this.carGroup.position.x * (0.2 + pf * 0.12) + lookCurveX, 1.8 - pf * 0.35, -30);
       }
 
-      // 5. Update 3-Lane Quiz Gates & Collision Check
+      // 5. Update 3-Lane Quiz Gates & Collision Check (gliding along the curved highway!)
       const spawnZ = cfg.GATE_SPAWN_Z;
       const passZ = cfg.GATE_PASS_Z;
       const despawnZ = cfg.GATE_DESPAWN_Z;
@@ -4428,6 +4429,8 @@
         const isSpeechWaiting = Boolean(gate.questionData && gate.questionData.isSpeech && !gate.questionData.speechPassed);
         const stepSpeed = isSpeechWaiting ? (gateSpeedUnitsPerSec * 0.62) : gateSpeedUnitsPerSec;
         gate.group.position.z += stepSpeed * dt;
+        gate.group.position.x = this._getRoadCurveX(gate.group.position.z) * 0.45;
+        gate.group.rotation.y = -this._getRoadCurveSlope(gate.group.position.z) * 0.25;
 
         const rawProgress = (gate.group.position.z - spawnZ) / Math.max(1, passZ - spawnZ);
         gate.progress = Math.max(0, Math.min(1, rawProgress));
@@ -4456,6 +4459,8 @@
       for (let i = this.activeObbyWaves.length - 1; i >= 0; i--) {
         const wave = this.activeObbyWaves[i];
         wave.group.position.z += obbySpeedUnitsPerSec * dt;
+        wave.group.position.x = this._getRoadCurveX(wave.group.position.z) * 0.65;
+        wave.group.rotation.y = -this._getRoadCurveSlope(wave.group.position.z) * 0.35;
 
         // Spin Robux rings in the wave
         if (Array.isArray(wave.coinMeshes)) {
