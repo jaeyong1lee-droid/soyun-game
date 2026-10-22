@@ -929,6 +929,7 @@
         .filter(function (c) { return c !== answerStr; });
     }
     const isExpr = String(queuedItem.id || '').startsWith('expr_') || String(queuedItem.subType || '').startsWith('expr_');
+    const isPron = String(queuedItem.id || '').startsWith('eng_pron_') || queuedItem.subType === 'en_to_pron';
     while (distractors.length < 2) {
       if (queuedItem.category === 'math') {
         const numVal = parseInt(answerStr, 10) || 50;
@@ -937,6 +938,12 @@
       } else if (isExpr) {
         const fallbackExpr = DAILY_ENGLISH_EXPRESSIONS[randomInt(0, DAILY_ENGLISH_EXPRESSIONS.length - 1)];
         const candidate = /^[a-zA-Z\s',.!?-]+$/.test(answerStr) ? fallbackExpr.en : fallbackExpr.kr;
+        if (candidate !== answerStr && !distractors.includes(candidate)) {
+          distractors.push(candidate);
+        }
+      } else if (isPron) {
+        const fallbackWord = ENGLISH_DICTIONARY[randomInt(0, ENGLISH_DICTIONARY.length - 1)];
+        const candidate = fallbackWord.pron || fallbackWord.kr;
         if (candidate !== answerStr && !distractors.includes(candidate)) {
           distractors.push(candidate);
         }
@@ -956,7 +963,7 @@
       id: queuedItem.id || `review_${Date.now()}`,
       category: queuedItem.category || 'math',
       categoryLabel: queuedItem.category === 'english'
-        ? (isExpr ? '🔄 오답 복습 · 실전 생활영어' : '🔄 오답 복습 · 초등 영단어')
+        ? (isExpr ? '🔄 오답 복습 · 실전 생활영어' : (isPron ? '🔄 오답 복습 · 영단어 발음 읽기' : '🔄 오답 복습 · 초등 영단어'))
         : '🔄 오답 복습 · 초등 수학 연산',
       subType: queuedItem.subType || 'review',
       stage: stageNum || 1,
