@@ -169,6 +169,7 @@ module.exports = async function handler(req, res) {
       const body = await readJsonBody(req);
       const s = (body && body.state) ? body.state : body || {};
       const forceReset = Boolean(body && body.forceReset);
+      const explicitSettingsUpdate = Boolean(body && body.explicitSettingsUpdate);
 
       if (forceReset) {
         const resetRes = await pool.query(
@@ -276,7 +277,10 @@ module.exports = async function handler(req, res) {
           total_score = GREATEST(soyun_roblox_racer_save.total_score, EXCLUDED.total_score),
           high_score = GREATEST(soyun_roblox_racer_save.high_score, EXCLUDED.high_score),
           max_speed = GREATEST(soyun_roblox_racer_save.max_speed, EXCLUDED.max_speed),
-          speed_multiplier = EXCLUDED.speed_multiplier,
+          speed_multiplier = CASE
+            WHEN $28::boolean THEN EXCLUDED.speed_multiplier
+            ELSE soyun_roblox_racer_save.speed_multiplier
+          END,
           total_solved = GREATEST(soyun_roblox_racer_save.total_solved, EXCLUDED.total_solved),
           total_correct = GREATEST(soyun_roblox_racer_save.total_correct, EXCLUDED.total_correct),
           total_wrong = GREATEST(soyun_roblox_racer_save.total_wrong, EXCLUDED.total_wrong),
@@ -285,16 +289,49 @@ module.exports = async function handler(req, res) {
           bosses_defeated = GREATEST(soyun_roblox_racer_save.bosses_defeated, EXCLUDED.bosses_defeated),
           pocket_money_count = GREATEST(soyun_roblox_racer_save.pocket_money_count, EXCLUDED.pocket_money_count),
           ashley_count = GREATEST(soyun_roblox_racer_save.ashley_count, EXCLUDED.ashley_count),
-          paid_pocket_count = EXCLUDED.paid_pocket_count,
-          paid_ashley_count = EXCLUDED.paid_ashley_count,
-          paid_jackpot_count = EXCLUDED.paid_jackpot_count,
-          bonus_name_pocket = EXCLUDED.bonus_name_pocket,
-          bonus_name_ashley = EXCLUDED.bonus_name_ashley,
-          bonus_name_jackpot = EXCLUDED.bonus_name_jackpot,
-          bonus_target_pocket = EXCLUDED.bonus_target_pocket,
-          bonus_target_ashley = EXCLUDED.bonus_target_ashley,
-          bonus_target_jackpot = EXCLUDED.bonus_target_jackpot,
-          subject_mode = EXCLUDED.subject_mode,
+          paid_pocket_count = CASE
+            WHEN $28::boolean THEN EXCLUDED.paid_pocket_count
+            ELSE soyun_roblox_racer_save.paid_pocket_count
+          END,
+          paid_ashley_count = CASE
+            WHEN $28::boolean THEN EXCLUDED.paid_ashley_count
+            ELSE soyun_roblox_racer_save.paid_ashley_count
+          END,
+          paid_jackpot_count = CASE
+            WHEN $28::boolean THEN EXCLUDED.paid_jackpot_count
+            ELSE soyun_roblox_racer_save.paid_jackpot_count
+          END,
+          bonus_name_pocket = CASE
+            WHEN $28::boolean THEN EXCLUDED.bonus_name_pocket
+            WHEN soyun_roblox_racer_save.bonus_name_pocket IS NOT NULL AND soyun_roblox_racer_save.bonus_name_pocket <> '용돈 3,000원' THEN soyun_roblox_racer_save.bonus_name_pocket
+            ELSE EXCLUDED.bonus_name_pocket
+          END,
+          bonus_name_ashley = CASE
+            WHEN $28::boolean THEN EXCLUDED.bonus_name_ashley
+            WHEN soyun_roblox_racer_save.bonus_name_ashley IS NOT NULL AND soyun_roblox_racer_save.bonus_name_ashley <> '애슐리 외식' THEN soyun_roblox_racer_save.bonus_name_ashley
+            ELSE EXCLUDED.bonus_name_ashley
+          END,
+          bonus_name_jackpot = CASE
+            WHEN $28::boolean THEN EXCLUDED.bonus_name_jackpot
+            WHEN soyun_roblox_racer_save.bonus_name_jackpot IS NOT NULL AND soyun_roblox_racer_save.bonus_name_jackpot <> '10판 보스 만원 상금' THEN soyun_roblox_racer_save.bonus_name_jackpot
+            ELSE EXCLUDED.bonus_name_jackpot
+          END,
+          bonus_target_pocket = CASE
+            WHEN $28::boolean THEN EXCLUDED.bonus_target_pocket
+            ELSE soyun_roblox_racer_save.bonus_target_pocket
+          END,
+          bonus_target_ashley = CASE
+            WHEN $28::boolean THEN EXCLUDED.bonus_target_ashley
+            ELSE soyun_roblox_racer_save.bonus_target_ashley
+          END,
+          bonus_target_jackpot = CASE
+            WHEN $28::boolean THEN EXCLUDED.bonus_target_jackpot
+            ELSE soyun_roblox_racer_save.bonus_target_jackpot
+          END,
+          subject_mode = CASE
+            WHEN $28::boolean THEN EXCLUDED.subject_mode
+            ELSE soyun_roblox_racer_save.subject_mode
+          END,
           wrong_answer_queue = CASE
             WHEN EXCLUDED.total_solved >= soyun_roblox_racer_save.total_solved THEN EXCLUDED.wrong_answer_queue
             ELSE soyun_roblox_racer_save.wrong_answer_queue
@@ -332,7 +369,8 @@ module.exports = async function handler(req, res) {
           bonusTargetJackpot,
           subjectMode,
           wrongQueueJson,
-          reviewHistoryJson
+          reviewHistoryJson,
+          explicitSettingsUpdate
         ]
       );
 
