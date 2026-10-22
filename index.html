@@ -759,46 +759,32 @@
   </div>
 
   <!-- =====================================================================
-       MODAL 8: Sky-Ascending World Tree Map Popup (#next-stage-modal)
+       MODAL 8: Visual Treasure-Island World Adventure Map (#next-stage-modal)
+       Minimal-text illustrated island map (like a treasure adventure map)
        Shown BEFORE Game Start AND when advancing to the Next Stage after Boss Clear!
-       ("1단계는 어느나라 - 2단계는 어느나라" 하늘로 올라가는 단계별 트리맵 요약도)
        ===================================================================== -->
   <div id="next-stage-modal" class="modal-backdrop hidden">
-    <div class="modal-card confirm-popup-card next-stage-popup-card sky-treemap-card" role="dialog" aria-modal="true" aria-labelledby="next-stage-title">
-      <div class="sky-treemap-header">
-        <div class="sky-treemap-pill-row">
-          <span id="sky-treemap-mode-pill" class="arcade-title-pill">☁️ SKY WORLD TREE MAP ⬆️</span>
-          <span id="sky-treemap-altitude-badge" class="sky-altitude-badge">🌤️ 현재 고도: 상공 1,000m</span>
-        </div>
-        <h2 id="next-stage-title" class="retry-title sky-treemap-title">🗺️ 하늘로 올라가는 소윤이의 월드 트리맵</h2>
-        <p id="sky-treemap-subtitle" class="sky-treemap-subtitle">
-          1단계 대자연의 나라부터 하늘 끝 만원 보스 왕국까지 한 단계씩 정복하며 위로 올라가요!
-        </p>
-      </div>
-
-      <!-- Vertical Sky-Climbing Tree Map Container (Bottom = Stage 1 Ground -> Top = Sky Kingdom Peak) -->
-      <div id="sky-treemap-scroll" class="sky-treemap-scroll" aria-label="하늘로 올라가는 단계별 월드 트리맵 요약도">
-        <div class="sky-treemap-clouds-bg" aria-hidden="true"></div>
+    <div class="modal-card confirm-popup-card next-stage-popup-card sky-treemap-card" role="dialog" aria-modal="true" aria-label="월드 어드벤처 지도">
+      <!-- Visual Parchment / Island Adventure Map Board (Minimal text, illustrated 3D islands & dashed path!) -->
+      <div id="sky-treemap-scroll" class="sky-treemap-scroll" aria-label="월드 어드벤처 지도">
         <div id="sky-treemap-list" class="sky-treemap-list">
-          <!-- Populated dynamically by UIManager.renderSkyTreeMap() -->
+          <!-- Populated dynamically with SVG Illustrated Islands & Winding Dashed Trail by UIManager -->
         </div>
       </div>
 
-      <!-- Current Position Summary Box -->
-      <div id="next-stage-preview-box" class="next-stage-preview-box">
-        <div class="next-stage-preview-top">
-          <span id="next-stage-badge" class="next-stage-badge">📍 현재 위치: 1단계</span>
-          <strong id="next-stage-name" class="next-stage-name">🏞️ 에메랄드 대자연의 나라</strong>
-        </div>
-        <span id="next-stage-bonus-note" class="next-stage-bonus-note">알프스 만년설 산맥 · 에메랄드 강변 · 푸른 소나무 숲</span>
+      <!-- Hidden compatibility nodes (kept minimal for script references) -->
+      <div id="next-stage-preview-box" class="next-stage-preview-box hidden">
+        <span id="next-stage-badge">STAGE 1</span>
+        <strong id="next-stage-name">STAGE 1</strong>
+        <span id="next-stage-bonus-note"></span>
       </div>
 
       <div class="confirm-popup-actions sky-treemap-actions">
         <button id="btn-next-stage-yes" class="btn-primary-cta btn-confirm-yes" type="button">
-          🚀 1단계 (에메랄드 대자연의 나라) 출발하기!
+          🚀 STAGE 1 START!
         </button>
         <button id="btn-next-stage-no" class="btn-secondary-action btn-confirm-no" type="button">
-          🏠 메인 화면으로
+          ✕ 닫기
         </button>
       </div>
     </div>
