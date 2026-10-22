@@ -1250,15 +1250,58 @@
 
     /**
      * Starts the 2x Speed Roblox Obby Action Mini-Game between quiz sets!
-     * Spawns 7 waves of 3-lane obstacles (tall spike blocks to dodge left/right, low red lava hurdles to JUMP over, and Robux boost rings).
+     * Spawns 3 sequential waves of 3-lane obstacles randomly alternating between:
+     * 1) 'obstacle_wall': 2 Tall Block Walls ('block') + 1 Low Hurdle ('hurdle')
+     * 2) 'fire_pit': 2 Very Wide Fire Pits ('wide_fire') + 1 Narrow Jumpable Fire Pit ('narrow_fire')
      */
     startObbyMinigame: function () {
       if (!state.isPlaying || state.isGameOver) return false;
       if (state.isObbyMode) return true;
 
+      if (this._obbyWaveTimer) {
+        clearTimeout(this._obbyWaveTimer);
+        this._obbyWaveTimer = null;
+      }
+
       state.isObbyMode = true;
-      state.obbyWavesTotal = 7;
+      state.obbyWavesTotal = 3;
       state.obbyWavesCleared = 0;
+      state.obbySuccessCount = 0;
+      state.obbyWaveQueue = [];
+
+      // Build 3 random obstacle waves (guaranteeing both 'obstacle_wall' and 'fire_pit' appear in the 3 waves!)
+      const types = [];
+      for (let i = 0; i < 3; i++) {
+        types.push(Math.random() < 0.5 ? 'obstacle_wall' : 'fire_pit');
+      }
+      if (types[0] === types[1] && types[1] === types[2]) {
+        types[2] = types[0] === 'obstacle_wall' ? 'fire_pit' : 'obstacle_wall';
+      }
+
+      let prevPassLane = -1;
+      for (let w = 0; w < state.obbyWavesTotal; w++) {
+        const wType = types[w];
+        const candidateLanes = [0, 1, 2].filter(function (l) {
+          return l !== prevPassLane;
+        });
+        const passLane = candidateLanes[Math.floor(Math.random() * candidateLanes.length)];
+        prevPassLane = passLane;
+
+        const lanes = [0, 1, 2].map(function (laneIdx) {
+          if (laneIdx === passLane) {
+            return wType === 'fire_pit' ? 'narrow_fire' : 'hurdle';
+          }
+          return wType === 'fire_pit' ? 'wide_fire' : 'block';
+        });
+
+        state.obbyWaveQueue.push({
+          waveIndex: w + 1,
+          totalWaves: state.obbyWavesTotal,
+          waveType: wType,
+          passLane: passLane,
+          lanes: lanes
+        });
+      }
 
       if (window.Engine3D) {
         if (typeof window.Engine3D.setDemoMode === 'function') {
@@ -1269,33 +1312,6 @@
           window.Engine3D.clearObbyObstacles();
         }
         window.Engine3D.setSpeed(getEffectiveSpeed());
-
-        // Spawn 7 dynamic Roblox Obby obstacle waves across Lanes 1, 2, 3
-        const patterns = [
-          ['block', 'hurdle', 'coin'],
-          ['hurdle', 'block', 'coin'],
-          ['coin', 'hurdle', 'block'],
-          ['block', 'coin', 'hurdle'],
-          ['hurdle', 'coin', 'block'],
-          ['coin', 'block', 'hurdle'],
-          ['hurdle', 'hurdle', 'coin']
-        ];
-
-        for (let w = 0; w < state.obbyWavesTotal; w++) {
-          const basePat = patterns[(w + state.stage) % patterns.length].slice();
-          // Lightly shuffle while keeping at least 1 hurdle and 1 coin/safe path
-          if ((w + state.stageProgress) % 2 === 1) {
-            basePat.reverse();
-          }
-          if (typeof window.Engine3D.spawnObbyObstacleWave === 'function') {
-            window.Engine3D.spawnObbyObstacleWave({
-              z: -56 - w * 34,
-              waveIndex: w + 1,
-              totalWaves: state.obbyWavesTotal,
-              lanes: basePat
-            });
-          }
-        }
       }
 
       if (window.SoundEngine) {
@@ -1303,67 +1319,131 @@
         window.SoundEngine.playStageClear();
       }
 
-      if (window.UIManager) {
-        if (typeof window.UIManager.showObbyHUD === 'function') {
-          window.UIManager.showObbyHUD(0, state.obbyWavesTotal);
-        }
-        if (typeof window.UIManager.pushRobloxChat === 'function') {
-          window.UIManager.pushRobloxChat(
-            '시스템',
-            '🎮 [미니게임] 2배속 로블록스 오비 액션 코스 진입! 점프와 차선 이동으로 돌파하세요!',
-            'system'
-          );
-        }
+      if (window.UIManager && typeof window.UIManager.pushRobloxChat === 'function') {
+        window.UIManager.pushRobloxChat(
+          '시스템',
+          '🎮 [오비 미니게임 3연속 돌파!] 높은 블록과 넓은 불구덩이를 피해 낮은/좁은 1개 레인으로 3번 돌파하세요!',
+          'system'
+        );
       }
 
       syncHUD();
+      this._spawnNextObbyWave();
       return true;
     },
 
     /**
-     * Handles passing a single 3-lane obstacle wave during the Roblox Obby Mini-Game.
-     * @param {Object} res { lane, laneType, isAirborne, outcome }
+     * Spawns the next obstacle wave (1/3 -> 2/3 -> 3/3) in the current Obby Mini-Game session.
+     */
+    _spawnNextObbyWave: function () {
+      if (!state.isPlaying || state.isGameOver || !state.isObbyMode) return;
+      if (!Array.isArray(state.obbyWaveQueue) || state.obbyWaveQueue.length === 0) return;
+
+      const nextWaveCfg = state.obbyWaveQueue.shift();
+      if (window.Engine3D && typeof window.Engine3D.spawnObbyObstacleWave === 'function') {
+        window.Engine3D.spawnObbyObstacleWave({
+          z: -72,
+          waveIndex: nextWaveCfg.waveIndex,
+          totalWaves: nextWaveCfg.totalWaves,
+          waveType: nextWaveCfg.waveType,
+          lanes: nextWaveCfg.lanes
+        });
+      }
+
+      if (window.UIManager && typeof window.UIManager.showObbyHUD === 'function') {
+        window.UIManager.showObbyHUD(
+          nextWaveCfg.waveIndex,
+          nextWaveCfg.totalWaves,
+          nextWaveCfg.waveType,
+          nextWaveCfg.passLane
+        );
+      }
+    },
+
+    /**
+     * Handles passing a single 3-lane obstacle wave during the Roblox Obby Mini-Game (3 waves total).
+     * @param {Object} res { cleared, outcome, laneType, waveType, lane, waveIndex, totalWaves }
      */
     handleObbyWavePass: function (res) {
-      if (!state.isPlaying || !state.isObbyMode) return;
+      if (!state.isPlaying || !state.isObbyMode || state.isGameOver) return;
 
       state.obbyWavesCleared += 1;
-      const outcome = res ? (res.outcome || (res.cleared ? 'coin' : 'hit_block')) : 'coin';
+      const isCleared = res ? Boolean(res.cleared) : true;
+      const outcome = res ? (res.outcome || (isCleared ? 'jump_clear' : 'hit_block')) : 'jump_clear';
+      const waveType = (res && res.waveType) ? res.waveType : 'obstacle_wall';
 
-      if (outcome === 'jump_clear' || outcome === 'coin') {
-        const bonusPts = outcome === 'jump_clear' ? 80 : 60;
+      if (isCleared && (outcome === 'jump_clear' || outcome === 'coin')) {
+        state.obbySuccessCount = (state.obbySuccessCount || 0) + 1;
+        const bonusPts = 80;
         if (window.SoundEngine) {
           window.SoundEngine.playCorrect(state.combo + 1);
         }
         if (window.SaveManager) {
           window.SaveManager.addScore(bonusPts, getEffectiveSpeed());
         }
-        if (outcome === 'jump_clear' && window.UIManager) {
-          window.UIManager.showFeedbackToast(
-            true,
-            `⬆️ 나이스 점프!! 용암 허들 돌파 & 공중 로벅스 링 획득! (+${bonusPts} R$)`
-          );
+        if (window.UIManager) {
+          const successMsg = waveType === 'fire_pit'
+            ? `🔥⬆️ 나이스 점프!! 좁은 불구덩이 건너기 성공! (+${bonusPts} R$ · ${state.obbyWavesCleared}/${state.obbyWavesTotal})`
+            : `🧱⬆️ 나이스 점프!! 낮은 장애물 넘기 성공! (+${bonusPts} R$ · ${state.obbyWavesCleared}/${state.obbyWavesTotal})`;
+          window.UIManager.showFeedbackToast(true, successMsg);
         }
       } else {
+        // FAILED to clear obstacle -> Subtract 1 HP & trigger Hurt / Ouch Animation ("피가 깎이고 아픈 애니")!
+        state.combo = 0;
+        state.hp = Math.max(0, state.hp - 1);
+
         if (window.SoundEngine) {
           window.SoundEngine.playWrong();
         }
         if (window.UIManager) {
           window.UIManager.triggerDamageFlash();
-          const msg = outcome === 'hit_hurdle'
-            ? '🔥 앗! 빨간 용암 허들은 [⬆️ 점프!] 버튼이나 스페이스바로 뛰어넘으세요!'
-            : '🧱 앗! 높은 가시 블록 벽은 옆 차선(◀ 1·2·3 ▶)으로 피하세요!';
-          window.UIManager.showFeedbackToast(false, msg);
+          if (typeof window.UIManager.triggerImpactEffect === 'function') {
+            window.UIManager.triggerImpactEffect('obby_hurt', {
+              outcome: outcome,
+              waveType: waveType,
+              hp: state.hp,
+              maxHp: state.maxHp
+            });
+          }
+          const failMsg = (outcome === 'hit_fire' || waveType === 'fire_pit')
+            ? `🔥💥 앗 뜨거!! 넓은 불구덩이에 빠져 피가 1 깎였어요! (❤️ ${state.hp}/${state.maxHp} · 좁은 불구덩이 레인으로 피하세요!)`
+            : `🧱💥 콰직!! 아야! 높은 블록에 부딪혀 피가 1 깎였어요! (❤️ ${state.hp}/${state.maxHp} · 낮은 장애물 레인으로 피하세요!)`;
+          window.UIManager.showFeedbackToast(false, failMsg);
+        }
+
+        syncHUD();
+
+        if (state.hp <= 0) {
+          const self = this;
+          if (this._obbyWaveTimer) {
+            clearTimeout(this._obbyWaveTimer);
+          }
+          this._obbyWaveTimer = setTimeout(function () {
+            self._obbyWaveTimer = null;
+            self.handleGameOver();
+          }, 680);
+          return;
         }
       }
 
-      if (window.UIManager && typeof window.UIManager.showObbyHUD === 'function') {
-        window.UIManager.showObbyHUD(state.obbyWavesCleared, state.obbyWavesTotal);
-      }
       syncHUD();
 
-      if (state.obbyWavesCleared >= state.obbyWavesTotal) {
-        this.endObbyMinigame();
+      const self = this;
+      if (this._obbyWaveTimer) {
+        clearTimeout(this._obbyWaveTimer);
+        this._obbyWaveTimer = null;
+      }
+
+      if (state.obbyWavesCleared < state.obbyWavesTotal) {
+        this._obbyWaveTimer = setTimeout(function () {
+          self._obbyWaveTimer = null;
+          self._spawnNextObbyWave();
+        }, isCleared ? 360 : 620);
+      } else {
+        this._obbyWaveTimer = setTimeout(function () {
+          self._obbyWaveTimer = null;
+          self.endObbyMinigame();
+        }, isCleared ? 520 : 920);
       }
     },
 
@@ -1373,11 +1453,23 @@
      */
     endObbyMinigame: function () {
       if (!state.isObbyMode) return;
+      if (this._obbyWaveTimer) {
+        clearTimeout(this._obbyWaveTimer);
+        this._obbyWaveTimer = null;
+      }
       state.isObbyMode = false;
+      const clearedCnt = state.obbySuccessCount || 0;
+      const totalCnt = state.obbyWavesTotal || 3;
       state.obbyWavesCleared = 0;
+      state.obbySuccessCount = 0;
+      state.obbyWaveQueue = [];
 
-      const clearBonus = 200;
-      if (window.SaveManager) {
+      if (!state.isPlaying || state.isGameOver || state.hp <= 0) {
+        return;
+      }
+
+      const clearBonus = clearedCnt * 70;
+      if (clearBonus > 0 && window.SaveManager) {
         window.SaveManager.addScore(clearBonus, getEffectiveSpeed());
       }
 
@@ -1390,25 +1482,27 @@
 
       if (window.SoundEngine) {
         window.SoundEngine.setSpeedTempo(getEffectiveSpeed());
-        window.SoundEngine.playStageClear();
+        if (clearedCnt > 0) {
+          window.SoundEngine.playStageClear();
+        }
       }
 
       if (window.UIManager) {
         if (typeof window.UIManager.hideObbyHUD === 'function') {
           window.UIManager.hideObbyHUD();
         }
-        if (typeof window.UIManager.triggerImpactEffect === 'function') {
-          window.UIManager.triggerImpactEffect('correct', { points: clearBonus, combo: state.combo });
-        }
-        window.UIManager.showFeedbackToast(
-          true,
-          `🏁 오비 미니게임 완주 성공!! 보너스 +${clearBonus} R$ 획득! 다시 문제 풀기로 돌아갑니다!`
-        );
-        if (typeof window.UIManager.pushRobloxChat === 'function') {
-          window.UIManager.pushRobloxChat(
-            '로블록스TV',
-            `🎉 이소윤 선수 2배속 오비 액션 코스 완벽 돌파!! (+${clearBonus} R$)`,
-            'tv'
+        if (clearedCnt === totalCnt) {
+          if (typeof window.UIManager.triggerImpactEffect === 'function') {
+            window.UIManager.triggerImpactEffect('correct', { points: clearBonus, combo: state.combo });
+          }
+          window.UIManager.showFeedbackToast(
+            true,
+            `🏁 오비 미니게임 3연속 완벽 돌파!! 보너스 +${clearBonus} R$ 획득! 다시 문제를 풀어볼까요?`
+          );
+        } else {
+          window.UIManager.showFeedbackToast(
+            clearedCnt > 0,
+            `🏁 오비 미니게임 종료! (${totalCnt}번 중 ${clearedCnt}번 성공 · +${clearBonus} R$) 다시 문제 풀기로 돌아갑니다!`
           );
         }
       }
