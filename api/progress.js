@@ -87,7 +87,7 @@ function rowToState(row) {
     paidPocketCount: parseInt(row.paid_pocket_count, 10) || 0,
     paidAshleyCount: parseInt(row.paid_ashley_count, 10) || 0,
     paidJackpotCount: parseInt(row.paid_jackpot_count, 10) || 0,
-    bonusNamePocket: (!row.bonus_name_pocket || row.bonus_name_pocket === '용돈 5,000원') ? '용돈 3,000원' : row.bonus_name_pocket,
+    bonusNamePocket: row.bonus_name_pocket || '용돈 3,000원',
     bonusNameAshley: row.bonus_name_ashley || '애슐리 외식',
     bonusNameJackpot: row.bonus_name_jackpot || '10판 보스 만원 상금',
     bonusTargetPocket: Math.max(1, parseInt(row.bonus_target_pocket, 10) || 100),
