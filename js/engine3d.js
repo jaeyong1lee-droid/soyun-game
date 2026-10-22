@@ -5621,29 +5621,29 @@
     },
 
     /**
-     * Trigger 5-Second All-Out Overwhelming Firepower Finisher Barrage on Boss when HP reaches 0!
+     * Trigger 5-Second Slow-Motion All-Out Overwhelming Firepower Finisher Barrage on Boss when HP reaches 0!
      * Fires all 5 special weapons (Ballistic Missiles, Water Gun, Mega Laser, Round Bomb, Meteor) in rapid waves
-     * for 4.05s, culminating in the massive Boss supernova explosion from 4.05s to 5.0s!
+     * in dramatic cinematic slow-motion (~0.36x time scale), culminating in the massive Boss supernova explosion!
      */
     triggerBossFinisherBarrage: function () {
       this._updateBossHpBar(0);
       this.bossDefeating = false;
-      this.bossSpotlightTimer = 5.2;
-      this.avatarCheerTimer = 5.0;
-      this.petSpinTimer = 5.0;
-      this.boostEffectTimer = 5.0;
+      this.bossFinisherSlowMoTimer = 8.5; // Slow-motion active for the 5s finisher and while awaiting player click
+      this.bossSpotlightTimer = 15.0;
+      this.avatarCheerTimer = 8.0;
+      this.petSpinTimer = 8.0;
+      this.boostEffectTimer = 8.0;
 
       this.bossFinisherQueue = [
-        { delay: 0.35, weapon: 'ballistic_missile' },
-        { delay: 0.85, weapon: 'water_gun' },
-        { delay: 1.35, weapon: 'mega_laser' },
-        { delay: 1.85, weapon: 'round_bomb' },
-        { delay: 2.35, weapon: 'meteor_hammer' },
-        { delay: 2.80, weapon: 'ballistic_missile' },
-        { delay: 3.15, weapon: 'mega_laser' },
-        { delay: 3.50, weapon: 'water_gun' },
-        { delay: 3.80, weapon: 'round_bomb' },
-        { delay: 4.05, weapon: 'meteor_hammer', isFinale: true }
+        { delay: 0.15, weapon: 'ballistic_missile' },
+        { delay: 0.65, weapon: 'water_gun' },
+        { delay: 1.15, weapon: 'mega_laser' },
+        { delay: 1.65, weapon: 'round_bomb' },
+        { delay: 2.15, weapon: 'meteor_hammer' },
+        { delay: 2.65, weapon: 'ballistic_missile' },
+        { delay: 3.10, weapon: 'mega_laser' },
+        { delay: 3.45, weapon: 'round_bomb' },
+        { delay: 3.85, weapon: 'meteor_hammer', isFinale: true }
       ];
       return this;
     },
@@ -5685,6 +5685,7 @@
     hideBoss: function () {
       this.isBossActive = false;
       this.bossDefeating = false;
+      this.bossFinisherSlowMoTimer = 0;
       this.bossDefeatCallback = null;
       this.bossChainExplosions = [];
       this.bossFinisherQueue = [];
@@ -5802,6 +5803,11 @@
      * Step physics, scrolling highway, Soyun avatar, pet, gates, boss, bricks, and camera by dt seconds
      */
     update: function (dt) {
+      const realDt = dt;
+      if (this.bossFinisherSlowMoTimer && this.bossFinisherSlowMoTimer > 0) {
+        this.bossFinisherSlowMoTimer = Math.max(0, this.bossFinisherSlowMoTimer - realDt);
+        dt = realDt * 0.36; // Cinematic Slow-Motion (0.36x time scale) for Boss Finisher Barrage!
+      }
       const cfg = getCfg();
       const lanes = cfg.LANES;
       this.elapsedTime += dt;
@@ -6358,11 +6364,11 @@
             this.bossImpactLight.intensity = Math.max(0, this.bossImpactLight.intensity - dt * 12);
           }
 
-          // Process 5-second All-Out Boss Finisher Barrage Queue!
+          // Process 5-second Slow-Motion All-Out Boss Finisher Barrage Queue (timed in real seconds)!
           if (Array.isArray(this.bossFinisherQueue) && this.bossFinisherQueue.length > 0) {
             for (let fq = this.bossFinisherQueue.length - 1; fq >= 0; fq--) {
               const fItem = this.bossFinisherQueue[fq];
-              fItem.delay -= dt;
+              fItem.delay -= realDt;
               if (fItem.delay <= 0) {
                 this.bossFinisherQueue.splice(fq, 1);
                 this._fireLaserAtBoss(fItem.weapon);
