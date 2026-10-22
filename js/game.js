@@ -2286,6 +2286,35 @@
           }
         });
 
+        // Real-time auto-save as the user types on their phone keyboard so edits are never lost even without pressing [이름저장]!
+        parentBonusContainer.addEventListener('input', function (e) {
+          const nameInput = e.target.closest('.parent-bonus-name-input');
+          if (nameInput && window.SaveManager && typeof window.SaveManager.setBonusName === 'function') {
+            const key = nameInput.getAttribute('data-bonus-key');
+            const val = String(nameInput.value || '').trim();
+            if (key && val) {
+              const updated = window.SaveManager.setBonusName(key, val);
+              if (window.UIManager) {
+                window.UIManager.renderDashboard(updated, state.selectedDashboardStage);
+              }
+              syncHUD();
+            }
+            return;
+          }
+          const countInput = e.target.closest('.parent-bonus-count-input');
+          if (countInput && window.SaveManager && typeof window.SaveManager.setBonusAchievedCount === 'function') {
+            const key = countInput.getAttribute('data-bonus-key');
+            const num = parseInt(countInput.value, 10);
+            if (key && !isNaN(num) && num >= 1) {
+              const updated = window.SaveManager.setBonusAchievedCount(key, num);
+              if (window.UIManager) {
+                window.UIManager.renderDashboard(updated, state.selectedDashboardStage);
+              }
+              syncHUD();
+            }
+          }
+        });
+
         parentBonusContainer.addEventListener('change', function (e) {
           const nameInput = e.target.closest('.parent-bonus-name-input');
           if (nameInput) {

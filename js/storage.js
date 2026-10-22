@@ -1058,7 +1058,23 @@
      * @returns {Object} Fresh default state
      */
     resetAllProgress: function () {
+      const prevCustom = loadCustomParentSettings();
+      const prevPocketName = (_state && _state.bonusNamePocket) || (prevCustom && prevCustom.bonusNamePocket) || '용돈 3,000원';
+      const prevAshleyName = (_state && _state.bonusNameAshley) || (prevCustom && prevCustom.bonusNameAshley) || '애슐리 외식';
+      const prevJackpotName = (_state && _state.bonusNameJackpot) || (prevCustom && prevCustom.bonusNameJackpot) || '10판 보스 만원 상금';
+      const prevTargetPocket = (_state && _state.bonusTargetPocket) || (prevCustom && prevCustom.bonusTargetPocket) || 100;
+      const prevTargetAshley = (_state && _state.bonusTargetAshley) || (prevCustom && prevCustom.bonusTargetAshley) || 1000;
+      const prevTargetJackpot = (_state && _state.bonusTargetJackpot) || (prevCustom && prevCustom.bonusTargetJackpot) || 10;
+
       _state = createDefaultState();
+      _state.bonusNamePocket = prevPocketName;
+      _state.bonusNameAshley = prevAshleyName;
+      _state.bonusNameJackpot = prevJackpotName;
+      _state.bonusTargetPocket = prevTargetPocket;
+      _state.bonusTargetAshley = prevTargetAshley;
+      _state.bonusTargetJackpot = prevTargetJackpot;
+
+      saveCustomParentSettings(_state);
       try {
         window.localStorage.setItem(getStorageKey(), JSON.stringify(_state));
       } catch (_e) {}

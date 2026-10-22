@@ -289,17 +289,10 @@
         elMainPetBadge.textContent = `${activePet.shortName || activePet.name}`;
       }
 
-      // Keep Parent Modal in sync if rendered (unless user is currently typing in an input inside #parent-modal)
+      // Keep Parent Modal in sync ONLY when #parent-modal is closed so background cloud sync NEVER overwrites phone input fields!
       const parentModalEl = byId('parent-modal');
-      const activeInputEl = document.activeElement;
-      const isEditingParentInput = Boolean(
-        parentModalEl &&
-        !parentModalEl.classList.contains('hidden') &&
-        activeInputEl &&
-        parentModalEl.contains(activeInputEl) &&
-        activeInputEl.tagName === 'INPUT'
-      );
-      if (!isEditingParentInput) {
+      const isParentModalOpen = Boolean(parentModalEl && !parentModalEl.classList.contains('hidden'));
+      if (!isParentModalOpen) {
         this.renderParentModal(state);
       }
 
