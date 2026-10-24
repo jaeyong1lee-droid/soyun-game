@@ -5842,3 +5842,16 @@ body.obby-mode-active #left-touch-pad #btn-turn-jump-action {
 .roblox-chat-box {
   display: none !important;
 }
+
+/* Keep Top HP Panel (#hud-left-panel) and Mini-Game Prompt (#question-banner) visible during all 3 Mini-Games! */
+body.obby-mode-active #hud-left-panel.hud-panel-left {
+  display: flex !important;
+}
+
+body.obby-mode-active #question-banner.question-banner {
+  display: flex !important;
+}
+
+body.obby-mode-active #question-prompt {
+  font-size: clamp(20px, 4.2vw, 30px) !important;
+}
