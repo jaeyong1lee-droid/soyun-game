@@ -146,7 +146,8 @@ function finishDeploy(stdout) {
 }
 
 function scheduleDeploy(filename) {
-  if (isDeploying || Date.now() < ignoreWatchUntil) return;
+  if (isDeploying) { pendingDeploy = true; return; }
+  if (Date.now() < ignoreWatchUntil) return;
   if (debounceTimer) clearTimeout(debounceTimer);
   debounceTimer = setTimeout(() => {
     debounceTimer = null;
