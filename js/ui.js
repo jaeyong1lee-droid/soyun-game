@@ -715,8 +715,16 @@
         spawnBadge(`🎉 보스 클리어 보너스 +${pts} R$!`, 'impact-combo', 0, 26);
       } else if (type === 'obby_hurt') {
         const isFire = opts.outcome === 'hit_fire' || opts.waveType === 'fire_pit';
+        const isLaser = opts.outcome === 'hit_laser' || opts.waveType === 'low_laser';
+        const isLog = opts.outcome === 'hit_log' || opts.waveType === 'high_log';
+        const isStair = opts.outcome === 'hit_stair' || opts.waveType === 'heaven_stairs';
+        let hurtMsg = `🧱💥 콰직!! 아야! 블록 충돌! (-1 ❤️)`;
+        if (isFire) hurtMsg = `🔥💥 앗 뜨거!! 불구덩이 추락! (-1 ❤️)`;
+        else if (isLaser) hurtMsg = `⚡💥 찌릿!! 회전 레이저봉 충돌! (-1 ❤️)`;
+        else if (isLog) hurtMsg = `🪵💥 쿵!! 거대 2단 통나무 충돌! (-1 ❤️)`;
+        else if (isStair) hurtMsg = `☁️💦 어이쿠!! 반대쪽 허공 헛디딤! (-1 ❤️)`;
         spawnBadge(
-          isFire ? `🔥💥 앗 뜨거!! 불구덩이 추락! (-1 ❤️)` : `🧱💥 콰직!! 아야! 블록 충돌! (-1 ❤️)`,
+          hurtMsg,
           'impact-wrong',
           0,
           0
@@ -907,7 +915,10 @@
     },
 
     /**
-     * Updates the Top Banner for the 3-Wave Obby Action Mini-Game (Obstacle Wall vs Fire Pit)
+     * Updates the Top Banner & Button Highlights for the 3 Distinct Mini-Games:
+     * 1) 'heaven_stairs': 🌈☁️ 로블록스 천국의 계단 (2-Button Climb vs Turn-Jump)
+     * 2) 'laser_jump': ⚡🪵 회전 레이저봉 & 거대 2단 통나무 점프 서바이벌
+     * 3) 'obby_rush': 🧱🔥 3레인 장애물 벽 & 불구덩이 돌파
      */
     showObbyHUD: function (waveIndex, totalWaves, waveType) {
       document.body.classList.add('obby-mode-active');
@@ -915,20 +926,96 @@
       const tot = totalWaves || 3;
       const catBadge = byId('question-category-badge');
       const promptEl = byId('question-prompt');
+      const leftBtn = byId('btn-turn-jump-action');
+      const rightBtn = byId('btn-jump-action');
+      const leftLbl = byId('left-btn-action-label');
+      const rightLbl = byId('right-btn-action-label');
+
+      if (leftBtn) leftBtn.classList.remove('stair-recommended-btn');
+      if (rightBtn) rightBtn.classList.remove('stair-recommended-btn');
+
+      if (waveType === 'low_laser') {
+        if (leftLbl) leftLbl.textContent = '2단점프';
+        if (rightLbl) rightLbl.textContent = '⬆️점프!';
+        if (rightBtn) rightBtn.classList.add('stair-recommended-btn');
+        if (catBadge) {
+          catBadge.textContent = `⚡ 점프 게임 (${idx} / ${tot}) · 회전 레이저봉 넘기`;
+        }
+        if (promptEl) {
+          promptEl.textContent = `⚡ 회전 레이저봉! 우측 [⬆️ 점프] 터치! (${idx}/${tot})`;
+        }
+      } else if (waveType === 'high_log') {
+        if (leftLbl) leftLbl.textContent = '🔄2단점프!';
+        if (rightLbl) rightLbl.textContent = '1단점프';
+        if (leftBtn) leftBtn.classList.add('stair-recommended-btn');
+        if (catBadge) {
+          catBadge.textContent = `🪵 점프 게임 (${idx} / ${tot}) · 거대 2단 통나무 넘기`;
+        }
+        if (promptEl) {
+          promptEl.textContent = `🪵 거대 통나무! 좌측 [🔄 2단점프] 터치! (${idx}/${tot})`;
+        }
+      } else {
+        if (leftLbl) leftLbl.textContent = '슈퍼점프';
+        if (rightLbl) rightLbl.textContent = '⬆️점프!';
+        if (catBadge) {
+          catBadge.textContent = waveType === 'fire_pit'
+            ? `🔥 오비 미니게임 (${idx} / ${tot}) · 불구덩이 건너기`
+            : `🧱 오비 미니게임 (${idx} / ${tot}) · 장애물 넘기`;
+        }
+        if (promptEl) {
+          promptEl.textContent = waveType === 'fire_pit'
+            ? `🔥 불구덩이 건너기! (${idx}/${tot})`
+            : `🧱 장애물 넘기! (${idx}/${tot})`;
+        }
+      }
+    },
+
+    /**
+     * Updates the Top Banner & Button Highlights for the 2-Button '천국의 계단' (Stairway to Heaven) Mini-Game!
+     */
+    showHeavenStairsHUD: function (stepIndex, totalSteps, facingDir, nextRequiredDir) {
+      document.body.classList.add('obby-mode-active');
+      const idx = Math.max(0, Math.min(totalSteps || 8, stepIndex || 0));
+      const tot = totalSteps || 8;
+      const needTurn = (facingDir !== nextRequiredDir);
+
+      const catBadge = byId('question-category-badge');
+      const promptEl = byId('question-prompt');
+      const leftBtn = byId('btn-turn-jump-action');
+      const rightBtn = byId('btn-jump-action');
+      const leftLbl = byId('left-btn-action-label');
+      const rightLbl = byId('right-btn-action-label');
+
+      if (leftLbl) leftLbl.textContent = '🔄방향전환';
+      if (rightLbl) rightLbl.textContent = '⬆️오르기';
+
+      if (leftBtn) leftBtn.classList.toggle('stair-recommended-btn', needTurn);
+      if (rightBtn) rightBtn.classList.toggle('stair-recommended-btn', !needTurn);
+
       if (catBadge) {
-        catBadge.textContent = waveType === 'fire_pit'
-          ? `🔥 오비 미니게임 (${idx} / ${tot}) · 불구덩이 건너기`
-          : `🧱 오비 미니게임 (${idx} / ${tot}) · 장애물 넘기`;
+        catBadge.textContent = `☁️ 천국의 계단 (${idx} / ${tot}계단)`;
       }
       if (promptEl) {
-        promptEl.textContent = waveType === 'fire_pit'
-          ? `🔥 불구덩이 건너기! (${idx}/${tot})`
-          : `🧱 장애물 넘기! (${idx}/${tot})`;
+        if (idx >= tot) {
+          promptEl.textContent = `👑 천국의 문 골인 성공!! (${tot}/${tot})`;
+        } else if (needTurn) {
+          promptEl.textContent = `☁️ 천국의 계단 (${idx}/${tot}) ➔ 좌측 [🔄 방향전환]!`;
+        } else {
+          promptEl.textContent = `☁️ 천국의 계단 (${idx}/${tot}) ➔ 우측 [⬆️ 오르기]!`;
+        }
       }
     },
 
     hideObbyHUD: function () {
       document.body.classList.remove('obby-mode-active');
+      const leftBtn = byId('btn-turn-jump-action');
+      const rightBtn = byId('btn-jump-action');
+      const leftLbl = byId('left-btn-action-label');
+      const rightLbl = byId('right-btn-action-label');
+      if (leftBtn) leftBtn.classList.remove('stair-recommended-btn');
+      if (rightBtn) rightBtn.classList.remove('stair-recommended-btn');
+      if (leftLbl) leftLbl.textContent = '방향/2단';
+      if (rightLbl) rightLbl.textContent = '점프/오르기';
     },
 
     /**
