@@ -544,7 +544,7 @@
         }
       }
 
-      if (question && question.isSpeech) {
+      if (false && question && question.isSpeech) {
         startSpeechListening(question);
       } else {
         stopSpeechListening();

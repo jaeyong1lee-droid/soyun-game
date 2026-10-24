@@ -792,7 +792,7 @@
     ensureStageReadingTracker(stage);
 
     // Stage 3+: Include Microphone English Pronunciation Questions (~18% of English questions)
-    if (stage >= 3 && Math.random() < 0.18) {
+    if (false && stage >= 3 && Math.random() < 0.18) {
       return generatePronunciationQuestion(stage);
     }
 
@@ -945,7 +945,7 @@
       String(queuedItem.id || '').startsWith('speech_');
 
     if (isSpeechItem) {
-      const lowerAns = answerStr.toLowerCase().trim();
+      return generateEnglishQuestion(stageNum || 1); const lowerAns = answerStr.toLowerCase().trim();
       const matchedEntry = PRONUNCIATION_WORDS.find(function (w) {
         return w.en.toLowerCase() === lowerAns;
       }) || { en: lowerAns, kr: '', pron: lowerAns, emoji: '🎤', aliases: [] };

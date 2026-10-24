@@ -210,11 +210,11 @@
       : 1.2;
 
     const wrongAnswerQueue = Array.isArray(raw.wrongAnswerQueue)
-      ? raw.wrongAnswerQueue.filter(Boolean)
+      ? raw.wrongAnswerQueue.filter(function (it) { return it && !it.isSpeech && it.subType !== 'pronunciation' && !String(it.id || '').startsWith('speech_') && !String(it.prompt || '').includes('🎤'); })
       : [];
 
     const reviewHistory = Array.isArray(raw.reviewHistory)
-      ? raw.reviewHistory.filter(Boolean)
+      ? raw.reviewHistory.filter(function (it) { return it && !it.isSpeech && it.subType !== 'pronunciation' && !String(it.id || '').startsWith('speech_') && !String(it.prompt || '').includes('🎤'); })
       : [];
 
     return {

@@ -817,7 +817,7 @@
         this.updateActiveLane(currentLane);
       }
 
-      this.updateGateProgress(0); const _sp = byId('speech-hud-panel'); if (_sp) { const _isS = Boolean(question.isSpeech); _sp.classList.toggle('hidden', !_isS); if (_isS) this.updateSpeechStatus('🎙️ 마이크 켜짐', `큰 소리로 "${(question.targetWord || question.answerText || '').toUpperCase()}" [${question.targetPron || ''}] 말하기!`, true, false); }
+      this.updateGateProgress(0); const _sp = byId('speech-hud-panel'); if (_sp) { _sp.classList.add('hidden'); }
     },
 
     /**
