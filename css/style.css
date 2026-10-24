@@ -3962,7 +3962,7 @@ body.start-screen-active #hud-reward-gauges-box {
   top: auto !important;
   right: auto !important;
   left: 14px !important;
-  bottom: calc(108px + env(safe-area-inset-bottom, 0px)) !important;
+  bottom: calc(114px + env(safe-area-inset-bottom, 0px)) !important;
   z-index: 65 !important;
   display: flex !important;
   align-items: center !important;
@@ -3977,7 +3977,7 @@ body.start-screen-active #hud-reward-gauges-box {
   top: auto !important;
   left: auto !important;
   right: 14px !important;
-  bottom: calc(40px + env(safe-area-inset-bottom, 0px)) !important;
+  bottom: calc(46px + env(safe-area-inset-bottom, 0px)) !important;
   transform: none !important;
   z-index: 65 !important;
   display: flex !important;
@@ -3990,6 +3990,7 @@ body.start-screen-active #hud-reward-gauges-box {
 }
 
 #utility-bar #btn-pause,
+#left-touch-pad #btn-turn-jump-action,
 #mobile-touch-pad #btn-jump-action,
 .arcade-circle-btn {
   width: 48px !important;
@@ -5757,7 +5758,7 @@ body.start-screen-active #left-touch-pad {
   top: auto !important;
   right: auto !important;
   left: 14px !important;
-  bottom: calc(40px + env(safe-area-inset-bottom, 0px)) !important;
+  bottom: calc(46px + env(safe-area-inset-bottom, 0px)) !important;
   transform: none !important;
   z-index: 65 !important;
   display: flex !important;
