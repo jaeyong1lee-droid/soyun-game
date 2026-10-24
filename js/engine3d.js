@@ -572,6 +572,7 @@
         if (typeof callbacks.onGatePass === 'function') this.onGatePass = callbacks.onGatePass;
         if (typeof callbacks.onGateProgress === 'function') this.onGateProgress = callbacks.onGateProgress;
         if (typeof callbacks.onObbyWavePass === 'function') this.onObbyWavePass = callbacks.onObbyWavePass;
+        if (typeof callbacks.onHeavenStairStep === 'function') this.onHeavenStairStep = callbacks.onHeavenStairStep;
       }
 
       if (this.isInitialized) {
@@ -3741,16 +3742,51 @@
     },
 
     /**
-     * Launches Soyun's Roblox Super Kart into a 3D Jump! (Used to clear Lava Hurdles & Narrow Fire Pits in Obby Rush!)
+     * Launches Soyun's Roblox Super Kart into a 3D Jump!
+     * - In Heaven Stairs mode ('heaven_stairs'): climbs 1 step forward in Soyun's current facing direction!
+     * - In Laser/Log Jump or Obby Rush: performs a jump (and upgrades to a 2x Double Jump if pressed again in mid-air!).
      */
     jump: function (powerScale) {
       if (this.isPaused) return false;
-      if (this.carJumpY > 0.35 && this.carJumpVel > -2) {
-        return false; // Already in mid-air
+      if (this.isHeavenStairsActive) {
+        return this.stepHeavenStairs(false);
       }
-      const pScale = typeof powerScale === 'number' ? powerScale : 1.0;
+
+      const pScale = typeof powerScale === 'number' ? powerScale : 1.1;
+
+      // Mark any approaching full-road Laser / Rolling Log obstacle wave as jumped!
+      if (Array.isArray(this.activeObbyWaves)) {
+        for (let i = 0; i < this.activeObbyWaves.length; i++) {
+          const w = this.activeObbyWaves[i];
+          if (w && !w.passed && w.group && w.group.position.z >= -54) {
+            w.playerJumped = true;
+            w.maxJumpScale = Math.max(w.maxJumpScale || 0, pScale);
+          }
+        }
+      }
+
+      // If already in mid-air, upgrade to a 2-Stage Double Jump!
+      if (this.carJumpY > 0.35 && this.carJumpVel > -6) {
+        if (!this.isDoubleJumpActive) {
+          this.isDoubleJumpActive = true;
+          this.carJumpVel = 18.2;
+          this.carSpinTimer = 0.58;
+          this.lastJumpScale = 1.55;
+          this.avatarCheerTimer = 0.65;
+          this.petSpinTimer = 0.65;
+          this.cameraZoomPunch = 8.5;
+          if (this.carGroup) {
+            this._spawnParticleBurst(this.carGroup.position.x, this.carGroup.position.y + 0.6, getCfg().GATE_PASS_Z, 0xffe600, 28, 1.15);
+          }
+          return true;
+        }
+        return false;
+      }
+
       this.isJumping = true;
-      this.carJumpVel = 15.6 * pScale;
+      this.isDoubleJumpActive = false;
+      this.lastJumpScale = pScale;
+      this.carJumpVel = 16.2 * pScale;
       this.avatarCheerTimer = 0.58;
       this.petSpinTimer = 0.58;
       this.cameraZoomPunch = 6.0;
@@ -3758,6 +3794,341 @@
         this._spawnParticleBurst(this.carGroup.position.x, 0.4, getCfg().GATE_PASS_Z, 0x00f3ff, 24, 0.95);
       }
       return true;
+    },
+
+    /**
+     * Left Action Button (#btn-turn-jump-action 🔄):
+     * - In Heaven Stairs mode ('heaven_stairs'): flips Soyun's facing direction (-1 <-> +1) AND climbs 1 step!
+     * - In Laser/Log Jump or Normal mode: launches a high 360° Spin Super Jump (1.6x height) to vault over giant rolling logs!
+     */
+    superJump: function () {
+      if (this.isPaused) return false;
+      if (this.isHeavenStairsActive) {
+        return this.stepHeavenStairs(true);
+      }
+
+      if (Array.isArray(this.activeObbyWaves)) {
+        for (let i = 0; i < this.activeObbyWaves.length; i++) {
+          const w = this.activeObbyWaves[i];
+          if (w && !w.passed && w.group && w.group.position.z >= -54) {
+            w.playerJumped = true;
+            w.maxJumpScale = 1.65;
+          }
+        }
+      }
+
+      this.isJumping = true;
+      this.isDoubleJumpActive = true;
+      this.lastJumpScale = 1.65;
+      this.carJumpVel = 20.6;
+      this.carSpinTimer = 0.68;
+      this.avatarCheerTimer = 0.72;
+      this.petSpinTimer = 0.72;
+      this.cameraZoomPunch = 9.5;
+      if (this.carGroup) {
+        this._spawnParticleBurst(this.carGroup.position.x, Math.max(0.5, this.carGroup.position.y), getCfg().GATE_PASS_Z, 0xff2a85, 32, 1.25);
+        this._spawnParticleBurst(this.carGroup.position.x, Math.max(0.5, this.carGroup.position.y + 0.4), getCfg().GATE_PASS_Z, 0xffe600, 24, 1.1);
+      }
+      return true;
+    },
+
+    /**
+     * Starts the 3D Roblox Stairway to Heaven Mini-Game ('heaven_stairs' — 2-button climbing game!)
+     * Builds an ascending zig-zagging staircase of glowing golden/rainbow clouds in the sky.
+     * @param {number} [totalSteps=8]
+     */
+    startHeavenStairs: function (totalSteps) {
+      if (!this.isInitialized) this.init();
+      const THREE = global.THREE;
+      if (!THREE || !this.scene) return null;
+
+      this.clearHeavenStairs();
+      this.clearObbyObstacles();
+
+      const numSteps = Math.max(5, Number(totalSteps) || 8);
+      const passZ = getCfg().GATE_PASS_Z;
+
+      this.isHeavenStairsActive = true;
+      this.heavenStairsTotal = numSteps;
+      this.heavenStairsStepIndex = 0;
+      this.stairClimbedY = 0;
+
+      // Build balanced zig-zag step directions so BOTH [⬆️ 오르기] and [🔄 방향전환] buttons are used!
+      const steps = [
+        { index: 0, x: 0, y: 0, z: 0, dir: 1 }
+      ];
+
+      // Pattern of relative moves ('same' = ⬆️ button, 'turn' = 🔄 button)
+      const patterns = [
+        ['same', 'turn', 'same', 'turn', 'same', 'same', 'turn', 'same'],
+        ['same', 'same', 'turn', 'same', 'turn', 'same', 'turn', 'same'],
+        ['turn', 'same', 'turn', 'same', 'same', 'turn', 'same', 'turn']
+      ];
+      const chosenPattern = patterns[Math.floor(Math.random() * patterns.length)];
+
+      let curDir = Math.random() < 0.5 ? 1 : -1;
+      const initialFacing = chosenPattern[0] === 'same' ? curDir : -curDir;
+      this.heavenStairsFacingDir = initialFacing;
+
+      let curX = 0;
+      for (let s = 1; s <= numSteps; s++) {
+        if (s > 1) {
+          const relMove = chosenPattern[(s - 1) % chosenPattern.length];
+          if (relMove === 'turn') {
+            curDir = -curDir;
+          }
+        }
+        // Keep stairs well inside screen bounds [-4.2, +4.2]
+        if (curX + curDir * 2.1 > 4.3 || curX + curDir * 2.1 < -4.3) {
+          curDir = -curDir;
+        }
+        curX = Math.round((curX + curDir * 2.1) * 100) / 100;
+        const stepY = Math.round(s * 1.18 * 100) / 100;
+        const stepZ = -s * 2.5;
+        steps.push({
+          index: s,
+          x: curX,
+          y: stepY,
+          z: stepZ,
+          dir: curDir,
+          coinMesh: null,
+          stepMesh: null
+        });
+      }
+      this.heavenStairsSteps = steps;
+
+      const stairsGroup = new THREE.Group();
+      stairsGroup.position.set(0, 0, passZ);
+
+      const disposables = {
+        geometries: [],
+        materials: []
+      };
+
+      const stepGeo = new THREE.BoxGeometry(2.35, 0.42, 1.92);
+      const cloudGeo = new THREE.BoxGeometry(2.75, 0.26, 2.24);
+      const rimGeo = new THREE.BoxGeometry(2.44, 0.14, 2.0);
+      disposables.geometries.push(stepGeo, cloudGeo, rimGeo);
+
+      const stepColors = [0x00f5ff, 0xffe600, 0xff2a85, 0x00ff88, 0xa855f7, 0x38bdf8, 0xfbbf24, 0xff6d00];
+      const cloudMat = new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0.92
+      });
+      const goldRimMat = new THREE.MeshBasicMaterial({ color: 0xffe600 });
+      disposables.materials.push(cloudMat, goldRimMat);
+
+      for (let s = 0; s <= numSteps; s++) {
+        const st = steps[s];
+        const colHex = s === 0 ? 0x00ff88 : (s === numSteps ? 0xffd700 : stepColors[(s - 1) % stepColors.length]);
+        const sMat = new THREE.MeshStandardMaterial({
+          color: colHex,
+          emissive: colHex,
+          emissiveIntensity: 0.55,
+          roughness: 0.2
+        });
+        disposables.materials.push(sMat);
+
+        const sGroup = new THREE.Group();
+        sGroup.position.set(st.x, st.y, st.z);
+
+        const cloudMesh = new THREE.Mesh(cloudGeo, cloudMat);
+        cloudMesh.position.set(0, -0.22, 0);
+        const blockMesh = new THREE.Mesh(stepGeo, sMat);
+        const rimMesh = new THREE.Mesh(rimGeo, goldRimMat);
+        rimMesh.position.set(0, 0.18, 0);
+        sGroup.add(cloudMesh, blockMesh, rimMesh);
+
+        if (s >= 1 && this.sharedRobuxGeo && this.sharedRobuxMaterial) {
+          const coin = new THREE.Mesh(this.sharedRobuxGeo, this.sharedRobuxMaterial);
+          const cScale = s === numSteps ? 2.1 : 1.45;
+          coin.scale.set(cScale, cScale, cScale);
+          coin.position.set(0, 1.05, 0);
+          sGroup.add(coin);
+          st.coinMesh = coin;
+        }
+
+        // Grand Golden Heaven Archway at the top step!
+        if (s === numSteps) {
+          const pillarGeo = new THREE.CylinderGeometry(0.22, 0.26, 3.2, 10);
+          const archBeamGeo = new THREE.BoxGeometry(3.2, 0.48, 0.48);
+          const archMat = new THREE.MeshBasicMaterial({ color: 0xffd700 });
+          disposables.geometries.push(pillarGeo, archBeamGeo);
+          disposables.materials.push(archMat);
+
+          const leftP = new THREE.Mesh(pillarGeo, archMat);
+          leftP.position.set(-1.15, 1.6, 0);
+          const rightP = new THREE.Mesh(pillarGeo, archMat);
+          rightP.position.set(1.15, 1.6, 0);
+          const topB = new THREE.Mesh(archBeamGeo, archMat);
+          topB.position.set(0, 3.25, 0);
+          sGroup.add(leftP, rightP, topB);
+        }
+
+        stairsGroup.add(sGroup);
+        st.stepMesh = sGroup;
+      }
+
+      // Glowing Target Ring highlighting the NEXT step to climb
+      const targetRingGeo = new THREE.TorusGeometry(1.32, 0.14, 10, 28);
+      targetRingGeo.rotateX(Math.PI / 2);
+      const targetRingMat = new THREE.MeshBasicMaterial({ color: 0xffe600 });
+      disposables.geometries.push(targetRingGeo);
+      disposables.materials.push(targetRingMat);
+
+      this.heavenNextStepRing = new THREE.Mesh(targetRingGeo, targetRingMat);
+      if (steps[1]) {
+        this.heavenNextStepRing.position.set(steps[1].x, steps[1].y + 0.35, steps[1].z);
+      }
+      stairsGroup.add(this.heavenNextStepRing);
+
+      // 3D Floating Direction Arrow above Soyun's Kart showing current facing direction (⬅️ Left vs ➡️ Right)
+      const arrowGroup = new THREE.Group();
+      const shaftGeo = new THREE.BoxGeometry(1.15, 0.32, 0.32);
+      const headGeo = new THREE.ConeGeometry(0.52, 0.78, 8);
+      headGeo.rotateZ(-Math.PI / 2);
+      const arrowMat = new THREE.MeshBasicMaterial({ color: 0x00ff88 });
+      disposables.geometries.push(shaftGeo, headGeo);
+      disposables.materials.push(arrowMat);
+
+      const shaftMesh = new THREE.Mesh(shaftGeo, arrowMat);
+      shaftMesh.position.set(-0.2, 0, 0);
+      const headMesh = new THREE.Mesh(headGeo, arrowMat);
+      headMesh.position.set(0.55, 0, 0);
+      arrowGroup.add(shaftMesh, headMesh);
+      arrowGroup.position.set(0, 3.5, passZ);
+      arrowGroup.scale.set(this.heavenStairsFacingDir, 1, 1);
+      this.scene.add(arrowGroup);
+
+      this.heavenFacingArrowGroup = arrowGroup;
+      this.heavenFacingArrowMat = arrowMat;
+      this.heavenStairsGroup = stairsGroup;
+      this.heavenStairsDisposables = disposables;
+      this.scene.add(stairsGroup);
+
+      return {
+        stepIndex: 0,
+        totalSteps: numSteps,
+        facingDir: this.heavenStairsFacingDir,
+        nextRequiredDir: steps[1] ? steps[1].dir : this.heavenStairsFacingDir
+      };
+    },
+
+    /**
+     * Executes 1 step in the 3D Heaven Stairs Mini-Game:
+     * @param {boolean} isTurnAndClimb - false = [⬆️ 오르기] (keep direction & climb), true = [🔄 방향전환] (flip direction & climb)
+     */
+    stepHeavenStairs: function (isTurnAndClimb) {
+      if (!this.isHeavenStairsActive || !Array.isArray(this.heavenStairsSteps)) return false;
+      const nextIdx = this.heavenStairsStepIndex + 1;
+      if (nextIdx > this.heavenStairsTotal) return false;
+
+      const nextStep = this.heavenStairsSteps[nextIdx];
+      if (!nextStep) return false;
+
+      const prevFacing = this.heavenStairsFacingDir || 1;
+      const attemptedDir = isTurnAndClimb ? -prevFacing : prevFacing;
+      const passZ = getCfg().GATE_PASS_Z;
+
+      if (attemptedDir === nextStep.dir) {
+        // SUCCESSFUL STEP CLIMB!
+        this.heavenStairsFacingDir = attemptedDir;
+        this.heavenStairsStepIndex = nextIdx;
+
+        if (this.heavenFacingArrowGroup) {
+          this.heavenFacingArrowGroup.scale.set(this.heavenStairsFacingDir, 1, 1);
+        }
+
+        // Snappy hop arc onto the step
+        this.isJumping = true;
+        this.carJumpY = 0.12;
+        this.carJumpVel = 10.2;
+        this.avatarCheerTimer = 0.52;
+        this.petSpinTimer = 0.52;
+        this.cameraZoomPunch = 5.5;
+
+        if (nextStep.coinMesh) {
+          nextStep.coinMesh.visible = false;
+        }
+
+        this.spawnBrickExplosion(nextStep.x, nextStep.y + 0.8, passZ, 18, false);
+        this._spawnParticleBurst(nextStep.x, nextStep.y + 1.0, passZ, 0xffe600, 26, 1.15);
+        this._spawnParticleBurst(nextStep.x, nextStep.y + 0.6, passZ, 0x00ff88, 20, 1.0);
+
+        const upcomingStep = this.heavenStairsSteps[nextIdx + 1] || null;
+        if (this.heavenNextStepRing) {
+          if (upcomingStep) {
+            this.heavenNextStepRing.visible = true;
+            this.heavenNextStepRing.position.set(upcomingStep.x, upcomingStep.y + 0.35, upcomingStep.z);
+          } else {
+            this.heavenNextStepRing.visible = false;
+          }
+        }
+
+        const isFinished = nextIdx >= this.heavenStairsTotal;
+        if (isFinished) {
+          this.triggerStageClearEffect();
+        }
+
+        if (typeof this.onHeavenStairStep === 'function') {
+          this.onHeavenStairStep({
+            cleared: true,
+            isFinished: isFinished,
+            stepIndex: nextIdx,
+            totalSteps: this.heavenStairsTotal,
+            facingDir: this.heavenStairsFacingDir,
+            nextRequiredDir: upcomingStep ? upcomingStep.dir : this.heavenStairsFacingDir
+          });
+        }
+        return true;
+      } else {
+        // WRONG DIRECTION -> Stepped into empty air!
+        const curStep = this.heavenStairsSteps[this.heavenStairsStepIndex] || { x: 0, y: 0 };
+        this.triggerDamageEffect(curStep.x, 'stair_miss');
+
+        // Auto-align Soyun's facing direction toward the next step after a stumble so she can easily climb with [⬆️]!
+        this.heavenStairsFacingDir = nextStep.dir;
+        if (this.heavenFacingArrowGroup) {
+          this.heavenFacingArrowGroup.scale.set(this.heavenStairsFacingDir, 1, 1);
+        }
+
+        if (typeof this.onHeavenStairStep === 'function') {
+          this.onHeavenStairStep({
+            cleared: false,
+            isFinished: false,
+            stepIndex: this.heavenStairsStepIndex,
+            totalSteps: this.heavenStairsTotal,
+            facingDir: this.heavenStairsFacingDir,
+            nextRequiredDir: nextStep.dir
+          });
+        }
+        return false;
+      }
+    },
+
+    /**
+     * Removes the 3D Heaven Stairs and smoothly returns Soyun's kart to the highway
+     */
+    clearHeavenStairs: function () {
+      this.isHeavenStairsActive = false;
+      this.heavenStairsSteps = [];
+      this.heavenStairsStepIndex = 0;
+      this.heavenNextStepRing = null;
+      if (this.heavenStairsGroup && this.scene) {
+        this.scene.remove(this.heavenStairsGroup);
+      }
+      this.heavenStairsGroup = null;
+      if (this.heavenFacingArrowGroup && this.scene) {
+        this.scene.remove(this.heavenFacingArrowGroup);
+      }
+      this.heavenFacingArrowGroup = null;
+      if (this.heavenStairsDisposables) {
+        this.heavenStairsDisposables.geometries.forEach((g) => g && g.dispose && g.dispose());
+        this.heavenStairsDisposables.materials.forEach((m) => m && m.dispose && m.dispose());
+        this.heavenStairsDisposables = null;
+      }
+      return this;
     },
 
     /**
@@ -3804,7 +4175,140 @@
 
       const coinMeshes = [];
       const flameMeshes = [];
+      const spinnerMeshes = [];
+      const rollerMeshes = [];
+      const wType = (waveConfig && waveConfig.waveType) ? waveConfig.waveType : 'obstacle_wall';
 
+      if (wType === 'low_laser') {
+        // ⚡ FULL-ROAD SPINNING NEON LASER SWEEPER BAR ('low_laser' — Must jump over with [⬆️ 점프]!)
+        const pylonGeo = new THREE.CylinderGeometry(0.45, 0.58, 2.6, 12);
+        const pylonMat = new THREE.MeshStandardMaterial({
+          color: 0x0f172a,
+          emissive: 0x00f5ff,
+          emissiveIntensity: 0.75,
+          roughness: 0.2
+        });
+        const capGeo = new THREE.SphereGeometry(0.56, 12, 12);
+        const capMat = new THREE.MeshBasicMaterial({ color: 0xff007f });
+        disposables.geometries.push(pylonGeo, capGeo);
+        disposables.materials.push(pylonMat, capMat);
+
+        [-6.8, 6.8].forEach((px) => {
+          const pylon = new THREE.Mesh(pylonGeo, pylonMat);
+          pylon.position.set(px, 1.3, 0);
+          const cap = new THREE.Mesh(capGeo, capMat);
+          cap.position.set(px, 2.7, 0);
+          waveGroup.add(pylon, cap);
+        });
+
+        // Central Spinning Laser Rotor + Full-Width Twin Plasma Sweeper Beams
+        const rotorGroup = new THREE.Group();
+        rotorGroup.position.set(0, 0.74, 0);
+        const hubGeo = new THREE.CylinderGeometry(0.75, 0.75, 0.9, 14);
+        const hubMat = new THREE.MeshBasicMaterial({ color: 0xffe600 });
+        const beamGeo1 = new THREE.BoxGeometry(13.6, 0.34, 0.34);
+        const beamMat1 = new THREE.MeshBasicMaterial({ color: 0x00f5ff });
+        const beamGeo2 = new THREE.BoxGeometry(0.34, 0.34, 5.2);
+        const beamMat2 = new THREE.MeshBasicMaterial({ color: 0xff007f });
+        disposables.geometries.push(hubGeo, beamGeo1, beamGeo2);
+        disposables.materials.push(hubMat, beamMat1, beamMat2);
+
+        const hubMesh = new THREE.Mesh(hubGeo, hubMat);
+        const beamMesh1 = new THREE.Mesh(beamGeo1, beamMat1);
+        const beamMesh2 = new THREE.Mesh(beamGeo2, beamMat2);
+        rotorGroup.add(hubMesh, beamMesh1, beamMesh2);
+        waveGroup.add(rotorGroup);
+        spinnerMeshes.push(rotorGroup);
+
+        // Glowing Jump Zone Mat in front of the Laser Bar (+Z)
+        const zoneGeo = new THREE.BoxGeometry(13.2, 0.12, 3.2);
+        const zoneMat = new THREE.MeshBasicMaterial({
+          color: 0x00ff9d,
+          transparent: true,
+          opacity: 0.55
+        });
+        disposables.geometries.push(zoneGeo);
+        disposables.materials.push(zoneMat);
+        const zoneMesh = new THREE.Mesh(zoneGeo, zoneMat);
+        zoneMesh.position.set(0, 0.08, 2.4);
+        waveGroup.add(zoneMesh);
+
+        if (this.sharedRobuxGeo && this.sharedRobuxMaterial) {
+          [-4.5, 0, 4.5].forEach((cx) => {
+            const airCoin = new THREE.Mesh(this.sharedRobuxGeo, this.sharedRobuxMaterial);
+            airCoin.scale.set(1.65, 1.65, 1.65);
+            airCoin.position.set(cx, 2.7, 0);
+            waveGroup.add(airCoin);
+            coinMeshes.push(airCoin);
+          });
+        }
+      } else if (wType === 'high_log') {
+        // 🪵🔥 FULL-ROAD GIANT 2-STORY ROLLING SPIKE LOG ('high_log' — Jump high with [🔄 2단 슈퍼점프]!)
+        const logGroup = new THREE.Group();
+        logGroup.position.set(0, 1.18, 0);
+
+        const logGeo = new THREE.CylinderGeometry(1.12, 1.12, 13.8, 16);
+        logGeo.rotateZ(Math.PI / 2);
+        const logMat = new THREE.MeshStandardMaterial({
+          color: 0x78350f,
+          emissive: 0x451a03,
+          emissiveIntensity: 0.45,
+          roughness: 0.55
+        });
+        const bandGeo = new THREE.CylinderGeometry(1.18, 1.18, 0.55, 16);
+        bandGeo.rotateZ(Math.PI / 2);
+        const bandMat = new THREE.MeshBasicMaterial({ color: 0xffbe0b });
+        const spikeGeo = new THREE.ConeGeometry(0.32, 0.78, 8);
+        const spikeMat = new THREE.MeshBasicMaterial({ color: 0xff1744 });
+        disposables.geometries.push(logGeo, bandGeo, spikeGeo);
+        disposables.materials.push(logMat, bandMat, spikeMat);
+
+        const logMesh = new THREE.Mesh(logGeo, logMat);
+        logGroup.add(logMesh);
+
+        [-5.2, -1.8, 1.8, 5.2].forEach((bx) => {
+          const band = new THREE.Mesh(bandGeo, bandMat);
+          band.position.set(bx, 0, 0);
+          logGroup.add(band);
+        });
+
+        // Add 3D hazard spikes around the rolling log circumference
+        [-4.2, -2.1, 0, 2.1, 4.2].forEach((sx, idx) => {
+          for (let a = 0; a < 4; a++) {
+            const angle = (a * Math.PI) / 2 + (idx % 2) * 0.4;
+            const sp = new THREE.Mesh(spikeGeo, spikeMat);
+            sp.position.set(sx, Math.cos(angle) * 1.32, Math.sin(angle) * 1.32);
+            sp.rotation.x = angle;
+            logGroup.add(sp);
+          }
+        });
+
+        waveGroup.add(logGroup);
+        rollerMeshes.push(logGroup);
+
+        // Glowing Super-Jump Zone Mat in front of the Giant Rolling Log (+Z)
+        const superZoneGeo = new THREE.BoxGeometry(13.2, 0.14, 3.8);
+        const superZoneMat = new THREE.MeshBasicMaterial({
+          color: 0xff2a85,
+          transparent: true,
+          opacity: 0.58
+        });
+        disposables.geometries.push(superZoneGeo);
+        disposables.materials.push(superZoneMat);
+        const superZoneMesh = new THREE.Mesh(superZoneGeo, superZoneMat);
+        superZoneMesh.position.set(0, 0.09, 2.8);
+        waveGroup.add(superZoneMesh);
+
+        if (this.sharedRobuxGeo && this.sharedRobuxMaterial) {
+          [-4.5, 0, 4.5].forEach((cx) => {
+            const highCoin = new THREE.Mesh(this.sharedRobuxGeo, this.sharedRobuxMaterial);
+            highCoin.scale.set(1.8, 1.8, 1.8);
+            highCoin.position.set(cx, 3.6, 0);
+            waveGroup.add(highCoin);
+            coinMeshes.push(highCoin);
+          });
+        }
+      } else {
       for (let i = 0; i < 3; i++) {
         const lx = lanes[i] !== undefined ? lanes[i] : (i - 1) * 4.5;
         const type = laneTypes[i];
@@ -4017,17 +4521,23 @@
         }
       }
 
+      }
+
       this.scene.add(waveGroup);
 
       const waveObj = {
         group: waveGroup,
         lanes: laneTypes,
-        waveType: (waveConfig && waveConfig.waveType) ? waveConfig.waveType : 'obstacle_wall',
+        waveType: wType,
         waveIndex: waveConfig && waveConfig.waveIndex ? waveConfig.waveIndex : 1,
         totalWaves: waveConfig && waveConfig.totalWaves ? waveConfig.totalWaves : 3,
         passed: false,
+        playerJumped: false,
+        maxJumpScale: 0,
         coinMeshes: coinMeshes,
         flameMeshes: flameMeshes,
+        spinnerMeshes: spinnerMeshes,
+        rollerMeshes: rollerMeshes,
         disposables: disposables
       };
 
@@ -6014,15 +6524,44 @@
 
       // 2. Soyun's Roblox Super Kart, 3D Blocky Avatar & Floating Cube Pet Physics
       if (this.carGroup) {
-        const targetX = lanes[this.targetLane] !== undefined ? lanes[this.targetLane] : 0;
+        let targetX = lanes[this.targetLane] !== undefined ? lanes[this.targetLane] : 0;
+        let targetBaseY = 0;
+        if (this.isHeavenStairsActive && Array.isArray(this.heavenStairsSteps)) {
+          const curStepObj = this.heavenStairsSteps[this.heavenStairsStepIndex] || { x: 0, y: 0 };
+          targetX = curStepObj.x;
+          targetBaseY = curStepObj.y;
+          if (this.heavenStairsGroup) {
+            const targetGroupZ = cfg.GATE_PASS_Z + this.heavenStairsStepIndex * 2.5;
+            this.heavenStairsGroup.position.z += (targetGroupZ - this.heavenStairsGroup.position.z) * Math.min(1, dt * 11.5);
+          }
+          if (this.heavenNextStepRing) {
+            const pulse = 1 + Math.sin(this.elapsedTime * 10) * 0.12;
+            this.heavenNextStepRing.scale.set(pulse, pulse, pulse);
+          }
+        }
+        this.stairClimbedY = (this.stairClimbedY || 0) + (targetBaseY - (this.stairClimbedY || 0)) * Math.min(1, dt * 11.5);
+
         const dx = targetX - this.carGroup.position.x;
 
         // Spring-lerp horizontal position
         this.carGroup.position.x += dx * Math.min(1, dt * 13.5);
 
-        // Dynamic banking roll & steering yaw proportional to lateral velocity
+        // Dynamic banking roll & steering yaw proportional to lateral velocity (or facing direction on Heaven Stairs!)
         this.carGroup.rotation.z = -dx * 0.085;
-        this.carGroup.rotation.y = -dx * 0.055;
+        if (this.isHeavenStairsActive) {
+          const targetYaw = -(this.heavenStairsFacingDir || 1) * 0.38;
+          this.carGroup.rotation.y += (targetYaw - this.carGroup.rotation.y) * Math.min(1, dt * 14.0);
+        } else {
+          this.carGroup.rotation.y = -dx * 0.055;
+        }
+
+        // 360-degree Super Spin Animation during 2-Stage Super Jump!
+        if (this.carSpinTimer && this.carSpinTimer > 0) {
+          this.carSpinTimer = Math.max(0, this.carSpinTimer - dt);
+          const spinProgress = 1 - this.carSpinTimer / 0.68;
+          this.carGroup.rotation.y += Math.sin(spinProgress * Math.PI * 2) * 0.45;
+          this.carGroup.rotation.z += (1 - spinProgress) * 0.35;
+        }
 
         // High-speed suspension vibration + 3D Jump Physics (carJumpY)!
         if (this.isJumping || this.carJumpY > 0 || this.carJumpVel !== 0) {
@@ -6032,8 +6571,9 @@
             this.carJumpY = 0;
             this.carJumpVel = 0;
             this.isJumping = false;
+            this.isDoubleJumpActive = false;
             this.carGroup.rotation.x = 0;
-            this._spawnParticleBurst(this.carGroup.position.x, 0.3, cfg.GATE_PASS_Z, 0xffe600, 16, 0.7);
+            this._spawnParticleBurst(this.carGroup.position.x, this.stairClimbedY + 0.3, cfg.GATE_PASS_Z, 0xffe600, 16, 0.7);
           } else {
             // Pitch nose slightly on jump arc
             this.carGroup.rotation.x = Math.max(-0.28, Math.min(0.28, this.carJumpVel * 0.018));
@@ -6043,7 +6583,15 @@
         }
 
         const vibeFreq = 26 + this.currentSpeed * 0.1;
-        this.carGroup.position.y = this.carJumpY + Math.sin(this.elapsedTime * vibeFreq) * 0.025;
+        this.carGroup.position.y = this.stairClimbedY + this.carJumpY + Math.sin(this.elapsedTime * vibeFreq) * 0.025;
+
+        if (this.heavenFacingArrowGroup) {
+          this.heavenFacingArrowGroup.position.set(
+            this.carGroup.position.x,
+            this.carGroup.position.y + 3.25 + Math.sin(this.elapsedTime * 9) * 0.15,
+            cfg.GATE_PASS_Z
+          );
+        }
 
         // Hurt / Ouch Animation ("아픈 애니"): Car spins/tilts/bucks & Soyun shakes head/arms in pain when hitting a block or fire pit!
         if (this.carHurtTimer > 0) {
@@ -6173,8 +6721,9 @@
         const pf = this._getPortraitFactor();
         const followFactor = 0.36 + pf * 0.24;
         const targetCamX = this.carGroup.position.x * followFactor;
+        const climbYOffset = (this.stairClimbedY || 0) * 0.95;
         this.camera.position.x += (targetCamX - this.camera.position.x) * Math.min(1, dt * 8);
-        this.camera.position.y = 4.5 + pf * 1.1;
+        this.camera.position.y = 4.5 + pf * 1.1 + climbYOffset;
         this.camera.position.z = 16.5 + pf * 5.0;
 
         if (this.shakeTimer > 0) {
@@ -6216,8 +6765,14 @@
             normalLookY + (bossLookY - normalLookY) * spotWeight,
             -30 + (bossLookZ - (-30)) * spotWeight * 0.65
           );
+        } else if (this.isHeavenStairsActive) {
+          this.camera.lookAt(
+            this.carGroup.position.x * 0.38,
+            2.1 + (this.stairClimbedY || 0) * 0.96,
+            -16
+          );
         } else {
-          this.camera.lookAt(this.carGroup.position.x * (0.2 + pf * 0.12) + lookCurveX, 1.8 - pf * 0.35, -30);
+          this.camera.lookAt(this.carGroup.position.x * (0.2 + pf * 0.12) + lookCurveX, 1.8 - pf * 0.35 + (this.stairClimbedY || 0) * 0.8, -30);
         }
       }
 
@@ -6285,8 +6840,34 @@
           }
         }
 
-        // Auto spring-jump when the player steers into a passable low hurdle or narrow fire pit lane right before reaching it!
-        if (!wave.passed && wave.group.position.z >= passZ - 5.6 && wave.group.position.z < passZ - 0.8) {
+        // Spin laser rotors and giant rolling logs!
+        if (Array.isArray(wave.spinnerMeshes)) {
+          for (let s = 0; s < wave.spinnerMeshes.length; s++) {
+            wave.spinnerMeshes[s].rotation.y += dt * 7.8;
+          }
+        }
+        if (Array.isArray(wave.rollerMeshes)) {
+          for (let r = 0; r < wave.rollerMeshes.length; r++) {
+            wave.rollerMeshes[r].rotation.x += dt * 6.8;
+          }
+        }
+
+        // Track jump input during Laser Bar / Giant Rolling Log approach window
+        if (!wave.passed && (wave.waveType === 'low_laser' || wave.waveType === 'high_log')) {
+          if (wave.group.position.z >= -52 && (this.isJumping || this.carJumpY > 0.35)) {
+            wave.playerJumped = true;
+            wave.maxJumpScale = Math.max(wave.maxJumpScale || 0, this.lastJumpScale || 1.1);
+          }
+          // If the player pressed Jump slightly early and landed just before the laser/log, re-hop over it smoothly!
+          if (wave.playerJumped && wave.group.position.z >= passZ - 5.2 && wave.group.position.z < passZ - 0.8 && !this.isJumping && this.carJumpY < 0.5) {
+            if (wave.waveType === 'high_log') {
+              this.superJump();
+            } else {
+              this.jump(1.18);
+            }
+          }
+        } else if (!wave.passed && wave.group.position.z >= passZ - 5.6 && wave.group.position.z < passZ - 0.8) {
+          // Auto spring-jump when the player steers into a passable low hurdle or narrow fire pit lane right before reaching it!
           const approachLane = this.targetLane;
           const approachType = wave.lanes[approachLane];
           if ((approachType === 'hurdle' || approachType === 'narrow_fire') && !this.isJumping) {
@@ -6304,7 +6885,20 @@
           let actionType = 'dodge';
           let outcome = 'coin';
 
-          if (laneType === 'block') {
+          if (wave.waveType === 'low_laser' || wave.waveType === 'high_log') {
+            const didJump = Boolean(wave.playerJumped || this.isJumping || this.carJumpY > 0.35);
+            if (didJump) {
+              cleared = true;
+              actionType = wave.waveType === 'high_log' ? 'super_jumped_log' : 'jumped_laser';
+              outcome = 'jump_clear';
+              this.triggerCorrectEffect(laneX);
+            } else {
+              cleared = false;
+              actionType = wave.waveType === 'high_log' ? 'hit_log' : 'hit_laser';
+              outcome = actionType;
+              this.triggerDamageEffect(laneX, actionType);
+            }
+          } else if (laneType === 'block') {
             cleared = false;
             actionType = 'hit_block';
             outcome = 'hit_block';
