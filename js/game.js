@@ -36,11 +36,41 @@
     maxPauseChances: 2,
 
     isObbyMode: false,
-    obbyWavesTotal: 7,
+    obbyGameType: 'heaven_stairs',
+    obbyWavesTotal: 8,
     obbyWavesCleared: 0,
+    stageMinigameMilestones: [4, 8, 12],
+    stageMinigameQueue: ['heaven_stairs', 'laser_jump', 'obby_rush'],
+    stageMinigamesTriggered: 0,
+    lastMinigameType: null,
     orientationMode: 'auto',
     stageWrongQuestions: []
   };
+
+  /**
+   * Computes strictly 3 evenly spaced question milestones per stage to trigger mini-games!
+   * (e.g. for 15 questions -> [4, 8, 12])
+   */
+  function buildStageMinigameMilestones(questionsToBoss) {
+    const q = Math.max(6, Number(questionsToBoss) || 15);
+    const m1 = Math.max(2, Math.round(q * 0.26));
+    const m2 = Math.max(m1 + 2, Math.round(q * 0.53));
+    const m3 = Math.min(q - 1, Math.max(m2 + 2, Math.round(q * 0.80)));
+    return [m1, m2, m3];
+  }
+
+  /**
+   * Builds a 3-game queue of 3 DISTINCT mini-games for the stage (never repeats the same game!):
+   * 1) 'heaven_stairs': 🌈☁️ 로블록스 천국의 계단 (2버튼 방향전환 & 오르기)
+   * 2) 'laser_jump': ⚡🪵 로블록스 회전 레이저봉 & 거대 통나무 2단점프 서바이벌
+   * 3) 'obby_rush': 🧱🔥 로블록스 3레인 용암·장애물 돌파 오비
+   */
+  function buildStageMinigameQueue(stageNum) {
+    if ((Number(stageNum) || 1) % 2 === 0) {
+      return ['heaven_stairs', 'obby_rush', 'laser_jump'];
+    }
+    return ['heaven_stairs', 'laser_jump', 'obby_rush'];
+  }
 
   let _speechRec = null;
   let _speechRestartTimer = null;
@@ -318,6 +348,9 @@
           },
           onObbyWavePass: function (res) {
             GameController.handleObbyWavePass(res);
+          },
+          onHeavenStairStep: function (res) {
+            GameController.handleHeavenStairStep(res);
           }
         });
         if (typeof window.Engine3D.setViewOrientationMode === 'function') {
@@ -409,6 +442,9 @@
       state.isGameOver = false;
       state.isObbyMode = false;
       state.obbyWavesCleared = 0;
+      state.stageMinigameMilestones = buildStageMinigameMilestones(state.stageConfig.questionsToBoss || 15);
+      state.stageMinigameQueue = buildStageMinigameQueue(state.stage);
+      state.stageMinigamesTriggered = 0;
       state.stageWrongQuestions = [];
 
       if (this._bossSpotlightTimer) {
@@ -462,6 +498,9 @@
         window.Engine3D.clearActiveGates();
         if (typeof window.Engine3D.clearObbyObstacles === 'function') {
           window.Engine3D.clearObbyObstacles();
+        }
+        if (typeof window.Engine3D.clearHeavenStairs === 'function') {
+          window.Engine3D.clearHeavenStairs();
         }
         window.Engine3D.hideBoss();
         window.Engine3D.setStageTheme(state.stageConfig);
@@ -888,12 +927,24 @@
             ? state.stageConfig.questionsToBoss
             : 15;
 
+          const milestones = Array.isArray(state.stageMinigameMilestones)
+            ? state.stageMinigameMilestones
+            : buildStageMinigameMilestones(questionsToBoss);
+
           if (state.stageProgress >= questionsToBoss) {
             this.enterBossPhase();
-          } else if (state.stageProgress > 0 && state.stageProgress % 3 === 0) {
-            // Every 3 normal solved questions, launch the 2x Speed Roblox Obby Action Mini-Game!
+          } else if (
+            state.stageProgress > 0 &&
+            (state.stageMinigamesTriggered || 0) < 3 &&
+            milestones.indexOf(state.stageProgress) !== -1
+          ) {
+            // Strictly 3 times per stage, launching a DIFFERENT mini-game each time!
+            state.stageMinigamesTriggered = (state.stageMinigamesTriggered || 0) + 1;
+            const nextMinigameType = (Array.isArray(state.stageMinigameQueue) && state.stageMinigameQueue.length > 0)
+              ? state.stageMinigameQueue.shift()
+              : 'heaven_stairs';
             syncHUD();
-            this.startObbyMinigame();
+            this.startObbyMinigame(nextMinigameType);
           } else {
             syncHUD();
             this.spawnNextQuestion();
@@ -1108,6 +1159,9 @@
       state.selectedDashboardStage = nextStage;
       state.stageConfig = nextStageCfg;
       state.stageProgress = 0;
+      state.stageMinigameMilestones = buildStageMinigameMilestones(nextStageCfg.questionsToBoss || 15);
+      state.stageMinigameQueue = buildStageMinigameQueue(nextStage);
+      state.stageMinigamesTriggered = 0;
       state.isBossPhase = false;
       state.bossMaxHp = nextStageCfg.bossHp || 12;
       state.bossCurrentHp = state.bossMaxHp;
@@ -1361,13 +1415,15 @@
     },
 
     /**
-     * Triggers 3D Roblox Obby Jump (`Engine3D.jump()`) over low red lava hurdles!
+     * Right Action Button (#btn-jump-action ⬆️):
+     * - In 'heaven_stairs': Climbs 1 step forward in Soyun's current facing direction!
+     * - In 'laser_jump' / 'obby_rush' / Normal: Jumps over low laser bars & hurdles!
      */
     triggerJump: function () {
       if (!state.isPlaying || state.isGameOver || state.isPaused) return false;
       if (window.Engine3D && typeof window.Engine3D.jump === 'function') {
         const jumped = window.Engine3D.jump();
-        if (jumped && window.SoundEngine) {
+        if (jumped && window.SoundEngine && !(state.isObbyMode && state.obbyGameType === 'heaven_stairs')) {
           if (typeof window.SoundEngine.playJump === 'function') {
             window.SoundEngine.playJump();
           } else {
@@ -1380,12 +1436,35 @@
     },
 
     /**
-     * Starts the 2x Speed Roblox Obby Action Mini-Game between quiz sets!
-     * Spawns 3 sequential waves of 3-lane obstacles randomly alternating between:
-     * 1) 'obstacle_wall': 2 Tall Block Walls ('block') + 1 Low Hurdle ('hurdle')
-     * 2) 'fire_pit': 2 Very Wide Fire Pits ('wide_fire') + 1 Narrow Jumpable Fire Pit ('narrow_fire')
+     * Left Action Button (#btn-turn-jump-action 🔄):
+     * - In 'heaven_stairs': Flips Soyun's facing direction (-1 <-> +1) AND climbs 1 step!
+     * - In 'laser_jump' / 'obby_rush' / Normal: Triggers a high 360° Spin 2-Stage Super Jump!
      */
-    startObbyMinigame: function () {
+    triggerTurnJump: function () {
+      if (!state.isPlaying || state.isGameOver || state.isPaused) return false;
+      if (window.Engine3D) {
+        if (typeof window.Engine3D.superJump === 'function') {
+          const jumped = window.Engine3D.superJump();
+          if (jumped && window.SoundEngine && !(state.isObbyMode && state.obbyGameType === 'heaven_stairs')) {
+            if (typeof window.SoundEngine.playJump === 'function') {
+              window.SoundEngine.playJump();
+            } else {
+              window.SoundEngine.playLaneSwitch();
+            }
+          }
+          return jumped;
+        }
+      }
+      return false;
+    },
+
+    /**
+     * Starts one of the 3 Distinct Roblox Action Mini-Games (strictly 3 times per stage, never repeating the same game!):
+     * 1) 'heaven_stairs': 🌈☁️ 로블록스 천국의 계단 (2버튼: 우측 [⬆️ 오르기] & 좌측 [🔄 방향전환 점프])
+     * 2) 'laser_jump': ⚡🪵 로블록스 회전 레이저봉 & 거대 2단 통나무 점프 서바이벌 (우측 [⬆️ 점프] & 좌측 [🔄 2단 슈퍼점프])
+     * 3) 'obby_rush': 🧱🔥 로블록스 3레인 용암·장애물 돌파 오비
+     */
+    startObbyMinigame: function (forcedGameType) {
       if (!state.isPlaying || state.isGameOver) return false;
       if (state.isObbyMode) return true;
 
@@ -1394,13 +1473,89 @@
         this._obbyWaveTimer = null;
       }
 
+      const validTypes = ['heaven_stairs', 'laser_jump', 'obby_rush'];
+      let gameType = (forcedGameType && validTypes.indexOf(forcedGameType) !== -1) ? forcedGameType : null;
+      if (!gameType) {
+        if (Array.isArray(state.stageMinigameQueue) && state.stageMinigameQueue.length > 0) {
+          gameType = state.stageMinigameQueue.shift();
+        } else {
+          const nonRepeat = validTypes.filter(function (t) { return t !== state.lastMinigameType; });
+          gameType = nonRepeat[Math.floor(Math.random() * nonRepeat.length)] || 'heaven_stairs';
+        }
+      }
+      state.lastMinigameType = gameType;
       state.isObbyMode = true;
-      state.obbyWavesTotal = 3;
+      state.obbyGameType = gameType;
       state.obbyWavesCleared = 0;
       state.obbySuccessCount = 0;
       state.obbyWaveQueue = [];
 
-      // Build 3 random obstacle waves (guaranteeing both 'obstacle_wall' and 'fire_pit' appear in the 3 waves!)
+      if (window.Engine3D) {
+        if (typeof window.Engine3D.setDemoMode === 'function') {
+          window.Engine3D.setDemoMode(false);
+        }
+        window.Engine3D.clearActiveGates();
+        if (typeof window.Engine3D.clearObbyObstacles === 'function') {
+          window.Engine3D.clearObbyObstacles();
+        }
+        if (typeof window.Engine3D.clearHeavenStairs === 'function') {
+          window.Engine3D.clearHeavenStairs();
+        }
+        window.Engine3D.setSpeed(getEffectiveSpeed());
+      }
+
+      if (window.SoundEngine) {
+        window.SoundEngine.setSpeedTempo(getEffectiveSpeed());
+        window.SoundEngine.playStageClear();
+      }
+
+      if (gameType === 'heaven_stairs') {
+        // 🌈☁️ MINI-GAME 1: 로블록스 천국의 계단 (8 Steps 2-Button Climbing Game!)
+        state.obbyWavesTotal = 8;
+        let stairInfo = { stepIndex: 0, totalSteps: 8, facingDir: 1, nextRequiredDir: 1 };
+        if (window.Engine3D && typeof window.Engine3D.startHeavenStairs === 'function') {
+          stairInfo = window.Engine3D.startHeavenStairs(8) || stairInfo;
+        }
+        if (window.UIManager) {
+          if (typeof window.UIManager.showHeavenStairsHUD === 'function') {
+            window.UIManager.showHeavenStairsHUD(0, stairInfo.totalSteps, stairInfo.facingDir, stairInfo.nextRequiredDir);
+          }
+          window.UIManager.showFeedbackToast(
+            true,
+            '☁️🌈 [미니게임 1: 로블록스 천국의 계단!] 방향이 같으면 우측 [⬆️ 오르기], 꺾이면 좌측 [🔄 방향전환] 버튼을 눌러 천국의 문까지 올라가세요!'
+          );
+        }
+        syncHUD();
+        return true;
+      }
+
+      if (gameType === 'laser_jump') {
+        // ⚡🪵 MINI-GAME 2: 로블록스 회전 레이저봉 & 거대 2단 통나무 점프 서바이벌!
+        state.obbyWavesTotal = 3;
+        const laserWaveTypes = ['low_laser', 'high_log', Math.random() < 0.5 ? 'low_laser' : 'high_log'];
+        for (let w = 0; w < state.obbyWavesTotal; w++) {
+          const wt = laserWaveTypes[w];
+          state.obbyWaveQueue.push({
+            waveIndex: w + 1,
+            totalWaves: state.obbyWavesTotal,
+            waveType: wt,
+            passLane: 1,
+            lanes: [wt, wt, wt]
+          });
+        }
+        if (window.UIManager) {
+          window.UIManager.showFeedbackToast(
+            true,
+            '⚡🪵 [미니게임 2: 회전 레이저봉 & 거대 통나무 점프!] 낮은 레이저봉은 우측 [⬆️ 점프], 거대 2단 통나무는 좌측 [🔄 2단점프]로 뛰어넘으세요!'
+          );
+        }
+        syncHUD();
+        this._spawnNextObbyWave();
+        return true;
+      }
+
+      // 🧱🔥 MINI-GAME 3: 로블록스 3레인 장애물 벽 & 불구덩이 돌파 ('obby_rush')
+      state.obbyWavesTotal = 3;
       const types = [];
       for (let i = 0; i < 3; i++) {
         types.push(Math.random() < 0.5 ? 'obstacle_wall' : 'fire_pit');
@@ -1434,33 +1589,95 @@
         });
       }
 
-      if (window.Engine3D) {
-        if (typeof window.Engine3D.setDemoMode === 'function') {
-          window.Engine3D.setDemoMode(false);
-        }
-        window.Engine3D.clearActiveGates();
-        if (typeof window.Engine3D.clearObbyObstacles === 'function') {
-          window.Engine3D.clearObbyObstacles();
-        }
-        window.Engine3D.setSpeed(getEffectiveSpeed());
-      }
-
-      if (window.SoundEngine) {
-        window.SoundEngine.setSpeedTempo(getEffectiveSpeed());
-        window.SoundEngine.playStageClear();
-      }
-
-      if (window.UIManager && typeof window.UIManager.pushRobloxChat === 'function') {
-        window.UIManager.pushRobloxChat(
-          '시스템',
-          '🎮 [오비 미니게임 3연속 돌파!] 높은 블록과 넓은 불구덩이를 피해 낮은/좁은 1개 레인으로 3번 돌파하세요!',
-          'system'
+      if (window.UIManager) {
+        window.UIManager.showFeedbackToast(
+          true,
+          '🧱🔥 [미니게임 3: 용암·장애물 레인 돌파!] 높은 블록과 넓은 불구덩이를 피해 낮은/좁은 레인으로 3번 돌파하세요!'
         );
       }
 
       syncHUD();
       this._spawnNextObbyWave();
       return true;
+    },
+
+    /**
+     * Handles each button step in the 3D '천국의 계단' (Stairway to Heaven) Mini-Game!
+     * @param {Object} res { cleared, isFinished, stepIndex, totalSteps, facingDir, nextRequiredDir }
+     */
+    handleHeavenStairStep: function (res) {
+      if (!state.isPlaying || !state.isObbyMode || state.isGameOver) return;
+      if (!res) return;
+
+      if (res.cleared) {
+        state.obbyWavesCleared = res.stepIndex;
+        state.obbySuccessCount = res.stepIndex;
+        const stepPts = 40;
+        if (window.SoundEngine) {
+          window.SoundEngine.playCorrect(res.stepIndex);
+        }
+        if (window.SaveManager) {
+          window.SaveManager.addScore(stepPts, getEffectiveSpeed());
+        }
+        if (window.UIManager && typeof window.UIManager.showHeavenStairsHUD === 'function') {
+          window.UIManager.showHeavenStairsHUD(
+            res.stepIndex,
+            res.totalSteps,
+            res.facingDir,
+            res.nextRequiredDir
+          );
+        }
+        syncHUD();
+
+        if (res.isFinished || res.stepIndex >= res.totalSteps) {
+          const self = this;
+          if (this._obbyWaveTimer) clearTimeout(this._obbyWaveTimer);
+          this._obbyWaveTimer = setTimeout(function () {
+            self._obbyWaveTimer = null;
+            self.endObbyMinigame();
+          }, 550);
+        }
+      } else {
+        // Stepped in the wrong direction -> -1 HP & hurt feedback, then align facing direction for easy continuation!
+        state.combo = 0;
+        state.hp = Math.max(0, state.hp - 1);
+        if (window.SoundEngine) {
+          window.SoundEngine.playWrong();
+        }
+        if (window.UIManager) {
+          window.UIManager.triggerDamageFlash();
+          if (typeof window.UIManager.triggerImpactEffect === 'function') {
+            window.UIManager.triggerImpactEffect('obby_hurt', {
+              outcome: 'hit_stair',
+              waveType: 'heaven_stairs',
+              hp: state.hp,
+              maxHp: state.maxHp
+            });
+          }
+          if (typeof window.UIManager.showHeavenStairsHUD === 'function') {
+            window.UIManager.showHeavenStairsHUD(
+              res.stepIndex,
+              res.totalSteps,
+              res.facingDir,
+              res.nextRequiredDir
+            );
+          }
+          window.UIManager.showFeedbackToast(
+            false,
+            `☁️💦 어이쿠!! 계단 반대쪽으로 헛디뎌 피가 1 깎였어요! (❤️ ${state.hp}/${state.maxHp} · 이제 우측 [⬆️ 오르기]를 누르세요!)`
+          );
+        }
+        syncHUD();
+
+        if (state.hp <= 0) {
+          const self = this;
+          if (this._obbyWaveTimer) clearTimeout(this._obbyWaveTimer);
+          this._obbyWaveTimer = setTimeout(function () {
+            self._obbyWaveTimer = null;
+            self.handleGameOver();
+          }, 680);
+        }
+      }
     },
 
     /**
@@ -1492,7 +1709,7 @@
     },
 
     /**
-     * Handles passing a single 3-lane obstacle wave during the Roblox Obby Mini-Game (3 waves total).
+     * Handles passing a single 3-lane or full-road obstacle wave during the Roblox Obby Mini-Game (3 waves total).
      * @param {Object} res { cleared, outcome, laneType, waveType, lane, waveIndex, totalWaves }
      */
     handleObbyWavePass: function (res) {
@@ -1505,7 +1722,7 @@
 
       if (isCleared && (outcome === 'jump_clear' || outcome === 'coin')) {
         state.obbySuccessCount = (state.obbySuccessCount || 0) + 1;
-        const bonusPts = 80;
+        const bonusPts = waveType === 'high_log' ? 110 : 85;
         if (window.SoundEngine) {
           window.SoundEngine.playCorrect(state.combo + 1);
         }
@@ -1513,9 +1730,14 @@
           window.SaveManager.addScore(bonusPts, getEffectiveSpeed());
         }
         if (window.UIManager) {
-          const successMsg = waveType === 'fire_pit'
-            ? `🔥⬆️ 나이스 점프!! 좁은 불구덩이 건너기 성공! (+${bonusPts} R$ · ${state.obbyWavesCleared}/${state.obbyWavesTotal})`
-            : `🧱⬆️ 나이스 점프!! 낮은 장애물 넘기 성공! (+${bonusPts} R$ · ${state.obbyWavesCleared}/${state.obbyWavesTotal})`;
+          let successMsg = `🧱⬆️ 나이스 점프!! 낮은 장애물 넘기 성공! (+${bonusPts} R$ · ${state.obbyWavesCleared}/${state.obbyWavesTotal})`;
+          if (waveType === 'fire_pit') {
+            successMsg = `🔥⬆️ 나이스 점프!! 좁은 불구덩이 건너기 성공! (+${bonusPts} R$ · ${state.obbyWavesCleared}/${state.obbyWavesTotal})`;
+          } else if (waveType === 'low_laser') {
+            successMsg = `⚡⬆️ 나이스 점프!! 회전 레이저봉 완벽 통과! (+${bonusPts} R$ · ${state.obbyWavesCleared}/${state.obbyWavesTotal})`;
+          } else if (waveType === 'high_log') {
+            successMsg = `🪵🔄 슈퍼 2단점프!! 거대 회전 통나무 완벽 통과! (+${bonusPts} R$ · ${state.obbyWavesCleared}/${state.obbyWavesTotal})`;
+          }
           window.UIManager.showFeedbackToast(true, successMsg);
         }
       } else {
@@ -1536,9 +1758,14 @@
               maxHp: state.maxHp
             });
           }
-          const failMsg = (outcome === 'hit_fire' || waveType === 'fire_pit')
-            ? `🔥💥 앗 뜨거!! 넓은 불구덩이에 빠져 피가 1 깎였어요! (❤️ ${state.hp}/${state.maxHp} · 좁은 불구덩이 레인으로 피하세요!)`
-            : `🧱💥 콰직!! 아야! 높은 블록에 부딪혀 피가 1 깎였어요! (❤️ ${state.hp}/${state.maxHp} · 낮은 장애물 레인으로 피하세요!)`;
+          let failMsg = `🧱💥 콰직!! 아야! 높은 블록에 부딪혀 피가 1 깎였어요! (❤️ ${state.hp}/${state.maxHp} · 낮은 장애물 레인으로 피하세요!)`;
+          if (outcome === 'hit_fire' || waveType === 'fire_pit') {
+            failMsg = `🔥💥 앗 뜨거!! 넓은 불구덩이에 빠져 피가 1 깎였어요! (❤️ ${state.hp}/${state.maxHp} · 좁은 불구덩이 레인으로 피하세요!)`;
+          } else if (outcome === 'hit_laser' || waveType === 'low_laser') {
+            failMsg = `⚡💥 찌릿!! 회전 레이저봉에 걸려 피가 1 깎였어요! (❤️ ${state.hp}/${state.maxHp} · 우측 [⬆️ 점프] 버튼을 누르세요!)`;
+          } else if (outcome === 'hit_log' || waveType === 'high_log') {
+            failMsg = `🪵💥 쿵!! 거대 통나무에 부딪혀 피가 1 깎였어요! (❤️ ${state.hp}/${state.maxHp} · 좌측 [🔄 2단점프] 버튼을 누르세요!)`;
+          }
           window.UIManager.showFeedbackToast(false, failMsg);
         }
 
@@ -1579,8 +1806,8 @@
     },
 
     /**
-     * Ends the 2x Speed Roblox Obby Mini-Game, restores 1x quiz speed, awards bonus Robux,
-     * and seamlessly resumes quiz mode (`spawnNextQuestion()`).
+     * Ends the current Roblox Action Mini-Game ('heaven_stairs' | 'laser_jump' | 'obby_rush'),
+     * restores 1x quiz speed, awards bonus Robux, and seamlessly resumes quiz mode (`spawnNextQuestion()`).
      */
     endObbyMinigame: function () {
       if (!state.isObbyMode) return;
@@ -1588,6 +1815,7 @@
         clearTimeout(this._obbyWaveTimer);
         this._obbyWaveTimer = null;
       }
+      const finishedGameType = state.obbyGameType || 'obby_rush';
       state.isObbyMode = false;
       const clearedCnt = state.obbySuccessCount || 0;
       const totalCnt = state.obbyWavesTotal || 3;
@@ -1599,7 +1827,7 @@
         return;
       }
 
-      const clearBonus = clearedCnt * 70;
+      const clearBonus = finishedGameType === 'heaven_stairs' ? 240 : (clearedCnt * 80);
       if (clearBonus > 0 && window.SaveManager) {
         window.SaveManager.addScore(clearBonus, getEffectiveSpeed());
       }
@@ -1607,6 +1835,9 @@
       if (window.Engine3D) {
         if (typeof window.Engine3D.clearObbyObstacles === 'function') {
           window.Engine3D.clearObbyObstacles();
+        }
+        if (typeof window.Engine3D.clearHeavenStairs === 'function') {
+          window.Engine3D.clearHeavenStairs();
         }
         window.Engine3D.setSpeed(getEffectiveSpeed());
       }
@@ -1622,18 +1853,21 @@
         if (typeof window.UIManager.hideObbyHUD === 'function') {
           window.UIManager.hideObbyHUD();
         }
-        if (clearedCnt === totalCnt) {
+        const gameLabel = finishedGameType === 'heaven_stairs'
+          ? '☁️🌈 천국의 계단'
+          : (finishedGameType === 'laser_jump' ? '⚡🪵 회전 레이저봉·통나무 점프' : '🧱🔥 용암·장애물 오비');
+        if (clearedCnt >= totalCnt) {
           if (typeof window.UIManager.triggerImpactEffect === 'function') {
             window.UIManager.triggerImpactEffect('correct', { points: clearBonus, combo: state.combo });
           }
           window.UIManager.showFeedbackToast(
             true,
-            `🏁 오비 미니게임 3연속 완벽 돌파!! 보너스 +${clearBonus} R$ 획득! 다시 문제를 풀어볼까요?`
+            `🏁 ${gameLabel} 완벽 클리어!! 보너스 +${clearBonus} R$ 획득! 다시 문제를 풀어볼까요?`
           );
         } else {
           window.UIManager.showFeedbackToast(
             clearedCnt > 0,
-            `🏁 오비 미니게임 종료! (${totalCnt}번 중 ${clearedCnt}번 성공 · +${clearBonus} R$) 다시 문제 풀기로 돌아갑니다!`
+            `🏁 ${gameLabel} 종료! (보너스 +${clearBonus} R$) 다시 문제 풀기로 돌아갑니다!`
           );
         }
       }
@@ -2245,7 +2479,27 @@
 
         if (!state.isPlaying || state.isGameOver) return;
 
+        if (state.isObbyMode && state.obbyGameType === 'heaven_stairs') {
+          if (e.code === 'ArrowLeft' || e.code === 'KeyA' || e.code === 'ShiftLeft' || e.code === 'ShiftRight' || e.code === 'KeyZ' || e.code === 'KeyQ') {
+            e.preventDefault();
+            self.triggerTurnJump();
+            return;
+          }
+          if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'ArrowRight' || e.code === 'KeyD') {
+            e.preventDefault();
+            self.triggerJump();
+            return;
+          }
+        }
+
         switch (e.code) {
+          case 'ShiftLeft':
+          case 'ShiftRight':
+          case 'KeyZ':
+          case 'KeyQ':
+            e.preventDefault();
+            self.triggerTurnJump();
+            break;
           case 'ArrowLeft':
           case 'KeyA':
             e.preventDefault();
@@ -2302,6 +2556,14 @@
 
           const width = window.innerWidth || 1280;
           const x = e.clientX;
+          if (state.isObbyMode && state.obbyGameType === 'heaven_stairs') {
+            if (x < width / 2) {
+              self.triggerTurnJump();
+            } else {
+              self.triggerJump();
+            }
+            return;
+          }
           if (x < width / 3) {
             self.selectLane(0);
           } else if (x > (width * 2) / 3) {
@@ -2338,16 +2600,38 @@
         canvasContainer.addEventListener('pointercancel', clearTouch);
       }
 
-      // Roblox Obby Jump Button (#btn-jump-action)
+      // Left Round Turn-Jump / 2x Super-Jump Button (#btn-turn-jump-action 🔄)
+      const btnTurnJump = document.getElementById('btn-turn-jump-action');
+      if (btnTurnJump) {
+        let lastTurnTap = 0;
+        btnTurnJump.addEventListener('pointerdown', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          lastTurnTap = Date.now();
+          self.triggerTurnJump();
+        });
+        btnTurnJump.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          if (Date.now() - lastTurnTap < 350) return;
+          self.triggerTurnJump();
+        });
+      }
+
+      // Right Round Jump / Climb Button (#btn-jump-action ⬆️)
       const btnJump = document.getElementById('btn-jump-action');
       if (btnJump) {
+        let lastJumpTap = 0;
         btnJump.addEventListener('pointerdown', function (e) {
           e.preventDefault();
           e.stopPropagation();
+          lastJumpTap = Date.now();
           self.triggerJump();
         });
         btnJump.addEventListener('click', function (e) {
           e.preventDefault();
+          e.stopPropagation();
+          if (Date.now() - lastJumpTap < 350) return;
           self.triggerJump();
         });
       }
