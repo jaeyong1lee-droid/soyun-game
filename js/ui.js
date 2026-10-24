@@ -218,8 +218,8 @@
       }
       const elDashPocketBonus = byId('dash-pocket-bonus-pill');
       if (elDashPocketBonus) {
-        elDashPocketBonus.textContent = `${unpaidPocket}개`;
-        elDashPocketBonus.classList.toggle('has-bonus', unpaidPocket > 0);
+        elDashPocketBonus.textContent = '';
+        elDashPocketBonus.style.display = 'none';
       }
       const elDashPocketFill = byId('dash-pocket-fill');
       if (elDashPocketFill) {
@@ -554,8 +554,8 @@
       }
       const elPocketBonusBadge = byId('hud-pocket-bonus-badge');
       if (elPocketBonusBadge) {
-        elPocketBonusBadge.textContent = `${unpaidPocket}개`;
-        elPocketBonusBadge.classList.toggle('has-bonus', unpaidPocket > 0);
+        elPocketBonusBadge.textContent = '';
+        elPocketBonusBadge.style.display = 'none';
       }
       const elPocketCount = byId('hud-pocket-count');
       if (elPocketCount) {
@@ -1666,7 +1666,7 @@
             <div class="compact-bonus-row3">
               <span class="compact-gauge-pill">
                 현재 저장 진행: <strong>${item.currentCount}${escapeHtml(item.unit)} / ${item.targetCount}${escapeHtml(item.unit)}</strong>
-                &nbsp;·&nbsp; 미지급 달성: <strong>${item.unpaid}개${typeof item.totalWon === 'number' ? ' (누계 ' + item.totalWon.toLocaleString() + '원)' : ''}</strong>
+                &nbsp;·&nbsp; ${typeof item.totalWon === 'number' ? '현재 적립 누계: <strong>' + item.totalWon.toLocaleString() + '원</strong>' : '미지급 달성: <strong>' + item.unpaid + '개</strong>'}
               </span>
               <button
                 type="button"
@@ -1748,7 +1748,10 @@
       const elPName = byId('boss-pop-pocket-name');
       if (elPName) elPName.textContent = `💵 ${pocketName}`;
       const elPBadge = byId('boss-pop-pocket-badge');
-      if (elPBadge) elPBadge.textContent = `달성 ${unpaidPocket}개`;
+      if (elPBadge) {
+        elPBadge.textContent = '';
+        elPBadge.style.display = 'none';
+      }
       const elPFill = byId('boss-pop-pocket-fill');
       if (elPFill) elPFill.style.width = `${pm.percent}%`;
       const elPScore = byId('boss-pop-pocket-score');
