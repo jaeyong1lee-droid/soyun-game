@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&family=Press+Start+2P&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
-  <link rel="stylesheet" href="css/style.css?v=20261024_41" />
+  <link rel="stylesheet" href="css/style.css?v=20261024_42" />
 </head>
 <body>
   <!-- 3D WebGL Viewport Container -->
@@ -204,10 +204,19 @@
     </div>
   </div>
 
-  <!-- Right-Side Road Round Jump Button (동그랗게 작게 길 오른쪽에 배치) -->
-  <div id="mobile-touch-pad" class="mobile-touch-pad" aria-label="점프 버튼">
-    <button id="btn-jump-action" class="touch-jump-btn arcade-circle-btn" type="button" title="점프! (SPACE / 위로 스와이프)">
+  <!-- Left-Side Road Round Turn-Jump / Super-Jump Button (일시정지 버튼은 위로 올리고 그 자리에 배치) -->
+  <div id="left-touch-pad" class="left-touch-pad" aria-label="방향전환 점프 및 2단 슈퍼점프 버튼">
+    <button id="btn-turn-jump-action" class="touch-turn-jump-btn arcade-circle-btn" type="button" title="방향전환 점프 / 2단 슈퍼점프! (SHIFT / 좌측 키)">
+      <span class="turn-jump-icon">🔄</span>
+      <span id="left-btn-action-label" class="btn-mini-sub-tag">방향/2단</span>
+    </button>
+  </div>
+
+  <!-- Right-Side Road Round Jump / Climb Button (동그랗게 작게 길 오른쪽에 배치) -->
+  <div id="mobile-touch-pad" class="mobile-touch-pad" aria-label="점프 및 계단 오르기 버튼">
+    <button id="btn-jump-action" class="touch-jump-btn arcade-circle-btn" type="button" title="점프 / 계단 오르기! (SPACE / 위로 스와이프)">
       <span class="jump-icon">⬆️</span>
+      <span id="right-btn-action-label" class="btn-mini-sub-tag">점프/오르기</span>
     </button>
   </div>
 
@@ -816,16 +825,16 @@
   <!-- Three.js r128 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <!-- Nano Banana Generated Retro 3D Assets Bundle (CORS-free on file:// & http://) -->
-  <script src="js/assets_data.js?v=20261024_41"></script>
+  <script src="js/assets_data.js?v=20261024_42"></script>
   <!-- Shared Game Modules -->
-  <script src="js/config.js?v=20261024_41"></script>
-  <script src="js/storage.js?v=20261024_41"></script>
-  <script src="js/questionEngine.js?v=20261024_41"></script>
-  <script src="js/sound.js?v=20261024_41"></script>
-  <script src="js/engine3d.js?v=20261024_41"></script>
+  <script src="js/config.js?v=20261024_42"></script>
+  <script src="js/storage.js?v=20261024_42"></script>
+  <script src="js/questionEngine.js?v=20261024_42"></script>
+  <script src="js/sound.js?v=20261024_42"></script>
+  <script src="js/engine3d.js?v=20261024_42"></script>
   <!-- UI & Game Controller -->
-  <script src="js/ui.js?v=20261024_41"></script>
-  <script src="js/game.js?v=20261024_41"></script>
+  <script src="js/ui.js?v=20261024_42"></script>
+  <script src="js/game.js?v=20261024_42"></script>
 
   <!-- Google Chrome / Mobile PWA Service Worker & One-Click App Install Handler -->
   <script>
@@ -833,7 +842,7 @@
       var deferredInstallPrompt = null;
       var installBtn = document.getElementById('btn-install-pwa');
 
-      window.__SOYUN_CLIENT_BUILD__ = '20261024_41';
+      window.__SOYUN_CLIENT_BUILD__ = '20261024_42';
       if ('serviceWorker' in navigator && window.location.protocol !== 'file:') {
         var swRefreshing = false;
         navigator.serviceWorker.addEventListener('controllerchange', function () {
@@ -845,7 +854,7 @@
           }
         });
         window.addEventListener('load', function () {
-          navigator.serviceWorker.register('sw.js?v=20261024_41', { updateViaCache: 'none' }).then(function (reg) {
+          navigator.serviceWorker.register('sw.js?v=20261024_42', { updateViaCache: 'none' }).then(function (reg) {
             reg.update();
           }).catch(function () {});
         });
