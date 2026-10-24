@@ -56,7 +56,7 @@ function pushToStandaloneGitHub() {
       return;
     }
     exec(
-      'git add index.html manifest.json sw.js vercel.json server.js package.json css js assets api && git commit -m "Auto-deploy Soyun game" && git push origin main',
+      'git add index.html manifest.json sw.js vercel.json server.js package.json css js assets api && (git diff --cached --quiet || git commit -m "Auto-deploy Soyun game") && git push origin main',
       { cwd: ROOT },
       () => {}
     );

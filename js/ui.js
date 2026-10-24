@@ -208,9 +208,9 @@
         elTotalBonusBadge.classList.toggle('has-bonus', totalUnpaid > 0);
       }
 
-      const pocketTitleText = pm.customName || state.bonusNamePocket || '용돈 3,000원';
+      const pocketTitleText = pm.displayName || pm.customName || state.bonusNamePocket || '용돈 3,000원';
       const ashleyTitleText = ash.customName || state.bonusNameAshley || '애슐리 외식';
-      const jackpotTitleText = (jp && jp.customName) || state.bonusNameJackpot || '10판 보스 만원 상금';
+      const jackpotTitleText = (jp && (jp.displayName || jp.customName)) || state.bonusNameJackpot || '10판 보스 만원 상금';
 
       const elDashPocketTitle = byId('dash-pocket-title');
       if (elDashPocketTitle) {
@@ -546,7 +546,7 @@
 
       const elHudPocketName = byId('hud-pocket-name');
       if (elHudPocketName) {
-        elHudPocketName.textContent = String(pm.customName || '용돈 3,000원').replace(/^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\s]+/u, '');
+        elHudPocketName.textContent = String(pm.displayName || pm.customName || '용돈 3,000원').replace(/^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\s]+/u, '');
       }
       const elPocketPhase = byId('hud-pocket-phase');
       if (elPocketPhase) {
@@ -591,7 +591,7 @@
       if (jp) {
         const elHudJackpotName = byId('hud-jackpot-name');
         if (elHudJackpotName) {
-          elHudJackpotName.textContent = String(jp.customName || '10판 보스 만원').replace(/^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\s]+/u, '');
+          elHudJackpotName.textContent = String(jp.displayName || jp.customName || '10판 보스 만원').replace(/^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\s]+/u, '');
         }
         const elJackpotPhase = byId('hud-jackpot-phase');
         if (elJackpotPhase) {
@@ -1551,7 +1551,10 @@
 
       const elUnpaidTotal = byId('parent-unpaid-total-badge');
       if (elUnpaidTotal) {
-        elUnpaidTotal.textContent = `미지급 달성 보너스: ${totalUnpaid}개`;
+        const cumPocketWon = typeof pm.totalWon === 'number' ? pm.totalWon : 0;
+        elUnpaidTotal.textContent = cumPocketWon > 0
+          ? `미지급 보너스: ${totalUnpaid}개 (용돈 누계 ${cumPocketWon.toLocaleString()}원)`
+          : `미지급 달성 보너스: ${totalUnpaid}개`;
       }
 
       const container = byId('parent-bonus-list-container');
@@ -1566,7 +1569,8 @@
           currentCount: pm.current || 0,
           unit: '판',
           stepSize: 10,
-          unpaid: unpaidPocket
+          unpaid: unpaidPocket,
+          totalWon: typeof pm.totalWon === 'number' ? pm.totalWon : undefined
         },
         {
           key: 'ashley',
@@ -1662,7 +1666,7 @@
             <div class="compact-bonus-row3">
               <span class="compact-gauge-pill">
                 현재 저장 진행: <strong>${item.currentCount}${escapeHtml(item.unit)} / ${item.targetCount}${escapeHtml(item.unit)}</strong>
-                &nbsp;·&nbsp; 미지급 달성: <strong>${item.unpaid}개</strong>
+                &nbsp;·&nbsp; 미지급 달성: <strong>${item.unpaid}개${typeof item.totalWon === 'number' ? ' (누계 ' + item.totalWon.toLocaleString() + '원)' : ''}</strong>
               </span>
               <button
                 type="button"
@@ -1724,9 +1728,9 @@
       const unpaidAshley = typeof ash.unpaidCount === 'number' ? ash.unpaidCount : ash.earnedCount;
       const unpaidJackpot = jp ? (typeof jp.unpaidCount === 'number' ? jp.unpaidCount : jp.earnedCount) : 0;
 
-      const pocketName = String(pm.customName || state.bonusNamePocket || '용돈 3,000원').replace(/^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\s]+/u, '');
+      const pocketName = String(pm.displayName || pm.customName || state.bonusNamePocket || '용돈 3,000원').replace(/^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\s]+/u, '');
       const ashleyName = String(ash.customName || state.bonusNameAshley || '애슐리 외식').replace(/^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\s]+/u, '');
-      const jackpotName = String((jp && jp.customName) || state.bonusNameJackpot || '10판 보스 만원 상금').replace(/^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\s]+/u, '');
+      const jackpotName = String((jp && (jp.displayName || jp.customName)) || state.bonusNameJackpot || '10판 보스 만원 상금').replace(/^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\s]+/u, '');
 
       const titleEl = byId('boss-reward-title');
       if (titleEl) {

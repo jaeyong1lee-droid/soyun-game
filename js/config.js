@@ -393,6 +393,48 @@
       const nameAshley = (saveState.bonusNameAshley && String(saveState.bonusNameAshley).trim()) || '애슐리 외식';
       const nameJackpot = (saveState.bonusNameJackpot && String(saveState.bonusNameJackpot).trim()) || '10판 보스 만원 상금';
 
+      const parseUnitWon = function (rawName, fallbackWon) {
+        const s = String(rawName || '');
+        const manMatch = s.match(/([0-9][0-9,]*)\s*만\s*원/);
+        if (manMatch) {
+          return (parseInt(manMatch[1].replace(/,/g, ''), 10) || 1) * 10000;
+        }
+        if (s.includes('만원')) {
+          return 10000;
+        }
+        const cheonMatch = s.match(/([0-9][0-9,]*)\s*천\s*원/);
+        if (cheonMatch) {
+          return (parseInt(cheonMatch[1].replace(/,/g, ''), 10) || 1) * 1000;
+        }
+        const wonMatch = s.match(/([0-9][0-9,]*)\s*원/);
+        if (wonMatch) {
+          return parseInt(wonMatch[1].replace(/,/g, ''), 10) || fallbackWon;
+        }
+        return fallbackWon;
+      };
+
+      const buildCumulativeDisplayName = function (rawName, unpaidCount, unitWon) {
+        const s = String(rawName || '').trim();
+        const count = Math.max(0, parseInt(unpaidCount, 10) || 0);
+        const cumulativeWon = count * unitWon;
+        const formattedWon = `${cumulativeWon.toLocaleString()}원`;
+        if (/([0-9][0-9,]*)\s*(만\s*원|천\s*원|원)/.test(s)) {
+          return s.replace(/([0-9][0-9,]*)\s*(만\s*원|천\s*원|원)/, formattedWon);
+        }
+        if (s.includes('만원') && count >= 2) {
+          return s.replace('만원', formattedWon);
+        }
+        return s;
+      };
+
+      const pocketUnitWon = parseUnitWon(namePocket, 2000);
+      const pocketTotalWon = unpaidPocket * pocketUnitWon;
+      const displayPocketName = buildCumulativeDisplayName(namePocket, unpaidPocket, pocketUnitWon);
+
+      const jackpotUnitWon = parseUnitWon(nameJackpot, 10000);
+      const jackpotTotalWon = unpaidJackpot * jackpotUnitWon;
+      const displayJackpotName = buildCumulativeDisplayName(nameJackpot, unpaidJackpot, jackpotUnitWon);
+
       return {
         totalCorrect: rawCorrect,
         totalWrong: rawWrong,
@@ -404,11 +446,13 @@
           key: 'pocket',
           icon: '💵',
           customName: namePocket,
-          title: `💵 ${namePocket}`,
+          displayName: displayPocketName,
+          title: `💵 ${displayPocketName}`,
           earnedCount: pocketEarned,
           paidCount: Math.max(0, paidPocket),
           unpaidCount: unpaidPocket,
-          totalWon: unpaidPocket * 3000,
+          unitWon: pocketUnitWon,
+          totalWon: pocketTotalWon,
           current: pocketCurrent,
           target: pocketTarget,
           unit: '판',
@@ -435,11 +479,13 @@
           key: 'jackpot',
           icon: '💴',
           customName: nameJackpot,
-          title: `💴 ${nameJackpot}`,
+          displayName: displayJackpotName,
+          title: `💴 ${displayJackpotName}`,
           earnedCount: jackpotEarned,
           paidCount: Math.max(0, paidJackpot),
           unpaidCount: unpaidJackpot,
-          totalWon: unpaidJackpot * 10000,
+          unitWon: jackpotUnitWon,
+          totalWon: jackpotTotalWon,
           current: jackpotCurrent,
           target: jackpotTarget,
           unit: '단계',

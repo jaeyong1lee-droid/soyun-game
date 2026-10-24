@@ -76,7 +76,7 @@
 
   function startSpeechListening(question) {
     stopSpeechListening();
-    if (!question || !question.isSpeech || question.speechPassed) return;
+    return; // Microphone speech questions completely disabled
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
@@ -708,7 +708,7 @@
           const prevRew = window.GameConfig.getRewardStatus(beforeCorrect, beforeBosses, beforeMaxStg, beforeWrong);
           const nextRew = window.GameConfig.getRewardStatus(afterCorrect, beforeBosses, beforeMaxStg, afterWrong);
           const curSave = window.SaveManager ? window.SaveManager.getState() : {};
-          const pocketLabel = curSave.bonusNamePocket || '용돈 3,000원';
+          const pocketLabel = (nextRew.pocketMoney && nextRew.pocketMoney.displayName) || curSave.bonusNamePocket || '용돈 3,000원';
           const ashleyLabel = curSave.bonusNameAshley || '애슐리 외식 상품권';
           if (nextRew.pocketMoney.earnedCount > prevRew.pocketMoney.earnedCount) {
             if (window.SoundEngine) window.SoundEngine.playStageClear();
@@ -1078,7 +1078,7 @@
       if (window.GameConfig && typeof window.GameConfig.getRewardStatus === 'function') {
         const prevRew = window.GameConfig.getRewardStatus(beforeCorrect, beforeBosses, beforeMaxStg, beforeWrong);
         const nextRew = window.GameConfig.getRewardStatus(beforeCorrect, afterBosses, afterMaxStg, beforeWrong);
-        const pocketLabel = afterSave.bonusNamePocket || '용돈 3,000원';
+        const pocketLabel = (nextRew.pocketMoney && nextRew.pocketMoney.displayName) || afterSave.bonusNamePocket || '용돈 3,000원';
         const ashleyLabel = afterSave.bonusNameAshley || '애슐리 외식 상품권';
 
         if (nextRew.pocketMoney.earnedCount > prevRew.pocketMoney.earnedCount && window.UIManager) {
