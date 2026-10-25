@@ -6301,8 +6301,8 @@
       }
       this.bossHitTimer = Math.max(this.bossHitTimer, 0.55);
       this.bossSquashTimer = Math.max(this.bossSquashTimer, 0.32);
-      this.bossRecoilZ = Math.min(this.bossRecoilZ, -6.5);
-      this.bossRecoilY = Math.max(this.bossRecoilY, 1.2);
+      this.bossRecoilZ = Math.min(this.bossRecoilZ, -2.2);
+      this.bossRecoilY = Math.max(this.bossRecoilY, 0.32);
       this.bossRecoilPitch = -0.48;
       this.bossRecoilYaw = (Math.random() < 0.5 ? 1 : -1) * 0.52;
       this.shakeIntensity = Math.max(this.shakeIntensity, 0.72);
@@ -7392,7 +7392,10 @@
           this.bossRecoilRoll += (0 - this.bossRecoilRoll) * Math.min(1, dt * 7.5);
 
           // Elastic Squash-and-Stretch Deformation when Boss takes a hit!
-          const baseBossScale = 0.88;
+          // Keep Boss compact (0.62) while question gates are active so it NEVER covers the 3 answer signboards!
+          const isFinisherBarrage = Boolean(this.bossFinisherSlowMoTimer && this.bossFinisherSlowMoTimer > 0);
+          const activeQuizGate = this.activeGates && this.activeGates.find((g) => !g.passed);
+          const baseBossScale = isFinisherBarrage ? 0.84 : 0.62;
           if (this.bossSquashTimer > 0) {
             this.bossSquashTimer = Math.max(0, this.bossSquashTimer - dt);
             const sqWave = Math.sin(this.bossSquashTimer * 26) * (this.bossSquashTimer * 0.72);
@@ -7451,17 +7454,43 @@
             }
           }
 
-          // Roam actively around the open lower-middle 3D road (z = -15.5 ~ -27.5, x = -6.8 ~ +6.8, y = 1.25 ~ 1.8)
-          // so the Boss is NEVER hidden behind the top question signboard (#question-banner)!
-          const roamZ = -21.2 + Math.sin(this.elapsedTime * 1.85) * 4.5 + Math.cos(this.elapsedTime * 3.7) * 1.6;
-          const targetBossZ = roamZ + this.bossRecoilZ;
-          const roamX = Math.sin(this.elapsedTime * 2.35) * 4.8 + Math.cos(this.elapsedTime * 3.85) * 2.1;
+          // Smart Answer-Signboard-Evading Boss Movement:
+          // 1) Stay in the near foreground (z = -12.5 ~ -15.5) and low to the road (y = 0.28 ~ 0.65)
+          //    so the Boss's top & HP bar stay strictly BELOW the camera line-of-sight to the overhead 3-lane Answer Signboards (y = 2.38 ~ 6.32)!
+          // 2) Favor the left/right outer road shoulders (|x| = 5.4 ~ 7.8) and duck extra low when crossing the center,
+          //    stepping out to the side shoulder whenever an Answer Gate approaches so the 3 choices are NEVER blocked!
+          let roamZ = -13.8 + Math.sin(this.elapsedTime * 1.65) * 1.8;
+          let rawSwing = Math.sin(this.elapsedTime * 1.45);
+          // Push lateral patrol toward outer shoulders so Boss doesn't linger in the center signboard view
+          const sideSign = rawSwing >= 0 ? 1 : -1;
+          let roamX = sideSign * (4.8 + Math.pow(Math.abs(rawSwing), 0.65) * 2.8) + Math.cos(this.elapsedTime * 2.9) * 0.65;
+
+          if (activeQuizGate && activeQuizGate.group) {
+            const gz = activeQuizGate.group.position.z;
+            // When the gate is in mid-to-close range (-44 to +6), step out further toward the outer shoulder
+            if (gz > -44 && gz < 6) {
+              const evadeWeight = Math.min(1, (gz + 44) / 20);
+              const shoulderX = sideSign * 7.6;
+              roamX = roamX * (1 - evadeWeight * 0.75) + shoulderX * (evadeWeight * 0.75);
+            }
+          } else if (isFinisherBarrage) {
+            // During the 8s Boss Finisher Barrage (no question gates), roam center-stage for dramatic explosions!
+            roamZ = -18.5 + Math.sin(this.elapsedTime * 2.1) * 2.5;
+            roamX = Math.sin(this.elapsedTime * 2.2) * 3.8;
+          }
+
+          const targetBossZ = roamZ + Math.max(-2.5, this.bossRecoilZ);
           this.bossGroup.position.z += (targetBossZ - this.bossGroup.position.z) * Math.min(1, dt * 8.5);
-          this.bossGroup.position.x = roamX;
-          this.bossGroup.position.y = 1.25 + Math.abs(Math.sin(this.elapsedTime * 3.8)) * 0.52 + this.bossRecoilY;
-          this.bossGroup.rotation.z = Math.cos(this.elapsedTime * 2.35) * -0.16 + this.bossRecoilRoll;
-          this.bossGroup.rotation.x = this.bossRecoilPitch + Math.sin(this.elapsedTime * 3.1) * 0.08;
-          this.bossGroup.rotation.y = this.bossRecoilYaw + Math.sin(this.elapsedTime * 1.85) * 0.22;
+          this.bossGroup.position.x += (roamX - this.bossGroup.position.x) * Math.min(1, dt * 7.5);
+
+          // Duck lower when crossing near the center lanes (|x| < 4.8) so center answer signboard is 100% clear
+          const centerDuck = Math.max(0, 1 - Math.abs(this.bossGroup.position.x) / 5.2) * 0.28;
+          const baseLowY = isFinisherBarrage ? 1.15 : (0.52 - centerDuck);
+          const bobY = Math.abs(Math.sin(this.elapsedTime * 3.4)) * (isFinisherBarrage ? 0.42 : 0.22);
+          this.bossGroup.position.y = baseLowY + bobY + Math.min(0.35, this.bossRecoilY);
+          this.bossGroup.rotation.z = Math.cos(this.elapsedTime * 2.1) * -0.12 + this.bossRecoilRoll;
+          this.bossGroup.rotation.x = this.bossRecoilPitch + Math.sin(this.elapsedTime * 3.1) * 0.06;
+          this.bossGroup.rotation.y = this.bossRecoilYaw + Math.sin(this.elapsedTime * 1.65) * 0.2;
 
           // Swing the giant Roblox Ban-Hammer rapidly — or flail wildly when hit!
           if (this.bossHitTimer > 0) {
