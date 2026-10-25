@@ -242,7 +242,7 @@
     const actionFactor = Number(state.activeSpeedFactor) || 1.0;
     const baseCap = state.isObbyMode ? 280 : (state.isBossPhase ? 260 : 225);
     const cap = actionFactor > 1.0 ? Math.round(baseCap * actionFactor) : baseCap;
-    return Math.max(8, Math.min(cap, Math.round(((state.speed || 32.4) * (state.speedMultiplier || 1.0) * obbyFactor * bossFactor * actionFactor) * 100) / 100));
+    return Math.max(2, Math.min(cap, Math.round(((state.speed || 32.4) * (state.speedMultiplier || 1.0) * obbyFactor * bossFactor * actionFactor) * 100) / 100));
   }
 
   function getMaxHp() {
@@ -1588,7 +1588,7 @@
       state.brakeCount = Math.max(0, state.brakeCount - 1);
       state.isBrakeActive = true;
       state.isBoosterActive = false;
-      state.activeSpeedFactor = 0.5;
+      state.activeSpeedFactor = 0.2;
 
       if (this._speedActionTimer) {
         clearTimeout(this._speedActionTimer);
@@ -1620,7 +1620,7 @@
         }
         window.UIManager.showFeedbackToast(
           true,
-          `🛑💨 끼이익!! [급브레이크 작동!] 2초간 속도가 0.5배로 느려집니다! (남은 브레이크: ${state.brakeCount}회)`
+          `🛑💨 끼이익!! [급브레이크 작동!] 2초간 속도가 80% 감속됩니다! (남은 브레이크: ${state.brakeCount}회)`
         );
       }
 

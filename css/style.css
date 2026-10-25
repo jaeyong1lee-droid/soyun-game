@@ -3961,11 +3961,13 @@ body.start-screen-active #hud-reward-gauges-box {
   top: auto !important;
   right: auto !important;
   left: 14px !important;
-  bottom: calc(217px + env(safe-area-inset-bottom, 0px)) !important;
+  bottom: calc(260px + env(safe-area-inset-bottom, 0px)) !important;
   z-index: 65 !important;
   display: flex !important;
+  flex-direction: column !important;
   align-items: center !important;
   justify-content: center !important;
+  gap: 8px !important;
   width: auto !important;
   padding: 0 !important;
   margin: 0 !important;
@@ -3976,12 +3978,14 @@ body.start-screen-active #hud-reward-gauges-box {
   top: auto !important;
   left: auto !important;
   right: 14px !important;
-  bottom: calc(149px + env(safe-area-inset-bottom, 0px)) !important;
+  bottom: calc(134px + env(safe-area-inset-bottom, 0px)) !important;
   transform: none !important;
   z-index: 65 !important;
   display: flex !important;
+  flex-direction: column !important;
   align-items: center !important;
   justify-content: center !important;
+  gap: 16px !important;
   width: auto !important;
   padding: 0 !important;
   margin: 0 !important;
@@ -5757,12 +5761,14 @@ body.start-screen-active #left-touch-pad {
   top: auto !important;
   right: auto !important;
   left: 14px !important;
-  bottom: calc(149px + env(safe-area-inset-bottom, 0px)) !important;
+  bottom: calc(134px + env(safe-area-inset-bottom, 0px)) !important;
   transform: none !important;
   z-index: 65 !important;
   display: flex !important;
+  flex-direction: column !important;
   align-items: center !important;
   justify-content: center !important;
+  gap: 16px !important;
   width: auto !important;
   padding: 0 !important;
   margin: 0 !important;
@@ -5989,7 +5995,8 @@ body.start-screen-active #lane-controls.brick-lane-controls {
    ============================================================================ */
 #left-touch-pad,
 #mobile-touch-pad {
-  gap: 12px !important;
+  flex-direction: column !important;
+  gap: 16px !important;
 }
 
 #left-touch-pad #btn-brake-action,

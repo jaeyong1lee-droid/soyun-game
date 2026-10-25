@@ -2284,7 +2284,7 @@
         brakeBadge.textContent = String(cnt);
       }
       if (brakeLbl) {
-        brakeLbl.textContent = isBrakeActive ? '🛑감속중!' : `브레이크 ${cnt}`;
+        brakeLbl.textContent = isBrakeActive ? '🛑80%감속!' : `브레이크 ${cnt}`;
       }
       if (brakeBtn) {
         brakeBtn.classList.toggle('brake-empty', cnt <= 0 && !isBrakeActive);
