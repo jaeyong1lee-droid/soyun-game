@@ -6331,7 +6331,7 @@
       const dt = Math.min(rawDt, 0.08);
 
       if (!this.isPaused) {
-        this.update(dt);
+        try { this.update(dt); } catch (_err) { console.warn("[Engine3D] update error:", _err); }
       }
 
       if (this.renderer && this.scene && this.camera) {
@@ -6362,7 +6362,7 @@
           this.avatarCheerTimer = 0.95;
           this.petSpinTimer = 0.85;
           if (Math.random() < 0.6) {
-            this.triggerJump();
+            this.jump();
           }
           const lx = lanes[nextLane] || 0;
           this._spawnParticleBurst(lx, 1.4, cfg.GATE_PASS_Z - 2, 0x00f3ff, 18, 0.9);

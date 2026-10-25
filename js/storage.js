@@ -367,31 +367,7 @@
           );
 
           if (data.state.buildId) {
-            if (!window.__SOYUN_BUILD_ID__) {
-              window.__SOYUN_BUILD_ID__ = window.__SOYUN_CLIENT_BUILD__ || data.state.buildId;
-            }
-            if (window.__SOYUN_BUILD_ID__ !== data.state.buildId && !isParentModalOpen && !isPlayingNow && !recentlyEditedLocally) {
-              window.__SOYUN_BUILD_ID__ = data.state.buildId;
-              let alreadyReloaded = false;
-              try {
-                alreadyReloaded = window.sessionStorage.getItem('soyun_reloaded_build_id') === String(data.state.buildId);
-                if (!alreadyReloaded) {
-                  window.sessionStorage.setItem('soyun_reloaded_build_id', String(data.state.buildId));
-                }
-              } catch (_e) {}
-              if (!alreadyReloaded) {
-                if (window.caches && typeof window.caches.keys === 'function') {
-                  window.caches.keys().then(function (keys) {
-                    return Promise.all(keys.map(function (k) { return window.caches.delete(k); }));
-                  }).finally(function () {
-                    window.location.reload();
-                  });
-                } else {
-                  window.location.reload();
-                }
-                return;
-              }
-            }
+            window.__SOYUN_BUILD_ID__ = data.state.buildId;
           }
 
           const cloud = sanitizeState(data.state);
