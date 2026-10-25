@@ -8,7 +8,7 @@
  */
 const fs = require('fs');
 const path = require('path');
-const { exec } = require('child_process');
+const { exec, execSync } = require('child_process');
 
 const ROOT = __dirname;
 const PERM_URL = 'https://jaeyong1lee-droid.github.io/soyun-game/';
@@ -55,12 +55,15 @@ function pushToStandaloneGitHub() {
       console.warn('⚠️ [보호 작동] 원본 파일 크기가 비정상(0바이트 등)이어서 GitHub 푸시를 중단합니다.');
       return;
     }
-    exec(
-      'git add index.html manifest.json sw.js vercel.json server.js package.json css js assets api && (git diff --cached --quiet || git commit -m "Auto-deploy Soyun game") && git push origin main',
-      { cwd: ROOT },
-      () => {}
-    );
-  } catch (_e) {}
+    execSync('git add index.html manifest.json sw.js vercel.json server.js package.json css js assets api', { cwd: ROOT, stdio: 'ignore' });
+    try {
+      execSync('git commit -m "Auto-deploy Soyun game"', { cwd: ROOT, stdio: 'ignore' });
+    } catch (_commitErr) {}
+    execSync('git push origin main', { cwd: ROOT, stdio: 'inherit' });
+    console.log('✅ [GitHub origin/main 푸시 완료 -> Vercel Production 자동 배포 트리거됨]');
+  } catch (e) {
+    console.warn('⚠️ [GitHub 푸시 경고]:', e.message);
+  }
 }
 
 function runDeploy(reason) {
