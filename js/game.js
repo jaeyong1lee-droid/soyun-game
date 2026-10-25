@@ -1761,7 +1761,7 @@
           let failMsg = `🧱💥 콰직!! 아야! 높은 블록에 부딪혀 피가 1 깎였어요! (❤️ ${state.hp}/${state.maxHp} · 낮은 장애물 레인으로 이동 후 [⬆️ 점프]하세요!)`;
           if (outcome === 'hit_hurdle') {
             failMsg = `🧱💥 쿵!! 낮은 장애물 레인에서 [⬆️ 점프]를 누르지 않아 부딪혔어요! (❤️ ${state.hp}/${state.maxHp})`;
-          } else if (outcome === 'hit_fire' && info && info.laneType === 'narrow_fire') {
+          } else if (outcome === 'hit_fire' && res && res.laneType === 'narrow_fire') {
             failMsg = `🔥💥 앗 뜨거!! 좁은 불구덩이에서 [⬆️ 점프]를 누르지 않아 빠졌어요! (❤️ ${state.hp}/${state.maxHp})`;
           } else if (outcome === 'hit_fire' || waveType === 'fire_pit') {
             failMsg = `🔥💥 앗 뜨거!! 넓은 불구덩이에 빠져 피가 1 깎였어요! (❤️ ${state.hp}/${state.maxHp} · 좁은 불구덩이 레인으로 이동 후 [⬆️ 점프]하세요!)`;
