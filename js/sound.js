@@ -538,6 +538,25 @@
     },
 
     /**
+     * KartRider Booster Ignition Sound (High-energy turbine whoosh + rising nitro chord!)
+     */
+    playBooster: function () {
+      playNoiseBurst(0.32, 0.34);
+      playTone(220, 'sawtooth', 0.35, 0, 0.28, 880);
+      playTone(330, 'triangle', 0.38, 0.05, 0.26, 1320);
+      playTone(523.25, 'sine', 0.28, 0.12, 0.3, 1046.5);
+    },
+
+    /**
+     * Emergency Hard Brake Screech Sound (Tire skid noise + rapid down-pitch deceleration!)
+     */
+    playBrake: function () {
+      playNoiseBurst(0.28, 0.36);
+      playTone(680, 'sawtooth', 0.26, 0, 0.26, 140);
+      playTone(440, 'square', 0.24, 0.04, 0.2, 110);
+    },
+
+    /**
      * UI button click feedback
      */
     playClick: function () {

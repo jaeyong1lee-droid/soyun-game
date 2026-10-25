@@ -34,6 +34,11 @@
 
     pauseChancesRemaining: 2,
     maxPauseChances: 2,
+    brakeCount: 0,
+    activeSpeedFactor: 1.0,
+    isBoosterActive: false,
+    isBrakeActive: false,
+    selectedVehicle: 'kart_saber',
 
     isObbyMode: false,
     obbyGameType: 'heaven_stairs',
@@ -234,8 +239,10 @@
     const bossFactor = (!state.isObbyMode && state.isBossPhase)
       ? ((window.GameConfig && window.GameConfig.BOSS_SPEED_MULTIPLIER) ? window.GameConfig.BOSS_SPEED_MULTIPLIER : 1.5)
       : 1.0;
-    const cap = state.isObbyMode ? 280 : (state.isBossPhase ? 260 : 225);
-    return Math.max(14, Math.min(cap, Math.round((state.speed || 36) * (state.speedMultiplier || 1.0) * obbyFactor * bossFactor)));
+    const actionFactor = Number(state.activeSpeedFactor) || 1.0;
+    const baseCap = state.isObbyMode ? 280 : (state.isBossPhase ? 260 : 225);
+    const cap = actionFactor > 1.0 ? Math.round(baseCap * actionFactor) : baseCap;
+    return Math.max(8, Math.min(cap, Math.round((state.speed || 36) * (state.speedMultiplier || 1.0) * obbyFactor * bossFactor * actionFactor)));
   }
 
   function getMaxHp() {
@@ -301,6 +308,11 @@
         reviewCount: wrongQueue.length,
         isPaused: state.isPaused,
         pauseChancesRemaining: state.pauseChancesRemaining,
+        brakeCount: state.brakeCount || 0,
+        activeSpeedFactor: state.activeSpeedFactor || 1.0,
+        isBoosterActive: Boolean(state.isBoosterActive),
+        isBrakeActive: Boolean(state.isBrakeActive),
+        selectedVehicle: state.selectedVehicle || 'kart_saber',
         maxPauseChances: state.maxPauseChances
       });
     }
@@ -356,6 +368,10 @@
         if (typeof window.Engine3D.setViewOrientationMode === 'function') {
           window.Engine3D.setViewOrientationMode(state.orientationMode);
         }
+        state.selectedVehicle = (saveState && saveState.selectedVehicle) || 'kart_saber';
+        if (typeof window.Engine3D.setVehicleType === 'function') {
+          window.Engine3D.setVehicleType(state.selectedVehicle);
+        }
         window.Engine3D.setStageTheme(state.stageConfig);
         window.Engine3D.setSpeed(getEffectiveSpeed());
         window.Engine3D.setLane(1);
@@ -373,6 +389,12 @@
       if (window.UIManager) {
         if (typeof window.UIManager.updateOrientationUI === 'function') {
           window.UIManager.updateOrientationUI(state.orientationMode);
+        }
+        if (typeof window.UIManager.updateCharacterButtonBadge === 'function') {
+          window.UIManager.updateCharacterButtonBadge(state.selectedVehicle);
+        }
+        if (typeof window.UIManager.updateBoosterBrakeUI === 'function') {
+          window.UIManager.updateBoosterBrakeUI(state.brakeCount, false, false);
         }
         window.UIManager.renderDashboard(saveState, state.selectedDashboardStage);
         window.UIManager.setStartScreenVisible(true);
@@ -432,6 +454,18 @@
       state.hp = state.maxHp;
       state.maxPauseChances = (window.GameConfig && window.GameConfig.MAX_PAUSE_CHANCES) ? window.GameConfig.MAX_PAUSE_CHANCES : 2;
       state.pauseChancesRemaining = state.maxPauseChances;
+      state.brakeCount = 0;
+      state.activeSpeedFactor = 1.0;
+      state.isBoosterActive = false;
+      state.isBrakeActive = false;
+      if (this._speedActionTimer) {
+        clearTimeout(this._speedActionTimer);
+        this._speedActionTimer = null;
+      }
+      document.body.classList.remove('kart-booster-fx-active', 'kart-brake-fx-active');
+      if (window.UIManager && typeof window.UIManager.updateBoosterBrakeUI === 'function') {
+        window.UIManager.updateBoosterBrakeUI(0, false, false);
+      }
       state.combo = 0;
       state.speedMultiplier = typeof saveState.speedMultiplier === 'number' ? saveState.speedMultiplier : 1.0;
       state.obbySpeedMultiplier = typeof saveState.obbySpeedMultiplier === 'number' ? saveState.obbySpeedMultiplier : 1.2;
@@ -1456,6 +1490,207 @@
         }
       }
       return false;
+    },
+
+    /**
+     * 🚀 KartRider Booster Button (#btn-booster-action, left of Jump/Climb button):
+     * - Speeds up to 2.0x for 2.0 seconds!
+     * - Grants +1 Brake charge (state.brakeCount += 1)!
+     * - Triggers KartRider high-speed animation & nitro effects!
+     */
+    triggerBooster: function () {
+      if (!state.isPlaying || state.isGameOver || state.isPaused) return false;
+      const self = this;
+
+      state.brakeCount = (state.brakeCount || 0) + 1;
+      state.isBoosterActive = true;
+      state.isBrakeActive = false;
+      state.activeSpeedFactor = 2.0;
+
+      if (this._speedActionTimer) {
+        clearTimeout(this._speedActionTimer);
+        this._speedActionTimer = null;
+      }
+
+      document.body.classList.remove('kart-brake-fx-active');
+      document.body.classList.add('kart-booster-fx-active');
+
+      if (window.SoundEngine) {
+        if (typeof window.SoundEngine.playBooster === 'function') {
+          window.SoundEngine.playBooster();
+        } else {
+          window.SoundEngine.playCorrect(3);
+        }
+        window.SoundEngine.setSpeedTempo(getEffectiveSpeed());
+      }
+
+      if (window.Engine3D) {
+        window.Engine3D.setSpeed(getEffectiveSpeed());
+        if (typeof window.Engine3D.triggerKartBooster === 'function') {
+          window.Engine3D.triggerKartBooster(2.0);
+        }
+      }
+
+      if (window.UIManager) {
+        if (typeof window.UIManager.updateBoosterBrakeUI === 'function') {
+          window.UIManager.updateBoosterBrakeUI(state.brakeCount, true, false);
+        }
+        window.UIManager.showFeedbackToast(
+          true,
+          `🚀💨 [카트라이더 부스터 발동!!] 2초간 속도 2.0배 폭주! (+🛑 브레이크 1회 충전 ➔ 총 ${state.brakeCount}회)`
+        );
+      }
+
+      syncHUD();
+
+      this._speedActionTimer = setTimeout(function () {
+        self._speedActionTimer = null;
+        state.isBoosterActive = false;
+        state.activeSpeedFactor = 1.0;
+        document.body.classList.remove('kart-booster-fx-active');
+        if (window.Engine3D) {
+          window.Engine3D.setSpeed(getEffectiveSpeed());
+        }
+        if (window.SoundEngine) {
+          window.SoundEngine.setSpeedTempo(getEffectiveSpeed());
+        }
+        if (window.UIManager && typeof window.UIManager.updateBoosterBrakeUI === 'function') {
+          window.UIManager.updateBoosterBrakeUI(state.brakeCount, false, false);
+        }
+        syncHUD();
+      }, 2000);
+
+      return true;
+    },
+
+    /**
+     * 🛑 Sudden Hard-Brake Button (#btn-brake-action, right of Turn-Jump button):
+     * - Starts at 0 charges; each Booster use adds +1 charge!
+     * - When pressed (if brakeCount > 0), slows speed to 0.5x for 2.0 seconds with sudden stop animation!
+     */
+    triggerBrake: function () {
+      if (!state.isPlaying || state.isGameOver || state.isPaused) return false;
+      const self = this;
+
+      if ((state.brakeCount || 0) <= 0) {
+        if (window.SoundEngine) {
+          window.SoundEngine.playClick();
+        }
+        if (window.UIManager) {
+          window.UIManager.showFeedbackToast(
+            false,
+            '🛑 브레이크 횟수가 0회예요! 우측 [🚀 부스터]를 쓰면 브레이크가 1회씩 올라갑니다!'
+          );
+        }
+        return false;
+      }
+
+      state.brakeCount = Math.max(0, state.brakeCount - 1);
+      state.isBrakeActive = true;
+      state.isBoosterActive = false;
+      state.activeSpeedFactor = 0.5;
+
+      if (this._speedActionTimer) {
+        clearTimeout(this._speedActionTimer);
+        this._speedActionTimer = null;
+      }
+
+      document.body.classList.remove('kart-booster-fx-active');
+      document.body.classList.add('kart-brake-fx-active');
+
+      if (window.SoundEngine) {
+        if (typeof window.SoundEngine.playBrake === 'function') {
+          window.SoundEngine.playBrake();
+        } else {
+          window.SoundEngine.playClick();
+        }
+        window.SoundEngine.setSpeedTempo(getEffectiveSpeed());
+      }
+
+      if (window.Engine3D) {
+        window.Engine3D.setSpeed(getEffectiveSpeed());
+        if (typeof window.Engine3D.triggerKartBrake === 'function') {
+          window.Engine3D.triggerKartBrake(2.0);
+        }
+      }
+
+      if (window.UIManager) {
+        if (typeof window.UIManager.updateBoosterBrakeUI === 'function') {
+          window.UIManager.updateBoosterBrakeUI(state.brakeCount, false, true);
+        }
+        window.UIManager.showFeedbackToast(
+          true,
+          `🛑💨 끼이익!! [급브레이크 작동!] 2초간 속도가 0.5배로 느려집니다! (남은 브레이크: ${state.brakeCount}회)`
+        );
+      }
+
+      syncHUD();
+
+      this._speedActionTimer = setTimeout(function () {
+        self._speedActionTimer = null;
+        state.isBrakeActive = false;
+        state.activeSpeedFactor = 1.0;
+        document.body.classList.remove('kart-brake-fx-active');
+        if (window.Engine3D) {
+          window.Engine3D.setSpeed(getEffectiveSpeed());
+        }
+        if (window.SoundEngine) {
+          window.SoundEngine.setSpeedTempo(getEffectiveSpeed());
+        }
+        if (window.UIManager && typeof window.UIManager.updateBoosterBrakeUI === 'function') {
+          window.UIManager.updateBoosterBrakeUI(state.brakeCount, false, false);
+        }
+        syncHUD();
+      }, 2000);
+
+      return true;
+    },
+
+    /**
+     * Selects one of the 10 Characters / Vehicles and updates the 3D scene immediately!
+     * @param {string} vehicleId
+     */
+    selectVehicle: function (vehicleId) {
+      const vObj = (window.GameConfig && typeof window.GameConfig.getVehicleById === 'function')
+        ? window.GameConfig.getVehicleById(vehicleId)
+        : { id: 'kart_saber', icon: '🏎️', name: '카트라이더 세이버 프로' };
+      state.selectedVehicle = vObj.id;
+
+      if (window.SaveManager && typeof window.SaveManager.setSelectedVehicle === 'function') {
+        window.SaveManager.setSelectedVehicle(vObj.id);
+      }
+      if (window.Engine3D && typeof window.Engine3D.setVehicleType === 'function') {
+        window.Engine3D.setVehicleType(vObj.id);
+      }
+      if (window.SoundEngine) {
+        window.SoundEngine.playCorrect(2);
+      }
+      if (window.UIManager) {
+        window.UIManager.renderCharacterModal(vObj.id);
+        window.UIManager.showFeedbackToast(
+          true,
+          `${vObj.icon} [${vObj.name}] 캐릭터 장착 완료!!`
+        );
+      }
+      return vObj.id;
+    },
+
+    openCharacterModal: function () {
+      if (window.SoundEngine) {
+        window.SoundEngine.playClick();
+      }
+      if (window.UIManager && typeof window.UIManager.showCharacterModal === 'function') {
+        window.UIManager.showCharacterModal(state.selectedVehicle || 'kart_saber');
+      }
+    },
+
+    closeCharacterModal: function () {
+      if (window.SoundEngine) {
+        window.SoundEngine.playClick();
+      }
+      if (window.UIManager && typeof window.UIManager.hideCharacterModal === 'function') {
+        window.UIManager.hideCharacterModal();
+      }
     },
 
     /**
@@ -2578,6 +2813,75 @@
           e.stopPropagation();
           if (Date.now() - lastJumpTap < 350) return;
           self.triggerJump();
+        });
+      }
+
+      // 🚀 Right-Side KartRider Booster Button (#btn-booster-action, left of Jump button)
+      const btnBooster = document.getElementById('btn-booster-action');
+      if (btnBooster) {
+        let lastBoosterTap = 0;
+        btnBooster.addEventListener('pointerdown', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          lastBoosterTap = Date.now();
+          self.triggerBooster();
+        });
+        btnBooster.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          if (Date.now() - lastBoosterTap < 350) return;
+          self.triggerBooster();
+        });
+      }
+
+      // 🛑 Left-Side Hard-Brake Button (#btn-brake-action, right of Turn-Jump button)
+      const btnBrake = document.getElementById('btn-brake-action');
+      if (btnBrake) {
+        let lastBrakeTap = 0;
+        btnBrake.addEventListener('pointerdown', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          lastBrakeTap = Date.now();
+          self.triggerBrake();
+        });
+        btnBrake.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          if (Date.now() - lastBrakeTap < 350) return;
+          self.triggerBrake();
+        });
+      }
+
+      // 🏎️ Middle-Right Character / Vehicle Change Button & Modal (10 types)
+      const btnOpenChar = document.getElementById('btn-open-character-modal');
+      if (btnOpenChar) {
+        btnOpenChar.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          self.openCharacterModal();
+        });
+      }
+      const btnCloseChar = document.getElementById('btn-close-character-modal');
+      if (btnCloseChar) {
+        btnCloseChar.addEventListener('click', function () {
+          self.closeCharacterModal();
+        });
+      }
+      const btnConfirmChar = document.getElementById('btn-confirm-character-modal');
+      if (btnConfirmChar) {
+        btnConfirmChar.addEventListener('click', function () {
+          self.closeCharacterModal();
+        });
+      }
+      const charGrid = document.getElementById('character-select-grid');
+      if (charGrid) {
+        charGrid.addEventListener('click', function (e) {
+          const card = e.target.closest('[data-vehicle-id]');
+          if (!card) return;
+          const vId = card.getAttribute('data-vehicle-id');
+          if (vId) {
+            self.selectVehicle(vId);
+          }
         });
       }
 

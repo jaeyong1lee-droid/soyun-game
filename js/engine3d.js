@@ -19,8 +19,8 @@
     GATE_DESPAWN_Z: 24,
     BOSS_Z: -38,
     BASE_SPEED: 36,
-    MAX_SPEED: 320,
-    MIN_SPEED: 14
+    MAX_SPEED: 500,
+    MIN_SPEED: 8
   };
 
   const STAGE_THEMES = [
@@ -1160,7 +1160,7 @@
             const bx = baseVxArr[v];
             const vy = pos.getY(v);
             const worldZ = -85 - vy;
-            const wf = 1 + Math.max(0, (8 - worldZ) * 0.0175);
+            const wf = 1;
             const curveX = this._getRoadCurveX(worldZ);
             pos.setX(v, bx * wf + curveX);
           }
@@ -1179,7 +1179,7 @@
             for (let v = 0; v < pos.count; v++) {
               const vy = pos.getY(v);
               const worldZ = -85 - vy;
-              const wf = 1 + Math.max(0, (8 - worldZ) * 0.0175);
+              const wf = 1;
               const curveX = this._getRoadCurveX(worldZ);
               pos.setX(v, sideEdge * wf + baseVxArr[v] + curveX);
             }
@@ -1199,7 +1199,7 @@
             for (let v = 0; v < pos.count; v++) {
               const vy = pos.getY(v);
               const worldZ = -85 - vy;
-              const wf = 1 + Math.max(0, (8 - worldZ) * 0.012);
+              const wf = 1;
               const curveX = this._getRoadCurveX(worldZ);
               const wave = Math.sin((this.elapsedTime || 0) * 3.2 + worldZ * 0.08) * 0.45;
               pos.setX(v, sideOffset * wf + baseVxArr[v] + curveX + wave);
@@ -1960,7 +1960,7 @@
       const spacing = 10;
       for (let i = 0; i < numRows; i++) {
         const zPos = 24 - i * spacing;
-        const wf = 1 + Math.max(0, (8 - zPos) * 0.0175);
+        const wf = 1;
         const curveX = this._getRoadCurveX(zPos);
         [-2.25, 2.25].forEach((xPos) => {
           const dash = new THREE.Mesh(dashGeo, this.dashMaterial);
@@ -1980,7 +1980,7 @@
 
       for (let i = 0; i < 32; i++) {
         const zPos = 24 - i * 7.5;
-        const wf = 1 + Math.max(0, (8 - zPos) * 0.0175);
+        const wf = 1;
         const curveX = this._getRoadCurveX(zPos);
         const mat = (i % 2 === 0) ? this.curbMatA : this.curbMatB;
         [-7.55, 7.55].forEach((cx) => {
@@ -3097,13 +3097,101 @@
     },
 
     /**
-     * Build "소윤이의 로블록스 오비 슈퍼카트" + 3D Blocky Avatar "이소윤" + Floating 3D Cube Pet
+     * Changes the active 3D Character / Vehicle type (10 types, default 'kart_saber') and rebuilds the 3D model immediately!
+     * @param {string} vehicleId
+     */
+    setVehicleType: function (vehicleId) {
+      const nextId = String(vehicleId || 'kart_saber').trim() || 'kart_saber';
+      this.currentVehicleType = nextId;
+      if (this.scene && global.THREE) {
+        const prevX = this.carGroup ? this.carGroup.position.x : 0;
+        const prevY = this.carGroup ? this.carGroup.position.y : 0;
+        this._buildPlayerCar();
+        if (this.carGroup) {
+          this.carGroup.position.x = prevX;
+          this.carGroup.position.y = prevY;
+        }
+        this.renderSingleFrame();
+      }
+      return this.currentVehicleType;
+    },
+
+    /**
+     * Triggers a 2.0-second KartRider Nitro Booster 3D Animation!
+     * @param {number} [duration=2.0]
+     */
+    triggerKartBooster: function (duration) {
+      const dur = typeof duration === 'number' ? duration : 2.0;
+      this.kartBoosterTimer = dur;
+      this.kartBrakeTimer = 0;
+      this.boostEffectTimer = dur;
+      this.BoosterParticleTick = 0;
+      this.avatarCheerTimer = dur;
+      this.petSpinTimer = dur;
+      this.cameraZoomPunch = 14.5;
+      if (this.carGroup) {
+        const cx = this.carGroup.position.x;
+        const cy = Math.max(0.4, this.carGroup.position.y + 0.5);
+        const cz = getCfg().GATE_PASS_Z + 1.8;
+        this._spawnParticleBurst(cx, cy, cz, 0x00e5ff, 36, 1.45);
+        this._spawnParticleBurst(cx, cy, cz, 0xffe600, 24, 1.2);
+      }
+      return true;
+    },
+
+    /**
+     * Triggers a 2.0-second Sudden Hard-Brake / Screech Stop 3D Animation!
+     * @param {number} [duration=2.0]
+     */
+    triggerKartBrake: function (duration) {
+      const dur = typeof duration === 'number' ? duration : 2.0;
+      this.kartBrakeTimer = dur;
+      this.kartBoosterTimer = 0;
+      this.boostEffectTimer = 0;
+      this.brakeParticleTick = 0;
+      this.cameraZoomPunch = -8.5;
+      if (this.carGroup) {
+        const cx = this.carGroup.position.x;
+        const cy = Math.max(0.25, this.carGroup.position.y + 0.25);
+        const cz = getCfg().GATE_PASS_Z + 1.4;
+        this._spawnParticleBurst(cx, cy, cz, 0xe2e8f0, 28, 1.0);
+        this._spawnParticleBurst(cx, cy, cz, 0xff5500, 20, 0.9);
+      }
+      return true;
+    },
+
+    /**
+     * Build 10 Distinct 3D Vehicles & Riding Characters for Soyun:
+     * 1) 'kart_saber'     : 🏎️ 카트라이더 세이버 프로 (Default!)
+     * 2) 'kart_cotton'    : ☁️ 카트라이더 코튼 V1
+     * 3) 'kart_burst'     : 🔥 카트라이더 버스트 Z7
+     * 4) 'girl_bicycle'   : 🚲 자전거 타는 소녀
+     * 5) 'girl_motorcycle': 🏍️ 오토바이 타는 소녀
+     * 6) 'girl_kickboard' : 🛴 킥보드 타는 소녀
+     * 7) 'girl_roller'    : 🛼 롤러스케이트 타는 소녀
+     * 8) 'girl_hoverboard': 🛸 호버보드 타는 소녀
+     * 9) 'kart_solid'     : 🛡️ 카트라이더 솔리드 골드
+     * 10) 'girl_unicorn'  : 🦄 유니콘 마법카트 소녀
      */
     _buildPlayerCar: function () {
       const THREE = global.THREE;
       if (this.carGroup && this.scene) {
         this.scene.remove(this.carGroup);
       }
+
+      if (!this.currentVehicleType) {
+        let savedVeh = 'kart_saber';
+        try {
+          if (global.SaveManager && typeof global.SaveManager.getSelectedVehicle === 'function') {
+            savedVeh = global.SaveManager.getSelectedVehicle() || 'kart_saber';
+          } else if (global.localStorage) {
+            savedVeh = global.localStorage.getItem('soyun_selected_vehicle_v1') || 'kart_saber';
+          }
+        } catch (_e) {}
+        this.currentVehicleType = savedVeh;
+      }
+
+      const vType = this.currentVehicleType || 'kart_saber';
 
       this.carGroup = new THREE.Group();
       this.carGroup.position.set(0, 0, getCfg().GATE_PASS_Z);
@@ -3112,133 +3200,511 @@
       this.carWheels = [];
       this.carFlames = [];
       this.carBodyMaterials = [];
+      this.soyunLeftLeg = null;
+      this.soyunRightLeg = null;
+      this.steeringWheelMesh = null;
 
-      // 1. Vibrant Open-Cockpit Roblox Blocky Speed Kart Chassis (Cyber-Pink, Neon-Cyan & Gold)
-      const chassisMat = new THREE.MeshStandardMaterial({
-        color: 0xff2a85,
-        metalness: 0.35,
-        roughness: 0.25,
-        emissive: 0x3a0028,
-        emissiveIntensity: 0.45
-      });
-      const cyanBlockMat = new THREE.MeshStandardMaterial({
-        color: 0x00f3ff,
+      // Color palettes per vehicle
+      const palettes = {
+        kart_saber:      { primary: 0xe11d48, secondary: 0xffffff, accent: 0xffe600, glow: 0x00e5ff, jacket: 0xe11d48, sleeve: 0xffffff },
+        kart_cotton:     { primary: 0x00b4d8, secondary: 0xf8fafc, accent: 0xffd166, glow: 0x38bdf8, jacket: 0x00b4d8, sleeve: 0xffffff },
+        kart_burst:      { primary: 0xff6d00, secondary: 0x1e293b, accent: 0xffe600, glow: 0xff9100, jacket: 0xff6d00, sleeve: 0x1e293b },
+        girl_bicycle:    { primary: 0x2ec4b6, secondary: 0xff70a6, accent: 0xffe600, glow: 0x2ec4b6, jacket: 0xff70a6, sleeve: 0xffffff },
+        girl_motorcycle: { primary: 0xff2a85, secondary: 0x00f5ff, accent: 0xffe600, glow: 0xff2a85, jacket: 0x1e1b4b, sleeve: 0xff2a85 },
+        girl_kickboard:  { primary: 0x00f5d4, secondary: 0x7209b7, accent: 0xffe600, glow: 0x00f5d4, jacket: 0x00f5d4, sleeve: 0xff2a85 },
+        girl_roller:     { primary: 0xff70a6, secondary: 0x00bbf9, accent: 0xfee440, glow: 0xff70a6, jacket: 0xff70a6, sleeve: 0x00bbf9 },
+        girl_hoverboard: { primary: 0x9b5de5, secondary: 0x00f5d4, accent: 0xfee440, glow: 0x00f5d4, jacket: 0x9b5de5, sleeve: 0x00f5d4 },
+        kart_solid:      { primary: 0xffd700, secondary: 0x10b981, accent: 0xffffff, glow: 0xffd700, jacket: 0x10b981, sleeve: 0xffd700 },
+        girl_unicorn:    { primary: 0xffffff, secondary: 0xff8fab, accent: 0xffd700, glow: 0xff8fab, jacket: 0xff8fab, sleeve: 0xffffff }
+      };
+      const pal = palettes[vType] || palettes.kart_saber;
+
+      const primaryMat = new THREE.MeshStandardMaterial({
+        color: pal.primary,
         metalness: 0.4,
-        roughness: 0.2,
-        emissive: 0x005577,
-        emissiveIntensity: 0.5
+        roughness: 0.22,
+        emissive: pal.primary,
+        emissiveIntensity: 0.28
+      });
+      const secondaryMat = new THREE.MeshStandardMaterial({
+        color: pal.secondary,
+        metalness: 0.35,
+        roughness: 0.22,
+        emissive: pal.secondary,
+        emissiveIntensity: 0.22
       });
       const goldMat = new THREE.MeshStandardMaterial({
-        color: 0xffd700,
+        color: pal.accent,
         metalness: 0.65,
         roughness: 0.2,
         emissive: 0x664400,
-        emissiveIntensity: 0.45
+        emissiveIntensity: 0.42
       });
-      this.carBodyMaterials.push(chassisMat, cyanBlockMat);
-
-      // Lower Blocky Base Frame
-      const baseGeo = new THREE.BoxGeometry(2.35, 0.44, 4.3);
-      const baseMesh = new THREE.Mesh(baseGeo, chassisMat);
-      baseMesh.position.set(0, 0.44, 0);
-      this.carGroup.add(baseMesh);
-
-      // Front Blocky Nose / Hood with Roblox Studs
-      const hoodGeo = new THREE.BoxGeometry(2.1, 0.38, 1.5);
-      const hoodMesh = new THREE.Mesh(hoodGeo, cyanBlockMat);
-      hoodMesh.position.set(0, 0.72, -1.35);
-      this.carGroup.add(hoodMesh);
-
-      // Gold Bumper & Headlight Bar
-      const bumperGeo = new THREE.BoxGeometry(2.42, 0.28, 0.32);
-      const bumperMesh = new THREE.Mesh(bumperGeo, goldMat);
-      bumperMesh.position.set(0, 0.42, -2.18);
-      this.carGroup.add(bumperMesh);
-
-      // Open Cockpit Side Fenders (with Roblox Studs on top!)
-      const fenderGeo = new THREE.BoxGeometry(0.36, 0.42, 2.1);
-      [-1.02, 1.02].forEach((fx) => {
-        const fender = new THREE.Mesh(fenderGeo, goldMat);
-        fender.position.set(fx, 0.76, 0.05);
-        this.carGroup.add(fender);
+      const chromeMat = new THREE.MeshStandardMaterial({
+        color: 0xe2e8f0,
+        metalness: 0.85,
+        roughness: 0.15
       });
+      const darkTireMat = new THREE.MeshStandardMaterial({
+        color: 0x151522,
+        roughness: 0.48
+      });
+      this.carBodyMaterials.push(primaryMat, secondaryMat);
 
-      // Add 12 Roblox Studs across the hood and side fenders!
-      const studGeo = this.sharedStudGeo || new THREE.CylinderGeometry(0.14, 0.14, 0.08, 12);
-      [-0.65, 0, 0.65].forEach((sx) => {
-        [-1.75, -1.15].forEach((sz) => {
-          const stud = new THREE.Mesh(studGeo, goldMat);
-          stud.position.set(sx, 0.95, sz);
-          this.carGroup.add(stud);
+      const nozzleGeo = new THREE.CylinderGeometry(0.16, 0.21, 0.42, 12);
+      const flameGeo = new THREE.ConeGeometry(0.22, 1.35, 10);
+      const flameMat = new THREE.MeshBasicMaterial({
+        color: 0x00e5ff,
+        transparent: true,
+        opacity: 0.94
+      });
+      this.carFlameMat = flameMat;
+
+      // Helper to add a booster nozzle + flame
+      const addBoosterPipe = (xPos, yPos, zPos, tiltX) => {
+        const nozzle = new THREE.Mesh(nozzleGeo, chromeMat);
+        nozzle.rotation.x = (Math.PI / 2) + (tiltX || 0);
+        nozzle.position.set(xPos, yPos, zPos);
+        this.carGroup.add(nozzle);
+
+        const flame = new THREE.Mesh(flameGeo, flameMat);
+        flame.rotation.x = (Math.PI / 2) + (tiltX || 0);
+        flame.position.set(xPos, yPos, zPos + 0.65);
+        this.carGroup.add(flame);
+        this.carFlames.push(flame);
+      };
+
+      // Avatar seat / standing offset depending on vehicle
+      let avatarY = 0.68;
+      let avatarZ = 0.15;
+      let armAngleX = 1.15;
+      let buildLegs = false;
+
+      if (vType === 'girl_bicycle') {
+        // =====================================================================
+        // 🚲 BICYCLE GIRL (민트&핑크 두발 자전거 타는 소윤이!)
+        // =====================================================================
+        avatarY = 1.05;
+        avatarZ = 0.22;
+        armAngleX = 1.05;
+        buildLegs = true;
+
+        // 2 Large Thin Spoked Bicycle Wheels (Front & Rear centered at x = 0)
+        const bikeTireGeo = new THREE.TorusGeometry(0.62, 0.085, 10, 24);
+        const bikeRimGeo = new THREE.TorusGeometry(0.54, 0.035, 8, 24);
+        const hubGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.22, 10);
+        const spokeGeo = new THREE.CylinderGeometry(0.018, 0.018, 1.08, 6);
+
+        [-1.38, 1.32].forEach((wz) => {
+          const wGroup = new THREE.Group();
+          wGroup.position.set(0, 0.68, wz);
+          const tire = new THREE.Mesh(bikeTireGeo, darkTireMat);
+          tire.rotation.y = Math.PI / 2;
+          const rim = new THREE.Mesh(bikeRimGeo, secondaryMat);
+          rim.rotation.y = Math.PI / 2;
+          const hub = new THREE.Mesh(hubGeo, chromeMat);
+          hub.rotation.z = Math.PI / 2;
+          wGroup.add(tire, rim, hub);
+          for (let sIdx = 0; sIdx < 4; sIdx++) {
+            const sp = new THREE.Mesh(spokeGeo, chromeMat);
+            sp.rotation.x = (sIdx * Math.PI) / 4;
+            wGroup.add(sp);
+          }
+          this.carGroup.add(wGroup);
+          this.carWheels.push(wGroup);
         });
-      });
-      [-1.02, 1.02].forEach((fx) => {
-        [-0.65, 0.05, 0.75].forEach((fz) => {
-          const stud = new THREE.Mesh(studGeo, chassisMat);
-          stud.position.set(fx, 1.01, fz);
-          this.carGroup.add(stud);
+
+        // Tubular Diamond Bicycle Frame
+        const tubeGeo = new THREE.CylinderGeometry(0.055, 0.055, 1.55, 10);
+        const topTube = new THREE.Mesh(tubeGeo, primaryMat);
+        topTube.position.set(0, 1.15, -0.32);
+        topTube.rotation.x = Math.PI / 2.2;
+        const downTube = new THREE.Mesh(tubeGeo, primaryMat);
+        downTube.position.set(0, 0.88, -0.45);
+        downTube.rotation.x = Math.PI / 3.1;
+        const seatPost = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 1.1, 10), chromeMat);
+        seatPost.position.set(0, 0.98, 0.28);
+        seatPost.rotation.x = -0.22;
+        const forkTube = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 1.28, 10), primaryMat);
+        forkTube.position.set(0, 1.12, -1.16);
+        forkTube.rotation.x = -0.26;
+        this.carGroup.add(topTube, downTube, seatPost, forkTube);
+
+        // Handlebars + Pink Grips + Cute Front Flower Basket
+        const hBar = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 1.25, 10), chromeMat);
+        hBar.rotation.z = Math.PI / 2;
+        hBar.position.set(0, 1.66, -0.98);
+        this.carGroup.add(hBar);
+        this.steeringWheelMesh = hBar;
+
+        const basketGeo = new THREE.BoxGeometry(0.76, 0.46, 0.54);
+        const basketMat = new THREE.MeshStandardMaterial({ color: 0xf4a261, roughness: 0.6 });
+        const basket = new THREE.Mesh(basketGeo, basketMat);
+        basket.position.set(0, 1.42, -1.35);
+        this.carGroup.add(basket);
+
+        // Colorful 3D flowers in the front basket
+        [-0.22, 0, 0.22].forEach((fx, fi) => {
+          const fl = new THREE.Mesh(
+            new THREE.SphereGeometry(0.14, 8, 8),
+            new THREE.MeshBasicMaterial({ color: fi === 1 ? 0xffe600 : 0xff2a85 })
+          );
+          fl.position.set(fx, 1.68, -1.35);
+          this.carGroup.add(fl);
         });
-      });
 
-      // Steering Column & Sporty Steering Wheel
-      const colGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.55, 8);
-      const colMat = new THREE.MeshStandardMaterial({ color: 0x222233 });
-      const colMesh = new THREE.Mesh(colGeo, colMat);
-      colMesh.position.set(0, 0.98, -0.58);
-      colMesh.rotation.x = -0.55;
-      this.carGroup.add(colMesh);
+        // Saddle Seat & Rear Booster Pipes
+        const saddle = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.14, 0.56), secondaryMat);
+        saddle.position.set(0, 1.38, 0.32);
+        this.carGroup.add(saddle);
 
-      const wheelRimGeo = new THREE.TorusGeometry(0.24, 0.045, 8, 16);
-      const wheelRimMat = new THREE.MeshBasicMaterial({ color: 0xffe600 });
-      this.steeringWheelMesh = new THREE.Mesh(wheelRimGeo, wheelRimMat);
-      this.steeringWheelMesh.position.set(0, 1.15, -0.42);
-      this.steeringWheelMesh.rotation.x = -0.55;
-      this.carGroup.add(this.steeringWheelMesh);
+        addBoosterPipe(-0.28, 0.85, 1.48, 0);
+        addBoosterPipe(0.28, 0.85, 1.48, 0);
 
-      // 2. 3D Blocky Roblox Avatar for "이소윤 (Soyun)" sitting inside the open cockpit!
+      } else if (vType === 'girl_motorcycle') {
+        // =====================================================================
+        // 🏍️ MOTORCYCLE GIRL (네온 슈퍼바이크 오토바이 타는 소윤이!)
+        // =====================================================================
+        avatarY = 0.92;
+        avatarZ = 0.18;
+        armAngleX = 1.28;
+        buildLegs = true;
+
+        // 2 Fat Superbike Tires with Glowing Neon Rims
+        const motoWheelGeo = new THREE.CylinderGeometry(0.58, 0.58, 0.46, 18);
+        const motoRimGeo = new THREE.TorusGeometry(0.38, 0.06, 10, 20);
+        [-1.42, 1.38].forEach((wz, idx) => {
+          const wHolder = new THREE.Group();
+          wHolder.position.set(0, 0.58, wz);
+          const tire = new THREE.Mesh(motoWheelGeo, darkTireMat);
+          tire.rotation.z = Math.PI / 2;
+          if (idx === 1) tire.scale.set(1, 1.25, 1); // Extra-wide rear superbike tire
+          wHolder.add(tire);
+          [-0.24, 0.24].forEach((rx) => {
+            const rim = new THREE.Mesh(motoRimGeo, secondaryMat);
+            rim.rotation.y = Math.PI / 2;
+            rim.position.x = rx;
+            wHolder.add(rim);
+          });
+          this.carGroup.add(wHolder);
+          this.carWheels.push(wHolder);
+        });
+
+        // Sculpted Aerodynamic Superbike Body & Fuel Tank
+        const bodyCore = new THREE.Mesh(new THREE.BoxGeometry(0.86, 0.68, 2.35), primaryMat);
+        bodyCore.position.set(0, 0.88, 0);
+        const fairingNose = new THREE.Mesh(new THREE.ConeGeometry(0.58, 1.15, 6), primaryMat);
+        fairingNose.rotation.x = -Math.PI / 2;
+        fairingNose.position.set(0, 1.02, -1.45);
+        const windshield = new THREE.Mesh(
+          new THREE.BoxGeometry(0.72, 0.42, 0.65),
+          new THREE.MeshBasicMaterial({ color: 0x00f5ff, transparent: true, opacity: 0.72 })
+        );
+        windshield.position.set(0, 1.38, -1.05);
+        windshield.rotation.x = 0.52;
+        const tailCowl = new THREE.Mesh(new THREE.BoxGeometry(0.74, 0.32, 0.95), secondaryMat);
+        tailCowl.position.set(0, 1.18, 1.15);
+        tailCowl.rotation.x = 0.22;
+        this.carGroup.add(bodyCore, fairingNose, windshield, tailCowl);
+
+        // Clip-on Handlebars
+        const motoBar = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 1.18, 10), goldMat);
+        motoBar.rotation.z = Math.PI / 2;
+        motoBar.position.set(0, 1.34, -0.68);
+        this.carGroup.add(motoBar);
+        this.steeringWheelMesh = motoBar;
+
+        // Twin Angled Superbike Exhaust Pipes
+        addBoosterPipe(-0.48, 0.78, 1.65, -0.15);
+        addBoosterPipe(0.48, 0.78, 1.65, -0.15);
+
+      } else if (vType === 'girl_kickboard') {
+        // =====================================================================
+        // 🛴 KICKBOARD GIRL (전동 킥보드 서서 타는 소윤이!)
+        // =====================================================================
+        avatarY = 0.88;
+        avatarZ = 0.15;
+        armAngleX = 0.98;
+        buildLegs = true;
+
+        // Low Neon Electric Kickboard Deck
+        const deckMesh = new THREE.Mesh(new THREE.BoxGeometry(0.96, 0.16, 2.75), secondaryMat);
+        deckMesh.position.set(0, 0.34, 0);
+        const ledTrim = new THREE.Mesh(new THREE.BoxGeometry(1.04, 0.08, 2.82), new THREE.MeshBasicMaterial({ color: 0x00f5d4 }));
+        ledTrim.position.set(0, 0.34, 0);
+        this.carGroup.add(deckMesh, ledTrim);
+
+        // 2 Scooter Wheels
+        const scootWheelGeo = new THREE.CylinderGeometry(0.34, 0.34, 0.28, 16);
+        [-1.22, 1.22].forEach((wz) => {
+          const wHolder = new THREE.Group();
+          wHolder.position.set(0, 0.34, wz);
+          const wMesh = new THREE.Mesh(scootWheelGeo, primaryMat);
+          wMesh.rotation.z = Math.PI / 2;
+          wHolder.add(wMesh);
+          this.carGroup.add(wHolder);
+          this.carWheels.push(wHolder);
+        });
+
+        // Tall Vertical Steering Stem + T-Handlebar + LED Headlight
+        const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.075, 1.68, 10), chromeMat);
+        stem.position.set(0, 1.12, -1.08);
+        stem.rotation.x = -0.14;
+        const tBar = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 1.15, 10), goldMat);
+        tBar.rotation.z = Math.PI / 2;
+        tBar.position.set(0, 1.92, -0.96);
+        this.carGroup.add(stem, tBar);
+        this.steeringWheelMesh = tBar;
+
+        addBoosterPipe(-0.34, 0.38, 1.45, 0);
+        addBoosterPipe(0.34, 0.38, 1.45, 0);
+
+      } else if (vType === 'girl_roller') {
+        // =====================================================================
+        // 🛼 ROLLER SKATE GIRL (네온 롤러스케이트 신고 달리는 소윤이!)
+        // =====================================================================
+        avatarY = 0.96;
+        avatarZ = 0.0;
+        armAngleX = 0.65;
+        buildLegs = true;
+
+        // 2 Neon Quad Roller Skates attached to the base with 4 glowing wheels each!
+        const bootGeo = new THREE.BoxGeometry(0.38, 0.34, 0.78);
+        const skateWheelGeo = new THREE.CylinderGeometry(0.14, 0.14, 0.12, 12);
+        [-0.34, 0.34].forEach((sx) => {
+          const skateGroup = new THREE.Group();
+          skateGroup.position.set(sx, 0.28, 0);
+          const boot = new THREE.Mesh(bootGeo, primaryMat);
+          boot.position.y = 0.12;
+          skateGroup.add(boot);
+          [-0.24, 0.24].forEach((wz) => {
+            [-0.22, 0.22].forEach((wx) => {
+              const sw = new THREE.Mesh(skateWheelGeo, goldMat);
+              sw.rotation.z = Math.PI / 2;
+              sw.position.set(wx, -0.08, wz);
+              skateGroup.add(sw);
+              this.carWheels.push(sw);
+            });
+          });
+          this.carGroup.add(skateGroup);
+        });
+
+        addBoosterPipe(-0.34, 0.32, 0.48, 0);
+        addBoosterPipe(0.34, 0.32, 0.48, 0);
+
+      } else if (vType === 'girl_hoverboard') {
+        // =====================================================================
+        // 🛸 HOVERBOARD GIRL (공중부양 사이버 호버보드 소윤이!)
+        // =====================================================================
+        avatarY = 0.92;
+        avatarZ = 0.05;
+        armAngleX = 0.55;
+        buildLegs = true;
+
+        const boardGeo = new THREE.BoxGeometry(1.45, 0.18, 3.1);
+        const boardMesh = new THREE.Mesh(boardGeo, primaryMat);
+        boardMesh.position.set(0, 0.46, 0);
+        const rimGeo = new THREE.BoxGeometry(1.58, 0.1, 3.22);
+        const rimMesh = new THREE.Mesh(rimGeo, new THREE.MeshBasicMaterial({ color: 0x00f5d4 }));
+        rimMesh.position.set(0, 0.46, 0);
+        this.carGroup.add(boardMesh, rimMesh);
+
+        // 2 Anti-Gravity Glowing Hover Rings Underneath
+        const hoverRingGeo = new THREE.TorusGeometry(0.48, 0.08, 8, 20);
+        hoverRingGeo.rotateX(Math.PI / 2);
+        [-0.95, 0.95].forEach((hz) => {
+          const hr = new THREE.Mesh(hoverRingGeo, new THREE.MeshBasicMaterial({ color: 0xfee440 }));
+          hr.position.set(0, 0.26, hz);
+          this.carGroup.add(hr);
+          this.carWheels.push(hr);
+        });
+
+        addBoosterPipe(-0.42, 0.46, 1.62, 0);
+        addBoosterPipe(0.42, 0.46, 1.62, 0);
+
+      } else {
+        // =====================================================================
+        // 🏎️ KARTRIDER SERIES KARTS:
+        //    - 'kart_saber'  (세이버 프로: 날렵한 레드&화이트 에어로 노즈콘 + 사이드 부스터 포드)
+        //    - 'kart_cotton' (코튼 V1: 둥근 스카이블루&화이트 유선형 바디)
+        //    - 'kart_burst'  (버스트 Z7: 오렌지 머슬 바디 + 거대 슈퍼차저 엔진)
+        //    - 'kart_solid'  (솔리드 골드: 황금 중장갑 범퍼 + 사이드 실드)
+        //    - 'girl_unicorn'(유니콘 마법카트: 유니콘 머리와 황금 뿔 + 날개)
+        // =====================================================================
+        // 1. Low-slung KartRider Racing Chassis Frame
+        const baseMesh = new THREE.Mesh(new THREE.BoxGeometry(2.28, 0.38, 4.15), primaryMat);
+        baseMesh.position.set(0, 0.42, 0);
+        this.carGroup.add(baseMesh);
+
+        // Aerodynamic KartRider Front Nose Cone & Splitter Wing
+        const noseCone = new THREE.Mesh(new THREE.BoxGeometry(1.65, 0.34, 1.65), secondaryMat);
+        noseCone.position.set(0, 0.64, -1.42);
+        noseCone.rotation.x = 0.14;
+        const frontWing = new THREE.Mesh(new THREE.BoxGeometry(2.58, 0.14, 0.62), primaryMat);
+        frontWing.position.set(0, 0.32, -2.18);
+        const frontGoldTrim = new THREE.Mesh(new THREE.BoxGeometry(2.62, 0.08, 0.22), goldMat);
+        frontGoldTrim.position.set(0, 0.38, -2.42);
+        this.carGroup.add(noseCone, frontWing, frontGoldTrim);
+
+        // Sculpted KartRider Side Booster Pontoons (Left & Right)
+        [-1.12, 1.12].forEach((px) => {
+          const pod = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.44, 2.35), secondaryMat);
+          pod.position.set(px, 0.66, 0.1);
+          const intake = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.24, 0.45), primaryMat);
+          intake.position.set(px, 0.68, -0.95);
+          this.carGroup.add(pod, intake);
+        });
+
+        // Vehicle-specific signature KartRider centerpiece!
+        if (vType === 'kart_saber') {
+          // Saber Pro Signature Center Fin & Red/White Aero Blades
+          const saberBlade = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.42, 1.85), primaryMat);
+          saberBlade.position.set(0, 0.84, -1.25);
+          this.carGroup.add(saberBlade);
+        } else if (vType === 'kart_burst') {
+          // Burst Z7 Giant Chrome V8 Supercharger Blower on the Hood!
+          const blower = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.52, 0.95), chromeMat);
+          blower.position.set(0, 0.95, -1.25);
+          const scoop = new THREE.Mesh(new THREE.BoxGeometry(0.76, 0.24, 0.62), goldMat);
+          scoop.position.set(0, 1.28, -1.32);
+          this.carGroup.add(blower, scoop);
+        } else if (vType === 'kart_solid') {
+          // Solid Gold Heavy Bumper Ram & Side Armor Shields
+          const ram = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 2.68, 12), goldMat);
+          ram.rotation.z = Math.PI / 2;
+          ram.position.set(0, 0.52, -2.38);
+          this.carGroup.add(ram);
+        } else if (vType === 'girl_unicorn') {
+          // Unicorn Royal Kart Figurehead + Golden Horn + Flapping Side Wings!
+          const uniHead = new THREE.Mesh(new THREE.BoxGeometry(0.68, 0.68, 0.68), primaryMat);
+          uniHead.position.set(0, 1.15, -1.85);
+          const uniHorn = new THREE.Mesh(new THREE.ConeGeometry(0.14, 0.68, 8), goldMat);
+          uniHorn.position.set(0, 1.65, -2.02);
+          uniHorn.rotation.x = 0.45;
+          this.carGroup.add(uniHead, uniHorn);
+          [-1.38, 1.38].forEach((wx) => {
+            const uWing = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.12, 0.95), secondaryMat);
+            uWing.position.set(wx, 0.96, 0.2);
+            uWing.rotation.z = wx > 0 ? 0.32 : -0.32;
+            this.carGroup.add(uWing);
+          });
+        }
+
+        // KartRider Bucket Seat Backrest
+        const seatBack = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.88, 0.24), secondaryMat);
+        seatBack.position.set(0, 1.02, 0.68);
+        seatBack.rotation.x = -0.15;
+        this.carGroup.add(seatBack);
+
+        // Sporty KartRider Steering Column & Wheel
+        const colMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.55, 8), chromeMat);
+        colMesh.position.set(0, 0.98, -0.58);
+        colMesh.rotation.x = -0.55;
+        this.carGroup.add(colMesh);
+
+        this.steeringWheelMesh = new THREE.Mesh(new THREE.TorusGeometry(0.24, 0.048, 8, 16), goldMat);
+        this.steeringWheelMesh.position.set(0, 1.15, -0.42);
+        this.steeringWheelMesh.rotation.x = -0.55;
+        this.carGroup.add(this.steeringWheelMesh);
+
+        // Rear Dual-Deck KartRider Aero Spoiler Wing
+        [-0.86, 0.86].forEach((sx) => {
+          const strut = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.62, 0.34), goldMat);
+          strut.position.set(sx, 0.98, 1.78);
+          this.carGroup.add(strut);
+        });
+        const wingBlade = new THREE.Mesh(new THREE.BoxGeometry(2.56, 0.14, 0.64), primaryMat);
+        wingBlade.position.set(0, 1.32, 1.88);
+        this.carGroup.add(wingBlade);
+
+        // Quad KartRider Rear Nitro Booster Pipes!
+        [-0.74, -0.28, 0.28, 0.74].forEach((bx) => {
+          addBoosterPipe(bx, 0.48, 2.12, -0.08);
+        });
+
+        // 4 Wide KartRider Racing Slicks with Glowing Star Rims
+        const wheelGeo = new THREE.CylinderGeometry(0.46, 0.46, 0.46, 16);
+        const rimGeo = new THREE.TorusGeometry(0.29, 0.055, 8, 16);
+        [
+          [-1.28, 0.46, -1.32],
+          [1.28, 0.46, -1.32],
+          [-1.34, 0.48, 1.32],
+          [1.34, 0.48, 1.32]
+        ].forEach(([wx, wy, wz]) => {
+          const wheelHolder = new THREE.Group();
+          wheelHolder.position.set(wx, wy, wz);
+          const tire = new THREE.Mesh(wheelGeo, darkTireMat);
+          tire.rotation.z = Math.PI / 2;
+          wheelHolder.add(tire);
+          const rim = new THREE.Mesh(rimGeo, goldMat);
+          rim.rotation.y = Math.PI / 2;
+          rim.position.x = wx > 0 ? 0.24 : -0.24;
+          wheelHolder.add(rim);
+          this.carGroup.add(wheelHolder);
+          this.carWheels.push(wheelHolder);
+        });
+      }
+
+      // =======================================================================
+      // 2. 3D Avatar for "이소윤 (Soyun)" riding the selected vehicle!
+      // =======================================================================
       this.soyunAvatarGroup = new THREE.Group();
-      this.soyunAvatarGroup.position.set(0, 0.68, 0.15);
+      this.soyunAvatarGroup.position.set(0, avatarY, avatarZ);
       this.carGroup.add(this.soyunAvatarGroup);
 
-      // Blocky Torso (VIP Cyber-Pink & Cyan Roblox Jacket)
-      const torsoGeo = new THREE.BoxGeometry(0.82, 0.74, 0.46);
+      const skinMat = new THREE.MeshStandardMaterial({ color: 0xffdfb8, roughness: 0.35 });
       const torsoMat = new THREE.MeshStandardMaterial({
-        color: 0x00f3ff,
-        roughness: 0.3,
-        emissive: 0x003355,
-        emissiveIntensity: 0.35
+        color: pal.jacket,
+        roughness: 0.28,
+        emissive: pal.jacket,
+        emissiveIntensity: 0.25
       });
-      const torsoMesh = new THREE.Mesh(torsoGeo, torsoMat);
+      const sleeveMat = new THREE.MeshStandardMaterial({
+        color: pal.sleeve,
+        roughness: 0.3
+      });
+
+      // Articulated Legs for Bicycle / Motorcycle / Kickboard / Roller / Hoverboard!
+      if (buildLegs) {
+        const legGeo = new THREE.BoxGeometry(0.28, 0.62, 0.28);
+        const legMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.4 });
+        this.soyunLeftLeg = new THREE.Group();
+        this.soyunLeftLeg.position.set(-0.22, 0.08, 0);
+        const lMesh = new THREE.Mesh(legGeo, legMat);
+        lMesh.position.y = -0.28;
+        this.soyunLeftLeg.add(lMesh);
+
+        this.soyunRightLeg = new THREE.Group();
+        this.soyunRightLeg.position.set(0.22, 0.08, 0);
+        const rMesh = new THREE.Mesh(legGeo, legMat);
+        rMesh.position.y = -0.28;
+        this.soyunRightLeg.add(rMesh);
+
+        this.soyunAvatarGroup.add(this.soyunLeftLeg, this.soyunRightLeg);
+      }
+
+      // Blocky Torso + Gold Back Star Emblem
+      const torsoMesh = new THREE.Mesh(new THREE.BoxGeometry(0.82, 0.74, 0.46), torsoMat);
       torsoMesh.position.set(0, 0.42, 0);
       this.soyunAvatarGroup.add(torsoMesh);
 
-      // Gold Star Emblem on Back of Soyun's Jacket (visible to player camera!)
-      const backBadgeGeo = new THREE.BoxGeometry(0.46, 0.46, 0.06);
-      const backBadge = new THREE.Mesh(backBadgeGeo, goldMat);
+      const backBadge = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.46, 0.06), goldMat);
       backBadge.position.set(0, 0.44, 0.24);
       backBadge.rotation.z = Math.PI / 4;
       this.soyunAvatarGroup.add(backBadge);
 
-      // Blocky Left & Right Arms extending toward the steering wheel
+      // Left & Right Arms
       const armGeo = new THREE.BoxGeometry(0.28, 0.66, 0.28);
-      const skinMat = new THREE.MeshStandardMaterial({
-        color: 0xffdfb8,
-        roughness: 0.35
-      });
-      const sleeveMat = new THREE.MeshStandardMaterial({
-        color: 0xff2a85,
-        roughness: 0.3
-      });
+      const handGeo = new THREE.BoxGeometry(0.26, 0.22, 0.26);
 
       this.soyunLeftArm = new THREE.Group();
       this.soyunLeftArm.position.set(-0.54, 0.66, 0);
       const leftArmMesh = new THREE.Mesh(armGeo, sleeveMat);
       leftArmMesh.position.set(0, -0.22, 0);
-      const leftHandGeo = new THREE.BoxGeometry(0.26, 0.22, 0.26);
-      const leftHand = new THREE.Mesh(leftHandGeo, skinMat);
+      const leftHand = new THREE.Mesh(handGeo, skinMat);
       leftHand.position.set(0, -0.56, 0);
       this.soyunLeftArm.add(leftArmMesh, leftHand);
-      this.soyunLeftArm.rotation.x = 1.15;
+      this.soyunLeftArm.rotation.x = armAngleX;
       this.soyunLeftArm.rotation.z = -0.18;
       this.soyunAvatarGroup.add(this.soyunLeftArm);
 
@@ -3246,98 +3712,73 @@
       this.soyunRightArm.position.set(0.54, 0.66, 0);
       const rightArmMesh = new THREE.Mesh(armGeo, sleeveMat);
       rightArmMesh.position.set(0, -0.22, 0);
-      const rightHand = new THREE.Mesh(leftHandGeo, skinMat);
+      const rightHand = new THREE.Mesh(handGeo, skinMat);
       rightHand.position.set(0, -0.56, 0);
       this.soyunRightArm.add(rightArmMesh, rightHand);
-      this.soyunRightArm.rotation.x = 1.15;
+      this.soyunRightArm.rotation.x = armAngleX;
       this.soyunRightArm.rotation.z = 0.18;
       this.soyunAvatarGroup.add(this.soyunRightArm);
 
-      // Blocky Roblox Head (Yellow/Peach with Cute Face on Front & Hair on Back)
+      // Head + Pigtails + Racing Goggles/Visor + Golden Crown (👑)
       const headGroup = new THREE.Group();
       headGroup.position.set(0, 1.12, 0);
       this.soyunAvatarGroup.add(headGroup);
       this.soyunHeadMesh = headGroup;
 
-      const headGeo = new THREE.BoxGeometry(0.74, 0.74, 0.74);
-      const hairDarkMat = new THREE.MeshStandardMaterial({
-        color: 0x1e132d,
-        roughness: 0.4
-      });
-      const faceMat = new THREE.MeshBasicMaterial({
-        map: this.textures.soyunFace
-      });
-      const headMaterials = [
-        skinMat,     // Right
-        skinMat,     // Left
-        hairDarkMat, // Top
-        skinMat,     // Bottom
-        faceMat,     // Front (+Z)
-        faceMat      // Back (-Z so face is also seen if turned!)
-      ];
-      const headBox = new THREE.Mesh(headGeo, headMaterials);
+      const hairDarkMat = new THREE.MeshStandardMaterial({ color: 0x1e132d, roughness: 0.4 });
+      const faceMat = new THREE.MeshBasicMaterial({ map: this.textures.soyunFace });
+      const headBox = new THREE.Mesh(new THREE.BoxGeometry(0.74, 0.74, 0.74), [
+        skinMat, skinMat, hairDarkMat, skinMat, faceMat, faceMat
+      ]);
       headGroup.add(headBox);
 
-      // Blocky Top & Back Hair Cap
-      const hairCapGeo = new THREE.BoxGeometry(0.78, 0.24, 0.78);
-      const hairCap = new THREE.Mesh(hairCapGeo, hairDarkMat);
+      const hairCap = new THREE.Mesh(new THREE.BoxGeometry(0.78, 0.24, 0.78), hairDarkMat);
       hairCap.position.set(0, 0.3, 0);
-      headGroup.add(hairCap);
-
-      const hairBackGeo = new THREE.BoxGeometry(0.76, 0.68, 0.18);
-      const hairBack = new THREE.Mesh(hairBackGeo, hairDarkMat);
+      const hairBack = new THREE.Mesh(new THREE.BoxGeometry(0.76, 0.68, 0.18), hairDarkMat);
       hairBack.position.set(0, 0.02, 0.34);
-      headGroup.add(hairBack);
+      headGroup.add(hairCap, hairBack);
 
-      // Cute Twin-Pigtails Hair Blocks on Both Sides + Pink/Cyan Hair Ribbons!
+      // KartRider Racing Goggles / Visor on Forehead
+      const visorMesh = new THREE.Mesh(
+        new THREE.BoxGeometry(0.8, 0.18, 0.82),
+        new THREE.MeshBasicMaterial({ color: 0x00f5ff, transparent: true, opacity: 0.82 })
+      );
+      visorMesh.position.set(0, 0.22, -0.02);
+      headGroup.add(visorMesh);
+
       const ribbonMat = new THREE.MeshBasicMaterial({ color: 0xff2a85 });
       const pigtailGeo = new THREE.BoxGeometry(0.26, 0.64, 0.28);
       const ribbonGeo = new THREE.BoxGeometry(0.32, 0.18, 0.32);
 
       this.soyunLeftPigtail = new THREE.Group();
       this.soyunLeftPigtail.position.set(-0.48, 0.1, 0.08);
-      const leftRibbon = new THREE.Mesh(ribbonGeo, ribbonMat);
       const leftTail = new THREE.Mesh(pigtailGeo, hairDarkMat);
       leftTail.position.set(-0.06, -0.28, 0);
       leftTail.rotation.z = -0.22;
-      this.soyunLeftPigtail.add(leftRibbon, leftTail);
+      this.soyunLeftPigtail.add(new THREE.Mesh(ribbonGeo, ribbonMat), leftTail);
       headGroup.add(this.soyunLeftPigtail);
 
       this.soyunRightPigtail = new THREE.Group();
       this.soyunRightPigtail.position.set(0.48, 0.1, 0.08);
-      const rightRibbon = new THREE.Mesh(ribbonGeo, ribbonMat);
       const rightTail = new THREE.Mesh(pigtailGeo, hairDarkMat);
       rightTail.position.set(0.06, -0.28, 0);
       rightTail.rotation.z = 0.22;
-      this.soyunRightPigtail.add(rightRibbon, rightTail);
+      this.soyunRightPigtail.add(new THREE.Mesh(ribbonGeo, ribbonMat), rightTail);
       headGroup.add(this.soyunRightPigtail);
 
-      // Golden 3D Crown (👑) on top of Soyun's head!
+      // Golden 3D Crown (👑)
       this.soyunCrownGroup = new THREE.Group();
       this.soyunCrownGroup.position.set(0, 0.5, 0);
       headGroup.add(this.soyunCrownGroup);
-
-      const crownBandGeo = new THREE.BoxGeometry(0.56, 0.16, 0.56);
-      const crownBand = new THREE.Mesh(crownBandGeo, goldMat);
-      this.soyunCrownGroup.add(crownBand);
-
+      this.soyunCrownGroup.add(new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.16, 0.56), goldMat));
       const spikeGeo = new THREE.ConeGeometry(0.11, 0.26, 4);
-      [
-        [-0.2, 0.2, -0.2],
-        [0.2, 0.2, -0.2],
-        [-0.2, 0.2, 0.2],
-        [0.2, 0.2, 0.2],
-        [0, 0.24, 0]
-      ].forEach(([cx, cy, cz], idx) => {
-        const spike = new THREE.Mesh(
-          spikeGeo,
-          idx === 4 ? new THREE.MeshBasicMaterial({ color: 0x00f3ff }) : goldMat
-        );
+      [[-0.2, 0.2, -0.2], [0.2, 0.2, -0.2], [-0.2, 0.2, 0.2], [0.2, 0.2, 0.2], [0, 0.24, 0]].forEach(([cx, cy, cz], idx) => {
+        const spike = new THREE.Mesh(spikeGeo, idx === 4 ? new THREE.MeshBasicMaterial({ color: 0x00f3ff }) : goldMat);
         spike.position.set(cx, cy, cz);
         this.soyunCrownGroup.add(spike);
       });
 
-      // 3. Crisp 3D Canvas Sprite Nameplate above Soyun's head ("👑 [VIP] 이소윤") at y = 2.65
+      // 3. Nameplate Sprite
       if (this.textures.soyunNameplate) {
         const spriteMat = new THREE.SpriteMaterial({
           map: this.textures.soyunNameplate,
@@ -3345,53 +3786,32 @@
           depthTest: false
         });
         this.soyunNameSprite = new THREE.Sprite(spriteMat);
-        this.soyunNameSprite.position.set(0, 2.68, 0.15);
+        this.soyunNameSprite.position.set(0, avatarY + 2.02, 0.15);
         this.soyunNameSprite.scale.set(3.2, 0.8, 1);
         this.carGroup.add(this.soyunNameSprite);
       }
 
-      // 4. Floating 3D Roblox Cube Pet (유니콘/드래곤 큐브 펫) at (1.65, 1.9, 0.3)
+      // 4. Floating 3D Cube Pet
       this.petGroup = new THREE.Group();
       this.petGroup.position.set(1.65, 1.9, 0.3);
       this.carGroup.add(this.petGroup);
 
-      const petBodyGeo = new THREE.BoxGeometry(0.68, 0.68, 0.68);
       const petSideMat = new THREE.MeshStandardMaterial({
         color: 0x72efdd,
         emissive: 0xff2a85,
         emissiveIntensity: 0.35,
         roughness: 0.25
       });
-      const petFaceMat = new THREE.MeshBasicMaterial({
-        map: this.textures.petFace
-      });
-      const petMaterials = [
-        petSideMat,
-        petSideMat,
-        petSideMat,
-        petSideMat,
-        petFaceMat, // Front (+Z toward camera)
-        petFaceMat  // Back (-Z)
-      ];
-      const petCube = new THREE.Mesh(petBodyGeo, petMaterials);
+      const petFaceMat = new THREE.MeshBasicMaterial({ map: this.textures.petFace });
+      const petCube = new THREE.Mesh(new THREE.BoxGeometry(0.68, 0.68, 0.68), [
+        petSideMat, petSideMat, petSideMat, petSideMat, petFaceMat, petFaceMat
+      ]);
       this.petGroup.add(petCube);
 
-      // Glowing Golden Unicorn Horn & Blocky Ears on Cube Pet
-      const hornGeo = new THREE.ConeGeometry(0.12, 0.42, 4);
-      const hornMat = new THREE.MeshBasicMaterial({ color: 0xffe600 });
-      const hornMesh = new THREE.Mesh(hornGeo, hornMat);
+      const hornMesh = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.42, 4), new THREE.MeshBasicMaterial({ color: 0xffe600 }));
       hornMesh.position.set(0, 0.52, 0);
       this.petGroup.add(hornMesh);
 
-      const earGeo = new THREE.BoxGeometry(0.16, 0.22, 0.16);
-      const earMat = new THREE.MeshBasicMaterial({ color: 0xff2a85 });
-      [-0.24, 0.24].forEach((ex) => {
-        const ear = new THREE.Mesh(earGeo, earMat);
-        ear.position.set(ex, 0.42, 0);
-        this.petGroup.add(ear);
-      });
-
-      // Flapping Blocky Wings on Cube Pet
       const wingGeo = new THREE.BoxGeometry(0.46, 0.1, 0.32);
       const wingMat = new THREE.MeshBasicMaterial({ color: 0xffe600 });
       this.petLeftWing = new THREE.Mesh(wingGeo, wingMat);
@@ -3400,88 +3820,12 @@
       this.petRightWing.position.set(0.5, 0.08, 0);
       this.petGroup.add(this.petLeftWing, this.petRightWing);
 
-      // 5. Rear Spoiler Wing, VIP Plate & Twin Turbo Boosters
-      const strutGeo = new THREE.BoxGeometry(0.14, 0.58, 0.32);
-      const wingBladeMat = new THREE.MeshBasicMaterial({ color: 0x00f3ff });
-      const leftStrut = new THREE.Mesh(strutGeo, goldMat);
-      leftStrut.position.set(-0.82, 0.96, 1.85);
-      const rightStrut = new THREE.Mesh(strutGeo, goldMat);
-      rightStrut.position.set(0.82, 0.96, 1.85);
-      const wingBladeGeo = new THREE.BoxGeometry(2.45, 0.14, 0.58);
-      const wingBlade = new THREE.Mesh(wingBladeGeo, wingBladeMat);
-      wingBlade.position.set(0, 1.26, 1.92);
-      this.carGroup.add(leftStrut, rightStrut, wingBlade);
-
-      const rearPlateGeo = new THREE.PlaneGeometry(1.65, 0.54);
-      const rearPlateMat = new THREE.MeshBasicMaterial({
-        map: this.textures.playerCar,
-        side: THREE.DoubleSide
-      });
-      const rearPlate = new THREE.Mesh(rearPlateGeo, rearPlateMat);
-      rearPlate.position.set(0, 0.58, 2.18);
-      this.carGroup.add(rearPlate);
-
-      const nozzleGeo = new THREE.CylinderGeometry(0.18, 0.22, 0.38, 12);
-      const nozzleMat = new THREE.MeshStandardMaterial({ color: 0x333344, metalness: 0.8 });
-      const flameGeo = new THREE.ConeGeometry(0.2, 1.25, 10);
-      const flameMat = new THREE.MeshBasicMaterial({
-        color: 0x00f3ff,
-        transparent: true,
-        opacity: 0.92
-      });
-      this.carFlameMat = flameMat;
-
-      [-0.56, 0.56].forEach((xOffset) => {
-        const nozzle = new THREE.Mesh(nozzleGeo, nozzleMat);
-        nozzle.rotation.x = Math.PI / 2;
-        nozzle.position.set(xOffset, 0.36, 2.2);
-        this.carGroup.add(nozzle);
-
-        const flame = new THREE.Mesh(flameGeo, flameMat);
-        flame.rotation.x = Math.PI / 2;
-        flame.position.set(xOffset, 0.36, 2.8);
-        this.carGroup.add(flame);
-        this.carFlames.push(flame);
-      });
-
-      // 6. 4 Spinning Chunky Roblox Kart Wheels
-      const wheelGeo = new THREE.CylinderGeometry(0.44, 0.44, 0.42, 16);
-      const wheelMat = new THREE.MeshStandardMaterial({
-        color: 0x151522,
-        roughness: 0.5
-      });
-      const rimGeo = new THREE.TorusGeometry(0.28, 0.05, 8, 16);
-      const rimMat = new THREE.MeshBasicMaterial({ color: 0xffe600 });
-
-      const wheelCoords = [
-        [-1.22, 0.44, -1.35],
-        [1.22, 0.44, -1.35],
-        [-1.22, 0.44, 1.35],
-        [1.22, 0.44, 1.35]
-      ];
-      wheelCoords.forEach(([wx, wy, wz]) => {
-        const wheelHolder = new THREE.Group();
-        wheelHolder.position.set(wx, wy, wz);
-
-        const tire = new THREE.Mesh(wheelGeo, wheelMat);
-        tire.rotation.z = Math.PI / 2;
-        wheelHolder.add(tire);
-
-        const rim = new THREE.Mesh(rimGeo, rimMat);
-        rim.rotation.y = Math.PI / 2;
-        rim.position.x = wx > 0 ? 0.21 : -0.21;
-        wheelHolder.add(rim);
-
-        this.carGroup.add(wheelHolder);
-        this.carWheels.push(wheelHolder);
-      });
-
-      // 7. Neon Undercarriage Glow Plane
+      // 5. Undercarriage Neon Glow
       const glowGeo = new THREE.PlaneGeometry(3.1, 5.2);
       const glowMat = new THREE.MeshBasicMaterial({
-        color: 0xff2a85,
+        color: pal.glow,
         transparent: true,
-        opacity: 0.4,
+        opacity: 0.42,
         side: THREE.DoubleSide
       });
       this.carUnderGlow = new THREE.Mesh(glowGeo, glowMat);
@@ -6268,12 +6612,9 @@
      * Computes adaptive 3D gate scale at normalized progress (0.0 at spawn -> 1.0 at player pass)
      * Ensures 3-lane signboards are huge from the start AND never clip horizontally on portrait phones.
      */
-    _getAdaptiveGateScale: function (progress) {
-      const p = Math.max(0, Math.min(1, Number(progress) || 0));
+    _getAdaptiveGateScale: function (_progress) {
       const pf = this._getPortraitFactor();
-      const initScale = Math.max(2.26, 2.44 - pf * 0.14);
-      const endScale = Math.max(0.98, 1.05 - pf * 0.06);
-      return initScale - p * (initScale - endScale);
+      return Math.max(0.94, 1.0 - pf * 0.05);
     },
 
     /**
@@ -6405,11 +6746,11 @@
         }
         if (dash.userData && typeof dash.userData.baseX === 'number') {
           const z = dash.position.z;
-          const wf = 1 + Math.max(0, (8 - z) * 0.0175);
+          const wf = 1;
           const curveX = this._getRoadCurveX(z);
           const slope = this._getRoadCurveSlope(z);
           dash.position.x = dash.userData.baseX * wf + curveX;
-          dash.rotation.z = -Math.atan(dash.userData.baseX * 0.0175 + slope);
+          dash.rotation.z = -Math.atan(slope);
         }
       }
 
@@ -6421,11 +6762,11 @@
         }
         if (curb.userData && typeof curb.userData.baseX === 'number') {
           const z = curb.position.z;
-          const wf = 1 + Math.max(0, (8 - z) * 0.0175);
+          const wf = 1;
           const curveX = this._getRoadCurveX(z);
           const slope = this._getRoadCurveSlope(z);
           curb.position.x = curb.userData.baseX * wf + curveX;
-          curb.rotation.y = -Math.atan(curb.userData.baseX * 0.0175 + slope);
+          curb.rotation.y = -Math.atan(slope);
         }
       }
 
@@ -6665,13 +7006,75 @@
           }
         }
 
-        // Scale twin turbo exhaust flames with speed & boost
+        // Animate articulated legs when riding Bicycle, Kickboard, Roller Skates, or Motorcycle!
+        if (this.soyunLeftLeg && this.soyunRightLeg) {
+          if (this.currentVehicleType === 'girl_bicycle' || this.currentVehicleType === 'girl_roller') {
+            const stride = Math.sin(this.elapsedTime * 16) * 0.55;
+            this.soyunLeftLeg.rotation.x = stride;
+            this.soyunRightLeg.rotation.x = -stride;
+          } else if (this.currentVehicleType === 'girl_kickboard') {
+            this.soyunLeftLeg.rotation.x = 0.05;
+            this.soyunRightLeg.rotation.x = Math.sin(this.elapsedTime * 12) * 0.35;
+          }
+        }
+
+        // KartRider Nitro Booster 3D Animation (2.0s high-speed wheelie pitch + giant cyan nitro jet stream!)
+        if (this.kartBoosterTimer && this.kartBoosterTimer > 0) {
+          this.kartBoosterTimer = Math.max(0, this.kartBoosterTimer - dt);
+          if (!this.isJumping) {
+            this.carGroup.rotation.x -= 0.12 + Math.sin(this.elapsedTime * 48) * 0.03;
+          }
+          if (this.carFlameMat) {
+            this.carFlameMat.color.setHex(0x00e5ff);
+          }
+          this.BoosterParticleTick = (this.BoosterParticleTick || 0) - dt;
+          if (this.BoosterParticleTick <= 0) {
+            this.BoosterParticleTick = 0.075;
+            this._spawnParticleBurst(
+              this.carGroup.position.x + (Math.random() - 0.5) * 0.9,
+              Math.max(0.35, this.carGroup.position.y + 0.45),
+              cfg.GATE_PASS_Z + 2.3,
+              Math.random() < 0.65 ? 0x00e5ff : 0xffe600,
+              10,
+              0.85
+            );
+          }
+        } else if (this.kartBrakeTimer && this.kartBrakeTimer > 0) {
+          // Sudden Hard-Brake Screech 3D Animation (2.0s nose-dive pitch + skid fishtail + tire smoke!)
+          this.kartBrakeTimer = Math.max(0, this.kartBrakeTimer - dt);
+          if (!this.isJumping) {
+            this.carGroup.rotation.x += 0.24 + Math.sin(this.elapsedTime * 42) * 0.04;
+            this.carGroup.rotation.y += Math.sin(this.elapsedTime * 36) * 0.14;
+          }
+          if (this.carFlameMat) {
+            this.carFlameMat.color.setHex(0xff1744);
+          }
+          this.brakeParticleTick = (this.brakeParticleTick || 0) - dt;
+          if (this.brakeParticleTick <= 0) {
+            this.brakeParticleTick = 0.085;
+            this._spawnParticleBurst(
+              this.carGroup.position.x + (Math.random() - 0.5) * 1.4,
+              Math.max(0.2, this.carGroup.position.y + 0.2),
+              cfg.GATE_PASS_Z + 1.4,
+              Math.random() < 0.7 ? 0xe2e8f0 : 0xff5500,
+              12,
+              0.75
+            );
+          }
+        } else if (this.carFlameMat) {
+          this.carFlameMat.color.setHex(0x00f3ff);
+        }
+
+        // Scale twin/quad turbo exhaust flames with speed & KartRider booster
         const speedNorm = Math.max(0, (this.currentSpeed - 80) / 220);
-        const boostBonus = this.boostEffectTimer > 0 ? 0.95 : 0;
+        const isKartBoosting = (this.kartBoosterTimer && this.kartBoosterTimer > 0);
+        const isKartBraking = (this.kartBrakeTimer && this.kartBrakeTimer > 0);
+        const boostBonus = isKartBoosting ? 2.15 : (this.boostEffectTimer > 0 ? 0.95 : 0);
         for (let f = 0; f < this.carFlames.length; f++) {
-          const pulse = 0.85 + Math.sin(this.elapsedTime * 45 + f) * 0.25;
-          const flameScale = (0.75 + speedNorm * 1.2 + boostBonus) * pulse;
-          this.carFlames[f].scale.set(1, flameScale, 1);
+          const pulse = 0.85 + Math.sin(this.elapsedTime * 55 + f) * 0.28;
+          const flameScale = isKartBraking ? 0.45 : (0.75 + speedNorm * 1.2 + boostBonus) * pulse;
+          const widthScale = isKartBoosting ? 1.55 : (isKartBraking ? 1.4 : 1.0);
+          this.carFlames[f].scale.set(widthScale, flameScale, widthScale);
         }
 
         // Damage red flash vs boost glow
@@ -6740,10 +7143,14 @@
         }
 
         const baseFov = 50 + pf * 12;
+        const kartBoostFov = (this.kartBoosterTimer && this.kartBoosterTimer > 0) ? 13 : 0;
+        const kartBrakeFov = (this.kartBrakeTimer && this.kartBrakeTimer > 0) ? -7 : 0;
         const targetFov =
           baseFov +
           Math.max(0, Math.min(16, (this.currentSpeed - 110) * 0.075)) +
           (this.boostEffectTimer > 0 ? 4 : 0) +
+          kartBoostFov +
+          kartBrakeFov +
           this.cameraZoomPunch;
 
         if (Math.abs(this.camera.fov - targetFov) > 0.08) {

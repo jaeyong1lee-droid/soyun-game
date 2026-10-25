@@ -2264,6 +2264,106 @@
       if (modal) {
         modal.classList.add('hidden');
       }
+    },
+
+    /**
+     * Updates the Booster & Brake buttons' badges, labels, and active glow states!
+     * @param {number} brakeCount
+     * @param {boolean} [isBoosterActive]
+     * @param {boolean} [isBrakeActive]
+     */
+    updateBoosterBrakeUI: function (brakeCount, isBoosterActive, isBrakeActive) {
+      const cnt = Math.max(0, parseInt(brakeCount, 10) || 0);
+      const brakeBtn = byId('btn-brake-action');
+      const brakeBadge = byId('brake-count-badge');
+      const brakeLbl = byId('brake-btn-label');
+      const boosterBtn = byId('btn-booster-action');
+      const boosterLbl = byId('booster-btn-label');
+
+      if (brakeBadge) {
+        brakeBadge.textContent = String(cnt);
+      }
+      if (brakeLbl) {
+        brakeLbl.textContent = isBrakeActive ? '🛑감속중!' : `브레이크 ${cnt}`;
+      }
+      if (brakeBtn) {
+        brakeBtn.classList.toggle('brake-empty', cnt <= 0 && !isBrakeActive);
+        brakeBtn.classList.toggle('brake-active-glow', Boolean(isBrakeActive));
+      }
+      if (boosterLbl) {
+        boosterLbl.textContent = isBoosterActive ? '🚀2.0배속!' : '부스터x2';
+      }
+      if (boosterBtn) {
+        boosterBtn.classList.toggle('booster-active-glow', Boolean(isBoosterActive));
+      }
+    },
+
+    /**
+     * Updates the middle-right Character Change button badge on the Main Screen
+     * @param {string} vehicleId
+     */
+    updateCharacterButtonBadge: function (vehicleId) {
+      const vObj = (window.GameConfig && typeof window.GameConfig.getVehicleById === 'function')
+        ? window.GameConfig.getVehicleById(vehicleId)
+        : { icon: '🏎️', shortName: '세이버 프로', name: '카트라이더 세이버 프로' };
+      const iconEl = byId('btn-char-current-icon');
+      const nameEl = byId('btn-char-current-name');
+      if (iconEl) iconEl.textContent = vObj.icon || '🏎️';
+      if (nameEl) nameEl.textContent = vObj.shortName || vObj.name || '세이버 프로';
+    },
+
+    /**
+     * Renders the 10 selectable Characters / Vehicles inside #character-select-modal
+     * @param {string} selectedVehicleId
+     */
+    renderCharacterModal: function (selectedVehicleId) {
+      const curId = String(selectedVehicleId || 'kart_saber').trim() || 'kart_saber';
+      this.updateCharacterButtonBadge(curId);
+
+      const gridEl = byId('character-select-grid');
+      if (!gridEl) return;
+
+      const list = (window.GameConfig && Array.isArray(window.GameConfig.CHARACTER_VEHICLES))
+        ? window.GameConfig.CHARACTER_VEHICLES
+        : [];
+
+      const cardsHtml = list.map(function (v) {
+        const isSel = (v.id === curId);
+        return `
+          <button
+            type="button"
+            class="character-card ${isSel ? 'is-selected' : ''}"
+            data-vehicle-id="${escapeHtml(v.id)}"
+            role="option"
+            aria-selected="${isSel ? 'true' : 'false'}"
+          >
+            <div class="character-card-icon-wrap" style="border-color: ${escapeHtml(v.primaryColor || '#00f5ff')};">
+              <span>${escapeHtml(v.icon)}</span>
+            </div>
+            <span class="character-card-tag">${escapeHtml(v.tag)}</span>
+            <strong class="character-card-name">${escapeHtml(v.name)}</strong>
+            <span class="character-card-desc">${escapeHtml(v.desc)}</span>
+            <span class="character-card-select-pill">${isSel ? '✅ 현재 장착중' : '👆 이 캐릭터 선택'}</span>
+          </button>
+        `;
+      });
+
+      gridEl.innerHTML = cardsHtml.join('');
+    },
+
+    showCharacterModal: function (selectedVehicleId) {
+      this.renderCharacterModal(selectedVehicleId);
+      const modal = byId('character-select-modal');
+      if (modal) {
+        modal.classList.remove('hidden');
+      }
+    },
+
+    hideCharacterModal: function () {
+      const modal = byId('character-select-modal');
+      if (modal) {
+        modal.classList.add('hidden');
+      }
     }
   };
 

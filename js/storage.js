@@ -50,6 +50,7 @@
       bonusTargetJackpot: 10,   // Target stages (단계) for Boss Bonus 3
       parentPin: '1508',        // Parent PIN for parent control window (1508)
       subjectMode: 'mixed',     // 'mixed' | 'math' | 'english'
+      selectedVehicle: 'kart_saber', // Selected character/vehicle ID (10 types, default KartRider Saber Pro)
       wrongAnswerQueue: [],     // Persistent queue of wrong questions that MUST re-appear!
       reviewHistory: [],        // Persistent cumulative notebook of wrong questions
       lastPlayedAt: null
@@ -91,6 +92,7 @@
         speedMultiplier: stateObj.speedMultiplier || existing.speedMultiplier || 1.0,
         obbySpeedMultiplier: stateObj.obbySpeedMultiplier || existing.obbySpeedMultiplier || 1.2,
         subjectMode: stateObj.subjectMode || existing.subjectMode || 'mixed',
+        selectedVehicle: stateObj.selectedVehicle || existing.selectedVehicle || 'kart_saber',
         updatedAt: Date.now()
       };
       window.localStorage.setItem(PARENT_CUSTOM_SETTINGS_KEY, JSON.stringify(payload));
@@ -1100,6 +1102,22 @@
       const pin = state.parentPin || '1508';
       const cleaned = String(inputPin || '').trim();
       return cleaned === '1508' || cleaned === String(pin).trim();
+    },
+
+    getSelectedVehicle: function () {
+      const state = this.getState();
+      return state.selectedVehicle || 'kart_saber';
+    },
+
+    setSelectedVehicle: function (vehicleId) {
+      const state = this.getState();
+      const cleaned = String(vehicleId || 'kart_saber').trim();
+      state.selectedVehicle = cleaned;
+      try {
+        window.localStorage.setItem('soyun_selected_vehicle_v1', cleaned);
+      } catch (_e) {}
+      this.save();
+      return state;
     },
 
     setParentPin: function (newPin) {

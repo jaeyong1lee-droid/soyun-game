@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&family=Press+Start+2P&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
-  <link rel="stylesheet" href="css/style.css?v=20261025_46" />
+  <link rel="stylesheet" href="css/style.css?v=20261025_47" />
 </head>
 <body>
   <!-- 3D WebGL Viewport Container -->
@@ -204,16 +204,25 @@
     </div>
   </div>
 
-  <!-- Left-Side Road Round Turn-Jump / Super-Jump Button (일시정지 버튼은 위로 올리고 그 자리에 배치) -->
-  <div id="left-touch-pad" class="left-touch-pad" aria-label="방향전환 점프 및 2단 슈퍼점프 버튼">
+  <!-- Left-Side Road: Round Turn-Jump Button + Round Brake Button to its RIGHT -->
+  <div id="left-touch-pad" class="left-touch-pad" aria-label="방향전환 점프 및 브레이크 버튼">
     <button id="btn-turn-jump-action" class="touch-turn-jump-btn arcade-circle-btn" type="button" title="방향전환 점프 / 2단 슈퍼점프! (SHIFT / 좌측 키)">
       <span class="turn-jump-icon">🔄</span>
       <span id="left-btn-action-label" class="btn-mini-sub-tag">방향/2단</span>
     </button>
+    <button id="btn-brake-action" class="touch-brake-btn arcade-circle-btn brake-empty" type="button" title="급브레이크! 2초간 0.5배 감속 (부스터 사용 시 1회씩 충전)">
+      <span class="brake-icon">🛑</span>
+      <span id="brake-count-badge" class="brake-count-badge">0</span>
+      <span id="brake-btn-label" class="btn-mini-sub-tag">브레이크 0</span>
+    </button>
   </div>
 
-  <!-- Right-Side Road Round Jump / Climb Button (동그랗게 작게 길 오른쪽에 배치) -->
-  <div id="mobile-touch-pad" class="mobile-touch-pad" aria-label="점프 및 계단 오르기 버튼">
+  <!-- Right-Side Road: Round Booster Button to the LEFT of Round Jump / Climb Button -->
+  <div id="mobile-touch-pad" class="mobile-touch-pad" aria-label="부스터 및 점프/계단 오르기 버튼">
+    <button id="btn-booster-action" class="touch-booster-btn arcade-circle-btn" type="button" title="카트라이더 부스터! 2초간 2.0배 가속 + 브레이크 1회 제공">
+      <span class="booster-icon">🚀</span>
+      <span id="booster-btn-label" class="btn-mini-sub-tag">부스터x2</span>
+    </button>
     <button id="btn-jump-action" class="touch-jump-btn arcade-circle-btn" type="button" title="점프 / 계단 오르기! (SPACE / 위로 스와이프)">
       <span class="jump-icon">⬆️</span>
       <span id="right-btn-action-label" class="btn-mini-sub-tag">점프/오르기</span>
@@ -382,6 +391,20 @@
           </button>
         </div>
       </div>
+
+      <!-- Middle-Right Character / Vehicle Change Button (메인화면 중간 오른쪽 캐릭터 변경 버튼 - 10종) -->
+      <button
+        id="btn-open-character-modal"
+        class="btn-character-change-midright"
+        type="button"
+        title="캐릭터 및 라이딩 차량 변경 (카트라이더·자전거·오토바이·킥보드 등 10종)"
+      >
+        <span id="btn-char-current-icon" class="char-btn-icon">🏎️</span>
+        <span class="char-btn-text-col">
+          <strong class="char-btn-title">캐릭터 변경</strong>
+          <small id="btn-char-current-name" class="char-btn-sub">세이버 프로</small>
+        </span>
+      </button>
 
       <!-- 4. Small Parent Window Button at Bottom-Right Corner (Requires PIN 1508) -->
       <button
@@ -841,19 +864,46 @@
     </div>
   </div>
 
+  <!-- =====================================================================
+       MODAL 9: Character & Vehicle Selection Modal (#character-select-modal)
+       10 Selectable Characters/Vehicles (KartRider Karts, Bicycle Girl, Motorcycle Girl, Kickboard Girl, etc.)
+       ===================================================================== -->
+  <div id="character-select-modal" class="modal-backdrop hidden">
+    <div class="modal-card character-select-card" role="dialog" aria-modal="true" aria-labelledby="character-select-title">
+      <div class="character-modal-header">
+        <div>
+          <span class="arcade-title-pill">KART &amp; RIDER GARAGE (10종)</span>
+          <h2 id="character-select-title" class="character-modal-title">🏎️ 이소윤의 캐릭터 &amp; 라이딩 변경</h2>
+          <p class="character-modal-sub">원하는 카트라이더 차량이나 자전거·오토바이·킥보드 소녀를 터치하면 즉시 3D 캐릭터가 변경됩니다!</p>
+        </div>
+        <button id="btn-close-character-modal" class="btn-close-char-modal" type="button" title="닫기">✕</button>
+      </div>
+
+      <div id="character-select-grid" class="character-select-grid" role="listbox" aria-label="캐릭터 및 차량 10종 선택">
+        <!-- Populated dynamically by UIManager.renderCharacterModal() -->
+      </div>
+
+      <div class="character-modal-footer">
+        <button id="btn-confirm-character-modal" class="btn-primary-cta character-confirm-btn" type="button">
+          ✅ 선택한 캐릭터로 장착 완료!
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Three.js r128 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <!-- Nano Banana Generated Retro 3D Assets Bundle (CORS-free on file:// & http://) -->
-  <script src="js/assets_data.js?v=20261025_46"></script>
+  <script src="js/assets_data.js?v=20261025_47"></script>
   <!-- Shared Game Modules -->
-  <script src="js/config.js?v=20261025_46"></script>
-  <script src="js/storage.js?v=20261025_46"></script>
-  <script src="js/questionEngine.js?v=20261025_46"></script>
-  <script src="js/sound.js?v=20261025_46"></script>
-  <script src="js/engine3d.js?v=20261025_46"></script>
+  <script src="js/config.js?v=20261025_47"></script>
+  <script src="js/storage.js?v=20261025_47"></script>
+  <script src="js/questionEngine.js?v=20261025_47"></script>
+  <script src="js/sound.js?v=20261025_47"></script>
+  <script src="js/engine3d.js?v=20261025_47"></script>
   <!-- UI & Game Controller -->
-  <script src="js/ui.js?v=20261025_46"></script>
-  <script src="js/game.js?v=20261025_46"></script>
+  <script src="js/ui.js?v=20261025_47"></script>
+  <script src="js/game.js?v=20261025_47"></script>
 
   <!-- Google Chrome / Mobile PWA Service Worker & One-Click App Install Handler -->
   <script>
@@ -861,10 +911,10 @@
       var deferredInstallPrompt = null;
       var installBtn = document.getElementById('btn-install-pwa');
 
-      window.__SOYUN_CLIENT_BUILD__ = '20261025_46';
+      window.__SOYUN_CLIENT_BUILD__ = '20261025_47';
       if ('serviceWorker' in navigator && window.location.protocol !== 'file:') {
         window.addEventListener('load', function () {
-          navigator.serviceWorker.register('sw.js?v=20261025_46', { updateViaCache: 'none' }).then(function (reg) {
+          navigator.serviceWorker.register('sw.js?v=20261025_47', { updateViaCache: 'none' }).then(function (reg) {
             reg.update();
           }).catch(function () {});
         });

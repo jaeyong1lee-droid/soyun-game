@@ -686,5 +686,125 @@
     }
   };
 
+  // 🏎️ 이소윤의 캐릭터 & 라이딩 변경 10종 (카트라이더 차량, 자전거, 오토바이 소녀, 킥보드 소녀 등 10종!)
+  const CHARACTER_VEHICLES = [
+    {
+      id: 'kart_saber',
+      icon: '🏎️',
+      name: '카트라이더 세이버 프로',
+      shortName: '세이버 프로',
+      tag: '⚡ 카트라이더 전설',
+      desc: '날렵한 레드&화이트 에어로 바디와 4연장 부스터를 장착한 카트라이더 대표 레이싱 카트!',
+      primaryColor: '#ff1744',
+      secondaryColor: '#ffffff',
+      accentColor: '#ffe600'
+    },
+    {
+      id: 'kart_cotton',
+      icon: '☁️',
+      name: '카트라이더 코튼 V1',
+      shortName: '코튼 V1',
+      tag: '💨 부드러운 드리프트',
+      desc: '구름처럼 부드러운 주행감과 스카이블루 유선형 바디를 자랑하는 카트라이더 코튼 시리즈!',
+      primaryColor: '#00b4d8',
+      secondaryColor: '#f8fafc',
+      accentColor: '#ffd166'
+    },
+    {
+      id: 'kart_burst',
+      icon: '🔥',
+      name: '카트라이더 버스트 Z7',
+      shortName: '버스트 Z7',
+      tag: '🚀 폭발적 부스터',
+      desc: '거대한 V8 슈퍼차저 엔진과 6연장 제트 머플러가 달린 오렌지 머슬 카트라이더 차량!',
+      primaryColor: '#ff6d00',
+      secondaryColor: '#22223b',
+      accentColor: '#ffe600'
+    },
+    {
+      id: 'girl_bicycle',
+      icon: '🚲',
+      name: '자전거 타는 소녀',
+      shortName: '자전거 소녀',
+      tag: '🌸 상큼 꽃바구니',
+      desc: '예쁜 꽃바구니가 달린 민트&핑크 두발 자전거 페달을 신나게 밟으며 달리는 소윤이!',
+      primaryColor: '#2ec4b6',
+      secondaryColor: '#ff70a6',
+      accentColor: '#ffe600'
+    },
+    {
+      id: 'girl_motorcycle',
+      icon: '🏍️',
+      name: '오토바이 타는 소녀',
+      shortName: '오토바이 소녀',
+      tag: '⚡ 슈퍼바이크 질주',
+      desc: '네온 핑크&사이언 레이싱 슈퍼바이크 오토바이를 타고 멋지게 도로를 가르는 라이더 소윤이!',
+      primaryColor: '#ff2a85',
+      secondaryColor: '#00f5ff',
+      accentColor: '#ffe600'
+    },
+    {
+      id: 'girl_kickboard',
+      icon: '🛴',
+      name: '킥보드 타는 소녀',
+      shortName: '킥보드 소녀',
+      tag: '✨ 네온 전동킥보드',
+      desc: 'LED 불빛이 반짝이는 터보 전동 킥보드를 서서 타며 상쾌하게 바람을 가르는 소윤이!',
+      primaryColor: '#00f5d4',
+      secondaryColor: '#7209b7',
+      accentColor: '#ffe600'
+    },
+    {
+      id: 'girl_roller',
+      icon: '🛼',
+      name: '롤러스케이트 타는 소녀',
+      shortName: '롤러 소녀',
+      tag: '🎵 리듬 스케이터',
+      desc: '반짝이는 네온 롤러스케이트와 헤드폰을 쓰고 트랙 위를 신나게 미끄러지는 소윤이!',
+      primaryColor: '#ff70a6',
+      secondaryColor: '#00bbf9',
+      accentColor: '#fee440'
+    },
+    {
+      id: 'girl_hoverboard',
+      icon: '🛸',
+      name: '호버보드 타는 소녀',
+      shortName: '호버보드 소녀',
+      tag: '🌌 미래 공중부양',
+      desc: '바닥에서 둥둥 떠서 플라즈마 제트 불꽃을 뿜는 사이버 네온 호버보드 소녀!',
+      primaryColor: '#9b5de5',
+      secondaryColor: '#00f5d4',
+      accentColor: '#fee440'
+    },
+    {
+      id: 'kart_solid',
+      icon: '🛡️',
+      name: '카트라이더 솔리드 골드',
+      shortName: '솔리드 골드',
+      tag: '👑 황금 중장갑 카트',
+      desc: '어떤 장애물에도 끄떡없는 황금빛 에메랄드 중장갑 카트라이더 솔리드 시리즈!',
+      primaryColor: '#ffd700',
+      secondaryColor: '#10b981',
+      accentColor: '#ffffff'
+    },
+    {
+      id: 'girl_unicorn',
+      icon: '🦄',
+      name: '유니콘 마법카트 소녀',
+      shortName: '유니콘 카트',
+      tag: '🌈 무지개 공주카트',
+      desc: '황금 뿔과 천사 날개가 달린 귀여운 유니콘 왕실 마법카트를 타고 달리는 공주 소윤이!',
+      primaryColor: '#ffffff',
+      secondaryColor: '#ff8fab',
+      accentColor: '#ffd700'
+    }
+  ];
+
+  GameConfig.CHARACTER_VEHICLES = CHARACTER_VEHICLES;
+  GameConfig.DEFAULT_VEHICLE_ID = 'kart_saber';
+  GameConfig.getVehicleById = function (id) {
+    return CHARACTER_VEHICLES.find(function (v) { return v.id === id; }) || CHARACTER_VEHICLES[0];
+  };
+
   window.GameConfig = GameConfig;
 })(window);
