@@ -6852,26 +6852,19 @@
           }
         }
 
-        // Track jump input during Laser Bar / Giant Rolling Log approach window
-        if (!wave.passed && (wave.waveType === 'low_laser' || wave.waveType === 'high_log')) {
+        // Track explicit player jump input during ALL obstacle wave approaches (Laser Bar, Giant Log, Low Hurdle, Narrow Fire Pit)
+        if (!wave.passed) {
           if (wave.group.position.z >= -52 && (this.isJumping || this.carJumpY > 0.35)) {
             wave.playerJumped = true;
             wave.maxJumpScale = Math.max(wave.maxJumpScale || 0, this.lastJumpScale || 1.1);
           }
-          // If the player pressed Jump slightly early and landed just before the laser/log, re-hop over it smoothly!
+          // If the player explicitly pressed Jump slightly early and landed just before the obstacle, sustain the hop smoothly!
           if (wave.playerJumped && wave.group.position.z >= passZ - 5.2 && wave.group.position.z < passZ - 0.8 && !this.isJumping && this.carJumpY < 0.5) {
             if (wave.waveType === 'high_log') {
               this.superJump();
             } else {
               this.jump(1.18);
             }
-          }
-        } else if (!wave.passed && wave.group.position.z >= passZ - 5.6 && wave.group.position.z < passZ - 0.8) {
-          // Auto spring-jump when the player steers into a passable low hurdle or narrow fire pit lane right before reaching it!
-          const approachLane = this.targetLane;
-          const approachType = wave.lanes[approachLane];
-          if ((approachType === 'hurdle' || approachType === 'narrow_fire') && !this.isJumping) {
-            this.jump(approachType === 'narrow_fire' ? 1.16 : 1.04);
           }
         }
 
@@ -6909,13 +6902,19 @@
             outcome = 'hit_fire';
             this.triggerDamageEffect(laneX, 'wide_fire');
           } else if (laneType === 'hurdle' || laneType === 'narrow_fire') {
-            if (!this.isJumping && this.carJumpY < 0.65) {
-              this.jump(laneType === 'narrow_fire' ? 1.16 : 1.04);
+            // 3rd Mini-Game (obby_rush): Must be in the correct lane AND actually press Jump!
+            const didJump = Boolean(wave.playerJumped || this.isJumping || this.carJumpY > 0.35);
+            if (didJump) {
+              cleared = true;
+              actionType = laneType === 'narrow_fire' ? 'jumped_fire' : 'jumped_hurdle';
+              outcome = 'jump_clear';
+              this.triggerCorrectEffect(laneX);
+            } else {
+              cleared = false;
+              actionType = laneType === 'narrow_fire' ? 'hit_fire' : 'hit_hurdle';
+              outcome = actionType;
+              this.triggerDamageEffect(laneX, laneType === 'narrow_fire' ? 'wide_fire' : 'block');
             }
-            cleared = true;
-            actionType = laneType === 'narrow_fire' ? 'jumped_fire' : 'jumped_hurdle';
-            outcome = 'jump_clear';
-            this.triggerCorrectEffect(laneX);
           } else {
             cleared = true;
             actionType = 'collected_coin';

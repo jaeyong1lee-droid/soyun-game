@@ -1758,9 +1758,13 @@
               maxHp: state.maxHp
             });
           }
-          let failMsg = `🧱💥 콰직!! 아야! 높은 블록에 부딪혀 피가 1 깎였어요! (❤️ ${state.hp}/${state.maxHp} · 낮은 장애물 레인으로 피하세요!)`;
-          if (outcome === 'hit_fire' || waveType === 'fire_pit') {
-            failMsg = `🔥💥 앗 뜨거!! 넓은 불구덩이에 빠져 피가 1 깎였어요! (❤️ ${state.hp}/${state.maxHp} · 좁은 불구덩이 레인으로 피하세요!)`;
+          let failMsg = `🧱💥 콰직!! 아야! 높은 블록에 부딪혀 피가 1 깎였어요! (❤️ ${state.hp}/${state.maxHp} · 낮은 장애물 레인으로 이동 후 [⬆️ 점프]하세요!)`;
+          if (outcome === 'hit_hurdle') {
+            failMsg = `🧱💥 쿵!! 낮은 장애물 레인에서 [⬆️ 점프]를 누르지 않아 부딪혔어요! (❤️ ${state.hp}/${state.maxHp})`;
+          } else if (outcome === 'hit_fire' && info && info.laneType === 'narrow_fire') {
+            failMsg = `🔥💥 앗 뜨거!! 좁은 불구덩이에서 [⬆️ 점프]를 누르지 않아 빠졌어요! (❤️ ${state.hp}/${state.maxHp})`;
+          } else if (outcome === 'hit_fire' || waveType === 'fire_pit') {
+            failMsg = `🔥💥 앗 뜨거!! 넓은 불구덩이에 빠져 피가 1 깎였어요! (❤️ ${state.hp}/${state.maxHp} · 좁은 불구덩이 레인으로 이동 후 [⬆️ 점프]하세요!)`;
           } else if (outcome === 'hit_laser' || waveType === 'low_laser') {
             failMsg = `⚡💥 찌릿!! 회전 레이저봉에 걸려 피가 1 깎였어요! (❤️ ${state.hp}/${state.maxHp} · 우측 [⬆️ 점프] 버튼을 누르세요!)`;
           } else if (outcome === 'hit_log' || waveType === 'high_log') {
@@ -2538,67 +2542,8 @@
         }
       });
 
-      // Click / Touch / Swipe directly on the 3D Viewport:
-      // 1) Instant 3-Zone Tap (Left 1/3 = Lane 0, Center 1/3 = Lane 1, Right 1/3 = Lane 2)
-      // 2) Horizontal Swipe Gesture (Swipe Left = moveLeft(), Swipe Right = moveRight())
-      // 3) Upward Swipe Gesture (Swipe Up = triggerJump() over Roblox Obby lava hurdles!)
-      const canvasContainer = document.getElementById('game-canvas-container');
-      if (canvasContainer) {
-        let touchStartX = null;
-        let touchStartY = null;
-        let touchSwiped = false;
-
-        canvasContainer.addEventListener('pointerdown', function (e) {
-          if (!state.isPlaying || state.isGameOver) return;
-          touchStartX = e.clientX;
-          touchStartY = e.clientY;
-          touchSwiped = false;
-
-          const width = window.innerWidth || 1280;
-          const x = e.clientX;
-          if (state.isObbyMode && state.obbyGameType === 'heaven_stairs') {
-            if (x < width / 2) {
-              self.triggerTurnJump();
-            } else {
-              self.triggerJump();
-            }
-            return;
-          }
-          if (x < width / 3) {
-            self.selectLane(0);
-          } else if (x > (width * 2) / 3) {
-            self.selectLane(2);
-          } else {
-            self.selectLane(1);
-          }
-        });
-
-        canvasContainer.addEventListener('pointermove', function (e) {
-          if (!state.isPlaying || state.isGameOver) return;
-          if (touchStartX === null || touchSwiped) return;
-          const dx = e.clientX - touchStartX;
-          const dy = e.clientY - touchStartY;
-          if (dy <= -28 && Math.abs(dy) > Math.abs(dx) * 1.1) {
-            touchSwiped = true;
-            self.triggerJump();
-          } else if (Math.abs(dx) >= 32 && Math.abs(dx) > Math.abs(dy) * 1.2) {
-            touchSwiped = true;
-            if (dx < 0) {
-              self.moveLeft();
-            } else {
-              self.moveRight();
-            }
-          }
-        });
-
-        const clearTouch = function () {
-          touchStartX = null;
-          touchStartY = null;
-          touchSwiped = false;
-        };
-        canvasContainer.addEventListener('pointerup', clearTouch);
-        canvasContainer.addEventListener('pointercancel', clearTouch);
-      }
+      // Viewport touch disabled by user request:
+      // Touching anywhere outside the 3 bottom brick lane buttons (#btn-lane-0/1/2) must NOT move the car!
 
       // Left Round Turn-Jump / 2x Super-Jump Button (#btn-turn-jump-action 🔄)
       const btnTurnJump = document.getElementById('btn-turn-jump-action');
@@ -2967,11 +2912,21 @@
         });
       }
 
-      // Bottom 3-Lane Buttons, Mobile Touch Steering Pad & Top Choice Preview Pills
+      // Bottom 3-Lane Brick Buttons (#btn-lane-0/1/2): ONLY touching these 3 bricks moves the car left/center/right!
       [0, 1, 2].forEach(function (laneIdx) {
         const laneBtn = document.getElementById(`btn-lane-${laneIdx}`);
         if (laneBtn) {
-          laneBtn.addEventListener('click', function () {
+          let lastBrickTap = 0;
+          laneBtn.addEventListener('pointerdown', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            lastBrickTap = Date.now();
+            self.selectLane(laneIdx);
+          });
+          laneBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (Date.now() - lastBrickTap < 420) return;
             self.selectLane(laneIdx);
           });
         }

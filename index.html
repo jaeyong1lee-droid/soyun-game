@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&family=Press+Start+2P&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
-  <link rel="stylesheet" href="css/style.css?v=20261025_44" />
+  <link rel="stylesheet" href="css/style.css?v=20261025_45" />
 </head>
 <body>
   <!-- 3D WebGL Viewport Container -->
@@ -217,6 +217,25 @@
     <button id="btn-jump-action" class="touch-jump-btn arcade-circle-btn" type="button" title="점프 / 계단 오르기! (SPACE / 위로 스와이프)">
       <span class="jump-icon">⬆️</span>
       <span id="right-btn-action-label" class="btn-mini-sub-tag">점프/오르기</span>
+    </button>
+  </div>
+
+  <!-- Bottom Full-Width 3-Lane Brick Direction Controls (제일 밑에 각 레인 열너비를 꽉 채운 벽돌 3개 버튼, 높이 = 점프버튼 지름 48px의 1.1배 = 53px) -->
+  <div id="lane-controls" class="lane-controls brick-lane-controls" role="group" aria-label="하단 3열 벽돌 레인 이동 버튼">
+    <button id="btn-lane-0" class="lane-btn brick-lane-btn" type="button" data-lane="0" title="1번 좌측 레인으로 이동 (←)">
+      <span class="brick-lane-arrow">◀</span>
+      <span class="brick-lane-label">좌측</span>
+      <span id="lane-btn-choice-0" class="lane-btn-choice"></span>
+    </button>
+    <button id="btn-lane-1" class="lane-btn brick-lane-btn active-lane" type="button" data-lane="1" title="2번 중앙 레인으로 이동 (●)">
+      <span class="brick-lane-arrow">●</span>
+      <span class="brick-lane-label">중앙</span>
+      <span id="lane-btn-choice-1" class="lane-btn-choice"></span>
+    </button>
+    <button id="btn-lane-2" class="lane-btn brick-lane-btn" type="button" data-lane="2" title="3번 우측 레인으로 이동 (→)">
+      <span class="brick-lane-label">우측</span>
+      <span class="brick-lane-arrow">▶</span>
+      <span id="lane-btn-choice-2" class="lane-btn-choice"></span>
     </button>
   </div>
 
@@ -825,16 +844,16 @@
   <!-- Three.js r128 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <!-- Nano Banana Generated Retro 3D Assets Bundle (CORS-free on file:// & http://) -->
-  <script src="js/assets_data.js?v=20261025_44"></script>
+  <script src="js/assets_data.js?v=20261025_45"></script>
   <!-- Shared Game Modules -->
-  <script src="js/config.js?v=20261025_44"></script>
-  <script src="js/storage.js?v=20261025_44"></script>
-  <script src="js/questionEngine.js?v=20261025_44"></script>
-  <script src="js/sound.js?v=20261025_44"></script>
-  <script src="js/engine3d.js?v=20261025_44"></script>
+  <script src="js/config.js?v=20261025_45"></script>
+  <script src="js/storage.js?v=20261025_45"></script>
+  <script src="js/questionEngine.js?v=20261025_45"></script>
+  <script src="js/sound.js?v=20261025_45"></script>
+  <script src="js/engine3d.js?v=20261025_45"></script>
   <!-- UI & Game Controller -->
-  <script src="js/ui.js?v=20261025_44"></script>
-  <script src="js/game.js?v=20261025_44"></script>
+  <script src="js/ui.js?v=20261025_45"></script>
+  <script src="js/game.js?v=20261025_45"></script>
 
   <!-- Google Chrome / Mobile PWA Service Worker & One-Click App Install Handler -->
   <script>
@@ -842,10 +861,10 @@
       var deferredInstallPrompt = null;
       var installBtn = document.getElementById('btn-install-pwa');
 
-      window.__SOYUN_CLIENT_BUILD__ = '20261025_44';
+      window.__SOYUN_CLIENT_BUILD__ = '20261025_45';
       if ('serviceWorker' in navigator && window.location.protocol !== 'file:') {
         window.addEventListener('load', function () {
-          navigator.serviceWorker.register('sw.js?v=20261025_44', { updateViaCache: 'none' }).then(function (reg) {
+          navigator.serviceWorker.register('sw.js?v=20261025_45', { updateViaCache: 'none' }).then(function (reg) {
             reg.update();
           }).catch(function () {});
         });

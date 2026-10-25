@@ -1277,8 +1277,7 @@ body.is-time-paused::before {
 .question-badges-row,
 .question-subprompt,
 .question-choices-preview,
-.gate-approach-wrap,
-.lane-controls {
+.gate-approach-wrap {
   display: none !important;
 }
 
@@ -3962,7 +3961,7 @@ body.start-screen-active #hud-reward-gauges-box {
   top: auto !important;
   right: auto !important;
   left: 14px !important;
-  bottom: calc(114px + env(safe-area-inset-bottom, 0px)) !important;
+  bottom: calc(170px + env(safe-area-inset-bottom, 0px)) !important;
   z-index: 65 !important;
   display: flex !important;
   align-items: center !important;
@@ -3977,7 +3976,7 @@ body.start-screen-active #hud-reward-gauges-box {
   top: auto !important;
   left: auto !important;
   right: 14px !important;
-  bottom: calc(46px + env(safe-area-inset-bottom, 0px)) !important;
+  bottom: calc(102px + env(safe-area-inset-bottom, 0px)) !important;
   transform: none !important;
   z-index: 65 !important;
   display: flex !important;
@@ -5758,7 +5757,7 @@ body.start-screen-active #left-touch-pad {
   top: auto !important;
   right: auto !important;
   left: 14px !important;
-  bottom: calc(46px + env(safe-area-inset-bottom, 0px)) !important;
+  bottom: calc(102px + env(safe-area-inset-bottom, 0px)) !important;
   transform: none !important;
   z-index: 65 !important;
   display: flex !important;
@@ -5855,4 +5854,131 @@ body.obby-mode-active #question-banner.question-banner {
 
 body.obby-mode-active #question-prompt {
   font-size: clamp(20px, 4.2vw, 30px) !important;
+}
+
+
+/* ============================================================================
+   BOTTOM 3-COLUMN FULL-WIDTH BRICK LANE CONTROLS (#lane-controls.brick-lane-controls)
+   - Positioned at the bottom where Jump / Turn-Jump buttons used to be
+   - 3 full-width brick buttons matching each lane column width
+   - Brick height = 1.1x Jump button diameter (48px * 1.1 = 53px)
+   - Realistic Roblox / Masonry Brick texture via inline SVG data URI
+   ============================================================================ */
+body.start-screen-active #lane-controls.brick-lane-controls {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+  display: none !important;
+}
+
+#lane-controls.brick-lane-controls {
+  position: fixed !important;
+  left: 8px !important;
+  right: 8px !important;
+  bottom: calc(36px + env(safe-area-inset-bottom, 0px)) !important;
+  transform: none !important;
+  width: auto !important;
+  max-width: none !important;
+  height: 53px !important;
+  min-height: 53px !important;
+  max-height: 53px !important;
+  z-index: 65 !important;
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 6px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  pointer-events: auto !important;
+}
+
+#lane-controls.brick-lane-controls .brick-lane-btn {
+  position: relative !important;
+  width: 100% !important;
+  height: 53px !important;
+  min-height: 53px !important;
+  max-height: 53px !important;
+  padding: 0 8px !important;
+  margin: 0 !important;
+  border-radius: 10px !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  cursor: pointer !important;
+  touch-action: manipulation !important;
+  user-select: none !important;
+  overflow: hidden !important;
+  background-color: #b53826 !important;
+  background-image:
+    linear-gradient(180deg, rgba(255, 230, 190, 0.22) 0%, rgba(0, 0, 0, 0.08) 48%, rgba(0, 0, 0, 0.36) 100%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='32' viewBox='0 0 64 32'%3E%3Crect width='64' height='32' fill='%237a2417'/%3E%3Crect x='1' y='1' width='30' height='13' rx='1.5' fill='%23c8432e'/%3E%3Crect x='2' y='2' width='28' height='3' fill='%23e2634b' opacity='0.65'/%3E%3Crect x='33' y='1' width='30' height='13' rx='1.5' fill='%23b93a26'/%3E%3Crect x='34' y='2' width='28' height='3' fill='%23dc5b43' opacity='0.6'/%3E%3Crect x='0' y='17' width='15' height='13' rx='1' fill='%23b63825'/%3E%3Crect x='17' y='17' width='30' height='13' rx='1.5' fill='%23cf4933'/%3E%3Crect x='18' y='18' width='28' height='3' fill='%23e86b52' opacity='0.65'/%3E%3Crect x='49' y='17' width='15' height='13' rx='1' fill='%23c13f2b'/%3E%3C/svg%3E") !important;
+  background-size: 100% 100%, 56px 28px !important;
+  background-repeat: no-repeat, repeat !important;
+  border: 2.5px solid #f4a261 !important;
+  box-shadow:
+    0 4px 0 #52160c,
+    0 6px 14px rgba(0, 0, 0, 0.65),
+    inset 0 2px 2px rgba(255, 240, 210, 0.55),
+    inset 0 -3px 4px rgba(45, 10, 5, 0.65) !important;
+  transition: transform 0.08s ease, box-shadow 0.12s ease, border-color 0.12s ease !important;
+}
+
+#lane-controls.brick-lane-controls .brick-lane-btn:active {
+  transform: translateY(3px) scale(0.98) !important;
+  box-shadow:
+    0 1px 0 #52160c,
+    0 3px 8px rgba(0, 0, 0, 0.65),
+    inset 0 2px 4px rgba(0, 0, 0, 0.45) !important;
+}
+
+#lane-controls.brick-lane-controls .brick-lane-btn.active-lane {
+  border: 2.5px solid #ffe600 !important;
+  box-shadow:
+    0 4px 0 #7c2d12,
+    0 0 18px rgba(255, 230, 0, 0.85),
+    inset 0 0 12px rgba(255, 230, 0, 0.45),
+    inset 0 2px 2px rgba(255, 255, 255, 0.75) !important;
+}
+
+#lane-controls.brick-lane-controls .brick-lane-arrow {
+  font-size: 17px !important;
+  font-weight: 900 !important;
+  color: #ffe600 !important;
+  line-height: 1 !important;
+  text-shadow:
+    0 2px 0 #2b0904,
+    0 -1px 0 #2b0904,
+    2px 0 0 #2b0904,
+    -2px 0 0 #2b0904,
+    0 0 8px rgba(0, 0, 0, 0.85) !important;
+  pointer-events: none !important;
+}
+
+#lane-controls.brick-lane-controls .brick-lane-label {
+  font-family: var(--font-kr) !important;
+  font-size: 16px !important;
+  font-weight: 900 !important;
+  color: #ffffff !important;
+  letter-spacing: -0.02em !important;
+  line-height: 1 !important;
+  text-shadow:
+    0 2px 0 #2b0904,
+    0 -1px 0 #2b0904,
+    2px 0 0 #2b0904,
+    -2px 0 0 #2b0904,
+    0 0 10px rgba(0, 0, 0, 0.9) !important;
+  pointer-events: none !important;
+}
+
+#lane-controls.brick-lane-controls .brick-lane-btn.active-lane .brick-lane-label,
+#lane-controls.brick-lane-controls .brick-lane-btn.active-lane .brick-lane-arrow {
+  color: #fffbe6 !important;
+  text-shadow:
+    0 2px 0 #3b0d06,
+    0 0 12px rgba(255, 230, 0, 0.95) !important;
+}
+
+#lane-controls.brick-lane-controls .lane-btn-choice {
+  display: none !important;
 }

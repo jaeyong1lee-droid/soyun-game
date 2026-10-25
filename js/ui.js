@@ -957,15 +957,16 @@
       } else {
         if (leftLbl) leftLbl.textContent = '슈퍼점프';
         if (rightLbl) rightLbl.textContent = '⬆️점프!';
+        if (rightBtn) rightBtn.classList.add('stair-recommended-btn');
         if (catBadge) {
           catBadge.textContent = waveType === 'fire_pit'
-            ? `🔥 오비 미니게임 (${idx} / ${tot}) · 불구덩이 건너기`
-            : `🧱 오비 미니게임 (${idx} / ${tot}) · 장애물 넘기`;
+            ? `🔥 오비 미니게임 (${idx} / ${tot}) · 좁은 불구덩이 레인 이동 + 점프!`
+            : `🧱 오비 미니게임 (${idx} / ${tot}) · 낮은 장애물 레인 이동 + 점프!`;
         }
         if (promptEl) {
           promptEl.textContent = waveType === 'fire_pit'
-            ? `🔥 불구덩이 건너기! (${idx}/${tot})`
-            : `🧱 장애물 넘기! (${idx}/${tot})`;
+            ? `🔥 좁은 불구덩이 레인으로 가서 [⬆️ 점프]! (${idx}/${tot})`
+            : `🧱 낮은 장애물 레인으로 가서 [⬆️ 점프]! (${idx}/${tot})`;
         }
       }
     },
