@@ -3961,7 +3961,7 @@ body.start-screen-active #hud-reward-gauges-box {
   top: auto !important;
   right: auto !important;
   left: 14px !important;
-  bottom: calc(170px + env(safe-area-inset-bottom, 0px)) !important;
+  bottom: calc(197px + env(safe-area-inset-bottom, 0px)) !important;
   z-index: 65 !important;
   display: flex !important;
   align-items: center !important;
@@ -3976,7 +3976,7 @@ body.start-screen-active #hud-reward-gauges-box {
   top: auto !important;
   left: auto !important;
   right: 14px !important;
-  bottom: calc(102px + env(safe-area-inset-bottom, 0px)) !important;
+  bottom: calc(129px + env(safe-area-inset-bottom, 0px)) !important;
   transform: none !important;
   z-index: 65 !important;
   display: flex !important;
@@ -5757,7 +5757,7 @@ body.start-screen-active #left-touch-pad {
   top: auto !important;
   right: auto !important;
   left: 14px !important;
-  bottom: calc(102px + env(safe-area-inset-bottom, 0px)) !important;
+  bottom: calc(129px + env(safe-area-inset-bottom, 0px)) !important;
   transform: none !important;
   z-index: 65 !important;
   display: flex !important;
@@ -5875,7 +5875,7 @@ body.start-screen-active #lane-controls.brick-lane-controls {
   position: fixed !important;
   left: 8px !important;
   right: 8px !important;
-  bottom: calc(36px + env(safe-area-inset-bottom, 0px)) !important;
+  bottom: calc(63px + env(safe-area-inset-bottom, 0px)) !important;
   transform: none !important;
   width: auto !important;
   max-width: none !important;
