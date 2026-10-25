@@ -15,8 +15,8 @@
       bossName: '블록 골렘 렉스 (Blocky Rex)',
       bossTitle: '1단계 대자연 강변 수문장',
       bossHp: 9, // 보스 체력 9
-      baseSpeed: 36, // 문제 풀이 시간 약 9.5초
-      gateSolveSeconds: 9.5,
+      baseSpeed: 32.4, // 기존 속도(36)의 90%를 x1.0 기본 속도로 설정 (풀이 시간 약 10.6초)
+      gateSolveSeconds: 10.6,
       themeColor: '#00e676',
       roadColor: '#1f2e3d',
       skyColor: '#0d47a1',
@@ -32,8 +32,8 @@
       bossName: '정글 킹 라이온 메카 (Lion Mecha)',
       bossTitle: '2단계 아마존 정글 수호신',
       bossHp: 10,
-      baseSpeed: 39.0, // 단계별 점진적 가속 (+3.0, 최대 1단계의 2.5배=90까지)
-      gateSolveSeconds: 8.8,
+      baseSpeed: 35.1, // 기존 속도(39.0)의 90% (+2.7씩 점진 가속, 최대 81까지)
+      gateSolveSeconds: 9.8,
       themeColor: '#84cc16',
       roadColor: '#292514',
       skyColor: '#14532d',
@@ -49,8 +49,8 @@
       bossName: '코블록스 스핑크스 (Korblox Sphinx)',
       bossTitle: '3단계 황금 피라미드 파라오 보스',
       bossHp: 10,
-      baseSpeed: 42.0, // 단계별 점진적 가속 (+3.0, 최대 1단계의 2.5배=90까지)
-      gateSolveSeconds: 8.1,
+      baseSpeed: 37.8, // 기존 속도(42.0)의 90% (+2.7씩 점진 가속, 최대 81까지)
+      gateSolveSeconds: 9.0,
       themeColor: '#fbbf24',
       roadColor: '#3d2814',
       skyColor: '#7c2d12',
@@ -66,8 +66,8 @@
       bossName: '아이스 프로스트 드래곤 (Frost Dragon)',
       bossTitle: '4단계 크리스탈 빙하 지배자',
       bossHp: 11,
-      baseSpeed: 45.0, // 단계별 점진적 가속 (+3.0, 최대 1단계의 2.5배=90까지)
-      gateSolveSeconds: 7.6,
+      baseSpeed: 40.5, // 기존 속도(45.0)의 90% (+2.7씩 점진 가속, 최대 81까지)
+      gateSolveSeconds: 8.4,
       themeColor: '#38bdf8',
       roadColor: '#0f2942',
       skyColor: '#082f49',
@@ -270,12 +270,12 @@
     JACKPOT_BOSS_INTERVAL: 10, // 10판째 보스마다 10,000원(만원) 상금!
     JACKPOT_BOSS_PRIZE_WON: 10000,
 
-    BASE_SPEED: 36,
-    MIN_SPEED_CAP: 18,
-    MAX_SPEED_CAP: 90, // 1단계 속도(36)의 2.5배(90)가 최대 속도 상한선! 그 이후 단계는 단어·문제 난이도만 상승!
-    SPEED_INCREMENT_PER_CORRECT: 0.15, // 문제 정답 시 소폭 가속 (최대 90 상한선 준수)
-    SPEED_STAGE_BONUS: 3.0, // 단계 상승 시 +3.0씩 점진 가속 (1단계 속도의 2.5배인 90 도달 후 속도 고정)
-    SPEED_STEP_BUTTON: 6, // [ - / + ] 속도 조절 버튼 클릭 시 증감 폭
+    BASE_SPEED: 32.4,
+    MIN_SPEED_CAP: 16.2,
+    MAX_SPEED_CAP: 81, // 1단계 속도(36)의 2.5배(90)가 최대 속도 상한선! 그 이후 단계는 단어·문제 난이도만 상승!
+    SPEED_INCREMENT_PER_CORRECT: 0.135, // 문제 정답 시 소폭 가속 (최대 90 상한선 준수)
+    SPEED_STAGE_BONUS: 2.7, // 단계 상승 시 +3.0씩 점진 가속 (1단계 속도의 2.5배인 90 도달 후 속도 고정)
+    SPEED_STEP_BUTTON: 5.4, // [ - / + ] 속도 조절 버튼 클릭 시 증감 폭
     SPEED_MULTIPLIERS: SPEED_MULTIPLIERS,
 
     GATE_SPAWN_Z: -74, // 처음부터 중앙 전광판이 큼직하게 보이도록 스폰 위치 최적화
@@ -541,8 +541,8 @@
         bossName: baseBossName,
         bossTitle: baseBossTitle,
         bossHp: Math.min(18, 9 + Math.floor((s - 1) * 0.5)),
-        baseSpeed: Math.min(90, +(36 + (s - 1) * 3.0).toFixed(1)),
-        gateSolveSeconds: Math.max(3.8, +(9.5 / (Math.min(90, 36 + (s - 1) * 3.0) / 36)).toFixed(1)),
+        baseSpeed: Math.min(81, +(32.4 + (s - 1) * 2.7).toFixed(1)),
+        gateSolveSeconds: Math.max(4.2, +(10.6 / (Math.min(81, 32.4 + (s - 1) * 2.7) / 32.4)).toFixed(1)),
         themeColor: isJackpotStage ? '#ffd700' : tpl.themeColor,
         roadColor: tpl.roadColor,
         skyColor: tpl.skyColor,

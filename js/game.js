@@ -21,7 +21,7 @@
 
     hp: 5,
     maxHp: 5,
-    speed: 36,
+    speed: 32.4,
     speedMultiplier: 1.0,
     obbySpeedMultiplier: 1.2,
     combo: 0,
@@ -242,7 +242,7 @@
     const actionFactor = Number(state.activeSpeedFactor) || 1.0;
     const baseCap = state.isObbyMode ? 280 : (state.isBossPhase ? 260 : 225);
     const cap = actionFactor > 1.0 ? Math.round(baseCap * actionFactor) : baseCap;
-    return Math.max(8, Math.min(cap, Math.round((state.speed || 36) * (state.speedMultiplier || 1.0) * obbyFactor * bossFactor * actionFactor)));
+    return Math.max(8, Math.min(cap, Math.round(((state.speed || 32.4) * (state.speedMultiplier || 1.0) * obbyFactor * bossFactor * actionFactor) * 100) / 100));
   }
 
   function getMaxHp() {
@@ -260,7 +260,7 @@
       bossName: '블록 골렘 렉스 (Blocky Rex)',
       bossTitle: '1단계 로블록스 연산 수문장',
       bossHp: 9,
-      baseSpeed: 36,
+      baseSpeed: 32.4,
       themeColor: '#00f2fe',
       roadColor: '#1a103c',
       bossColor: 0xff3366
@@ -337,7 +337,7 @@
       state.stageProgress = Math.max(0, parseInt(saveState.stageProgress, 10) || 0);
       state.speedMultiplier = typeof saveState.speedMultiplier === 'number' ? saveState.speedMultiplier : 1.0;
       state.obbySpeedMultiplier = typeof saveState.obbySpeedMultiplier === 'number' ? saveState.obbySpeedMultiplier : 1.2;
-      state.speed = state.stageConfig.baseSpeed || 36;
+      state.speed = state.stageConfig.baseSpeed || 32.4;
       state.currentLane = 1;
       try {
         const savedOrient = window.localStorage.getItem('soyun_view_orientation_mode');
@@ -469,7 +469,7 @@
       state.combo = 0;
       state.speedMultiplier = typeof saveState.speedMultiplier === 'number' ? saveState.speedMultiplier : 1.0;
       state.obbySpeedMultiplier = typeof saveState.obbySpeedMultiplier === 'number' ? saveState.obbySpeedMultiplier : 1.2;
-      state.speed = state.stageConfig.baseSpeed || 36;
+      state.speed = state.stageConfig.baseSpeed || 32.4;
       state.currentLane = 1;
       state.isPlaying = true;
       state.isPaused = false;
@@ -1206,7 +1206,7 @@
       const maxSpeedCap = (window.GameConfig && window.GameConfig.MAX_SPEED_CAP)
         ? window.GameConfig.MAX_SPEED_CAP
         : 90;
-      state.speed = Math.min(maxSpeedCap, Math.max(state.speed + stageSpeedBonus, nextStageCfg.baseSpeed || 39));
+      state.speed = Math.min(maxSpeedCap, Math.max(state.speed + stageSpeedBonus, nextStageCfg.baseSpeed || 35.1));
 
       if (window.QuestionEngine && typeof window.QuestionEngine.resetStageCounters === 'function') {
         window.QuestionEngine.resetStageCounters(nextStage);
@@ -2187,7 +2187,7 @@
         }
         window.UIManager.showFeedbackToast(
           true,
-          `⚡ 소윤이 카트 속도 조절: ${clamped.toFixed(1)}x 배속 (${getEffectiveSpeed()} KM/H)`
+          `⚡ 소윤이 카트 속도 조절: ${clamped.toFixed(1)}x 배속 (${Math.round(getEffectiveSpeed())} KM/H)`
         );
       }
       syncHUD();

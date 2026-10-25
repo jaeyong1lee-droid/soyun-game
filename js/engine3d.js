@@ -18,7 +18,7 @@
     GATE_PASS_Z: 8,
     GATE_DESPAWN_Z: 24,
     BOSS_Z: -38,
-    BASE_SPEED: 36,
+    BASE_SPEED: 32.4,
     MAX_SPEED: 500,
     MIN_SPEED: 8
   };
