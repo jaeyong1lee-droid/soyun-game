@@ -105,7 +105,7 @@ function finishDeploy(stdout) {
   isDeploying = false;
   ignoreWatchUntil = Date.now() + 4000;
   const match = String(stdout || '').match(/https:\/\/[a-z0-9-]+\.tmp\.now/i);
-  const buildId = String(Date.now());
+  let buildId = '20261025_44'; try { const m = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8').match(/__SOYUN_CLIENT_BUILD__\s*=\s*'([^']+)'/); if (m && m[1]) buildId = m[1]; } catch (_e) {}
 
   if (match && match[0]) {
     const url = match[0];
