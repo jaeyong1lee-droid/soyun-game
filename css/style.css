@@ -3961,7 +3961,7 @@ body.start-screen-active #hud-reward-gauges-box {
   top: auto !important;
   right: auto !important;
   left: 14px !important;
-  bottom: calc(260px + env(safe-area-inset-bottom, 0px)) !important;
+  bottom: calc(234px + env(safe-area-inset-bottom, 0px)) !important;
   z-index: 65 !important;
   display: flex !important;
   flex-direction: column !important;
@@ -3978,18 +3978,18 @@ body.start-screen-active #hud-reward-gauges-box {
   top: auto !important;
   left: auto !important;
   right: 14px !important;
-  bottom: calc(134px + env(safe-area-inset-bottom, 0px)) !important;
+  bottom: calc(46px + env(safe-area-inset-bottom, 0px)) !important;
   transform: none !important;
-  z-index: 65 !important;
+  z-index: 66 !important;
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 16px !important;
+  gap: 80px !important;
   width: auto !important;
   padding: 0 !important;
   margin: 0 !important;
-  pointer-events: auto !important;
+  pointer-events: none !important;
 }
 
 #utility-bar #btn-pause,
@@ -5761,18 +5761,18 @@ body.start-screen-active #left-touch-pad {
   top: auto !important;
   right: auto !important;
   left: 14px !important;
-  bottom: calc(134px + env(safe-area-inset-bottom, 0px)) !important;
+  bottom: calc(46px + env(safe-area-inset-bottom, 0px)) !important;
   transform: none !important;
-  z-index: 65 !important;
+  z-index: 66 !important;
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 16px !important;
+  gap: 80px !important;
   width: auto !important;
   padding: 0 !important;
   margin: 0 !important;
-  pointer-events: auto !important;
+  pointer-events: none !important;
 }
 
 #left-touch-pad #btn-turn-jump-action,
@@ -5881,7 +5881,7 @@ body.start-screen-active #lane-controls.brick-lane-controls {
   position: fixed !important;
   left: 8px !important;
   right: 8px !important;
-  bottom: calc(63px + env(safe-area-inset-bottom, 0px)) !important;
+  bottom: calc(106px + env(safe-area-inset-bottom, 0px)) !important;
   transform: none !important;
   width: auto !important;
   max-width: none !important;
@@ -5996,7 +5996,13 @@ body.start-screen-active #lane-controls.brick-lane-controls {
 #left-touch-pad,
 #mobile-touch-pad {
   flex-direction: column !important;
-  gap: 16px !important;
+  gap: 80px !important;
+  pointer-events: none !important;
+}
+
+#left-touch-pad button,
+#mobile-touch-pad button {
+  pointer-events: auto !important;
 }
 
 #left-touch-pad #btn-brake-action,
