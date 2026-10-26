@@ -5897,7 +5897,41 @@ body.start-screen-active #lane-controls.brick-lane-controls {
   pointer-events: auto !important;
 }
 
-#lane-controls.brick-lane-controls .brick-lane-btn {
+@keyframes neonArrowStrokeCycle {
+  0%   { stroke: #00f5ff; filter: drop-shadow(0 0 6px #00f5ff) drop-shadow(0 0 12px rgba(0, 245, 255, 0.55)); }
+  25%  { stroke: #ff2a85; filter: drop-shadow(0 0 6px #ff2a85) drop-shadow(0 0 12px rgba(255, 42, 133, 0.55)); }
+  50%  { stroke: #ffe600; filter: drop-shadow(0 0 6px #ffe600) drop-shadow(0 0 12px rgba(255, 230, 0, 0.55)); }
+  75%  { stroke: #00ff88; filter: drop-shadow(0 0 6px #00ff88) drop-shadow(0 0 12px rgba(0, 255, 136, 0.55)); }
+  100% { stroke: #00f5ff; filter: drop-shadow(0 0 6px #00f5ff) drop-shadow(0 0 12px rgba(0, 245, 255, 0.55)); }
+}
+
+@keyframes neonArrowTextCycle {
+  0%   { color: #00f5ff; }
+  25%  { color: #ff70a6; }
+  50%  { color: #ffe600; }
+  75%  { color: #00ff88; }
+  100% { color: #00f5ff; }
+}
+
+@keyframes neonArrowFlowLeft {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(-4px); }
+}
+
+@keyframes neonArrowFlowRight {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(4px); }
+}
+
+@keyframes neonArrowFlowUp {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+#lane-controls.brick-lane-controls .brick-lane-btn,
+#lane-controls.brick-lane-controls .brick-lane-btn:hover,
+#lane-controls.brick-lane-controls .brick-lane-btn:active,
+#lane-controls.brick-lane-controls .brick-lane-btn.active-lane {
   position: relative !important;
   width: 100% !important;
   height: 53px !important;
@@ -5905,7 +5939,7 @@ body.start-screen-active #lane-controls.brick-lane-controls {
   max-height: 53px !important;
   padding: 0 8px !important;
   margin: 0 !important;
-  border-radius: 10px !important;
+  border-radius: 0 !important;
   display: flex !important;
   flex-direction: row !important;
   align-items: center !important;
@@ -5914,75 +5948,97 @@ body.start-screen-active #lane-controls.brick-lane-controls {
   cursor: pointer !important;
   touch-action: manipulation !important;
   user-select: none !important;
-  overflow: hidden !important;
-  background-color: #b53826 !important;
-  background-image:
-    linear-gradient(180deg, rgba(255, 230, 190, 0.22) 0%, rgba(0, 0, 0, 0.08) 48%, rgba(0, 0, 0, 0.36) 100%),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='32' viewBox='0 0 64 32'%3E%3Crect width='64' height='32' fill='%237a2417'/%3E%3Crect x='1' y='1' width='30' height='13' rx='1.5' fill='%23c8432e'/%3E%3Crect x='2' y='2' width='28' height='3' fill='%23e2634b' opacity='0.65'/%3E%3Crect x='33' y='1' width='30' height='13' rx='1.5' fill='%23b93a26'/%3E%3Crect x='34' y='2' width='28' height='3' fill='%23dc5b43' opacity='0.6'/%3E%3Crect x='0' y='17' width='15' height='13' rx='1' fill='%23b63825'/%3E%3Crect x='17' y='17' width='30' height='13' rx='1.5' fill='%23cf4933'/%3E%3Crect x='18' y='18' width='28' height='3' fill='%23e86b52' opacity='0.65'/%3E%3Crect x='49' y='17' width='15' height='13' rx='1' fill='%23c13f2b'/%3E%3C/svg%3E") !important;
-  background-size: 100% 100%, 56px 28px !important;
-  background-repeat: no-repeat, repeat !important;
-  border: 2.5px solid #f4a261 !important;
-  box-shadow:
-    0 4px 0 #52160c,
-    0 6px 14px rgba(0, 0, 0, 0.65),
-    inset 0 2px 2px rgba(255, 240, 210, 0.55),
-    inset 0 -3px 4px rgba(45, 10, 5, 0.65) !important;
-  transition: transform 0.08s ease, box-shadow 0.12s ease, border-color 0.12s ease !important;
+  overflow: visible !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  transition: transform 0.08s ease !important;
 }
 
 #lane-controls.brick-lane-controls .brick-lane-btn:active {
-  transform: translateY(3px) scale(0.98) !important;
-  box-shadow:
-    0 1px 0 #52160c,
-    0 3px 8px rgba(0, 0, 0, 0.65),
-    inset 0 2px 4px rgba(0, 0, 0, 0.45) !important;
+  transform: scale(0.95) !important;
 }
 
-#lane-controls.brick-lane-controls .brick-lane-btn.active-lane {
-  border: 2.5px solid #ffe600 !important;
-  box-shadow:
-    0 4px 0 #7c2d12,
-    0 0 18px rgba(255, 230, 0, 0.85),
-    inset 0 0 12px rgba(255, 230, 0, 0.45),
-    inset 0 2px 2px rgba(255, 255, 255, 0.75) !important;
+#lane-controls.brick-lane-controls .neon-arrow-svg {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  pointer-events: none !important;
+  overflow: visible !important;
+}
+
+#lane-controls.brick-lane-controls .neon-arrow-shape {
+  fill: transparent !important;
+  stroke-width: 2.8px !important;
+  stroke-linejoin: round !important;
+  stroke-linecap: round !important;
+  animation: neonArrowStrokeCycle 3.2s linear infinite !important;
+}
+
+#lane-controls.brick-lane-controls .brick-lane-btn.active-lane .neon-arrow-shape {
+  stroke-width: 3.6px !important;
 }
 
 #lane-controls.brick-lane-controls .brick-lane-arrow {
-  font-size: 17px !important;
+  position: relative !important;
+  z-index: 2 !important;
+  font-size: 19px !important;
   font-weight: 900 !important;
-  color: #ffe600 !important;
   line-height: 1 !important;
+  animation: neonArrowTextCycle 3.2s linear infinite !important;
   text-shadow:
-    0 2px 0 #2b0904,
-    0 -1px 0 #2b0904,
-    2px 0 0 #2b0904,
-    -2px 0 0 #2b0904,
-    0 0 8px rgba(0, 0, 0, 0.85) !important;
+    -1.5px -1.5px 0 #040614,
+     1.5px -1.5px 0 #040614,
+    -1.5px  1.5px 0 #040614,
+     1.5px  1.5px 0 #040614,
+     0 0 10px currentColor !important;
   pointer-events: none !important;
 }
 
+#lane-controls.brick-lane-controls .brick-lane-arrow.neon-flow-left {
+  animation: neonArrowTextCycle 3.2s linear infinite, neonArrowFlowLeft 0.75s ease-in-out infinite !important;
+}
+
+#lane-controls.brick-lane-controls .brick-lane-arrow.neon-flow-right {
+  animation: neonArrowTextCycle 3.2s linear infinite, neonArrowFlowRight 0.75s ease-in-out infinite !important;
+}
+
+#lane-controls.brick-lane-controls .brick-lane-arrow.neon-flow-up {
+  animation: neonArrowTextCycle 3.2s linear infinite, neonArrowFlowUp 0.75s ease-in-out infinite !important;
+}
+
 #lane-controls.brick-lane-controls .brick-lane-label {
+  position: relative !important;
+  z-index: 2 !important;
   font-family: var(--font-kr) !important;
-  font-size: 16px !important;
+  font-size: 15.5px !important;
   font-weight: 900 !important;
   color: #ffffff !important;
   letter-spacing: -0.02em !important;
   line-height: 1 !important;
   text-shadow:
-    0 2px 0 #2b0904,
-    0 -1px 0 #2b0904,
-    2px 0 0 #2b0904,
-    -2px 0 0 #2b0904,
-    0 0 10px rgba(0, 0, 0, 0.9) !important;
+    -1.5px -1.5px 0 #040614,
+     1.5px -1.5px 0 #040614,
+    -1.5px  1.5px 0 #040614,
+     1.5px  1.5px 0 #040614,
+     0 2px 6px rgba(0, 0, 0, 0.95),
+     0 0 10px rgba(0, 245, 255, 0.75) !important;
   pointer-events: none !important;
 }
 
-#lane-controls.brick-lane-controls .brick-lane-btn.active-lane .brick-lane-label,
-#lane-controls.brick-lane-controls .brick-lane-btn.active-lane .brick-lane-arrow {
-  color: #fffbe6 !important;
+#lane-controls.brick-lane-controls .brick-lane-btn.active-lane .brick-lane-label {
+  color: #ffffff !important;
   text-shadow:
-    0 2px 0 #3b0d06,
-    0 0 12px rgba(255, 230, 0, 0.95) !important;
+    -1.5px -1.5px 0 #040614,
+     1.5px -1.5px 0 #040614,
+    -1.5px  1.5px 0 #040614,
+     1.5px  1.5px 0 #040614,
+     0 0 14px rgba(255, 230, 0, 0.95) !important;
 }
 
 #lane-controls.brick-lane-controls .lane-btn-choice {

@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&family=Press+Start+2P&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
-  <link rel="stylesheet" href="css/style.css?v=20261026_52" />
+  <link rel="stylesheet" href="css/style.css?v=20261026_53" />
 </head>
 <body>
   <!-- 3D WebGL Viewport Container -->
@@ -229,21 +229,30 @@
     </button>
   </div>
 
-  <!-- Bottom Full-Width 3-Lane Brick Direction Controls (제일 밑에 각 레인 열너비를 꽉 채운 벽돌 3개 버튼, 높이 = 점프버튼 지름 48px의 1.1배 = 53px) -->
-  <div id="lane-controls" class="lane-controls brick-lane-controls" role="group" aria-label="하단 3열 벽돌 레인 이동 버튼">
-    <button id="btn-lane-0" class="lane-btn brick-lane-btn" type="button" data-lane="0" title="1번 좌측 레인으로 이동 (←)">
-      <span class="brick-lane-arrow">◀</span>
+  <!-- Bottom Full-Width 3-Lane Shaped Neon Arrow Direction Controls (2안: 내부 완전 투명 + 실시간 색상변화 네온 화살표 프레임) -->
+  <div id="lane-controls" class="lane-controls brick-lane-controls neon-arrow-lane-controls" role="group" aria-label="하단 3열 네온 화살표 레인 이동 버튼">
+    <button id="btn-lane-0" class="lane-btn brick-lane-btn neon-arrow-btn neon-arrow-left" type="button" data-lane="0" title="1번 좌측 레인으로 이동 (←)">
+      <svg class="neon-arrow-svg" viewBox="0 0 180 53" preserveAspectRatio="none" aria-hidden="true">
+        <polygon class="neon-arrow-shape" points="24,3 176,3 176,50 24,50 4,26.5" />
+      </svg>
+      <span class="brick-lane-arrow neon-flow-left">⬅</span>
       <span class="brick-lane-label">좌측</span>
       <span id="lane-btn-choice-0" class="lane-btn-choice"></span>
     </button>
-    <button id="btn-lane-1" class="lane-btn brick-lane-btn active-lane" type="button" data-lane="1" title="2번 중앙 레인으로 이동 (●)">
-      <span class="brick-lane-arrow">●</span>
+    <button id="btn-lane-1" class="lane-btn brick-lane-btn neon-arrow-btn neon-arrow-center active-lane" type="button" data-lane="1" title="2번 중앙 레인으로 이동 (↑)">
+      <svg class="neon-arrow-svg" viewBox="0 0 180 53" preserveAspectRatio="none" aria-hidden="true">
+        <polygon class="neon-arrow-shape" points="14,12 90,3 166,12 176,50 4,50" />
+      </svg>
+      <span class="brick-lane-arrow neon-flow-up">⬆</span>
       <span class="brick-lane-label">중앙</span>
       <span id="lane-btn-choice-1" class="lane-btn-choice"></span>
     </button>
-    <button id="btn-lane-2" class="lane-btn brick-lane-btn" type="button" data-lane="2" title="3번 우측 레인으로 이동 (→)">
+    <button id="btn-lane-2" class="lane-btn brick-lane-btn neon-arrow-btn neon-arrow-right" type="button" data-lane="2" title="3번 우측 레인으로 이동 (→)">
+      <svg class="neon-arrow-svg" viewBox="0 0 180 53" preserveAspectRatio="none" aria-hidden="true">
+        <polygon class="neon-arrow-shape" points="4,3 156,3 176,26.5 156,50 4,50" />
+      </svg>
       <span class="brick-lane-label">우측</span>
-      <span class="brick-lane-arrow">▶</span>
+      <span class="brick-lane-arrow neon-flow-right">➡</span>
       <span id="lane-btn-choice-2" class="lane-btn-choice"></span>
     </button>
   </div>
@@ -894,16 +903,16 @@
   <!-- Three.js r128 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <!-- Nano Banana Generated Retro 3D Assets Bundle (CORS-free on file:// & http://) -->
-  <script src="js/assets_data.js?v=20261026_52"></script>
+  <script src="js/assets_data.js?v=20261026_53"></script>
   <!-- Shared Game Modules -->
-  <script src="js/config.js?v=20261026_52"></script>
-  <script src="js/storage.js?v=20261026_52"></script>
-  <script src="js/questionEngine.js?v=20261026_52"></script>
-  <script src="js/sound.js?v=20261026_52"></script>
-  <script src="js/engine3d.js?v=20261026_52"></script>
+  <script src="js/config.js?v=20261026_53"></script>
+  <script src="js/storage.js?v=20261026_53"></script>
+  <script src="js/questionEngine.js?v=20261026_53"></script>
+  <script src="js/sound.js?v=20261026_53"></script>
+  <script src="js/engine3d.js?v=20261026_53"></script>
   <!-- UI & Game Controller -->
-  <script src="js/ui.js?v=20261026_52"></script>
-  <script src="js/game.js?v=20261026_52"></script>
+  <script src="js/ui.js?v=20261026_53"></script>
+  <script src="js/game.js?v=20261026_53"></script>
 
   <!-- Google Chrome / Mobile PWA Service Worker & One-Click App Install Handler -->
   <script>
@@ -911,7 +920,7 @@
       var deferredInstallPrompt = null;
       var installBtn = document.getElementById('btn-install-pwa');
 
-      window.__SOYUN_CLIENT_BUILD__ = '20261026_52';
+      window.__SOYUN_CLIENT_BUILD__ = '20261026_53';
       if ('serviceWorker' in navigator && window.location.protocol !== 'file:') {
         window.addEventListener('load', function () {
           var refreshing = false;
@@ -921,7 +930,7 @@
               window.location.reload();
             }
           });
-          navigator.serviceWorker.register('sw.js?v=20261026_52', { updateViaCache: 'none' }).then(function (reg) {
+          navigator.serviceWorker.register('sw.js?v=20261026_53', { updateViaCache: 'none' }).then(function (reg) {
             reg.update();
           }).catch(function () {});
         });
