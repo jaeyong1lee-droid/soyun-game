@@ -5871,6 +5871,33 @@ body.obby-mode-active #question-prompt {
    - Realistic Roblox / Masonry Brick texture via inline SVG data URI
    ============================================================================ */
 body.start-screen-active #lane-controls.brick-lane-controls {
+  display: none !important;
+}
+
+@keyframes neonArrowStrokeCycle {
+  0%   { stroke: #00f5ff; filter: drop-shadow(0 0 6px #00f5ff) drop-shadow(0 0 12px rgba(0, 245, 255, 0.55)); }
+  25%  { stroke: #ff2a85; filter: drop-shadow(0 0 6px #ff2a85) drop-shadow(0 0 12px rgba(255, 42, 133, 0.55)); }
+  50%  { stroke: #ffe600; filter: drop-shadow(0 0 6px #ffe600) drop-shadow(0 0 12px rgba(255, 230, 0, 0.55)); }
+  75%  { stroke: #00ff88; filter: drop-shadow(0 0 6px #00ff88) drop-shadow(0 0 12px rgba(0, 255, 136, 0.55)); }
+  100% { stroke: #00f5ff; filter: drop-shadow(0 0 6px #00f5ff) drop-shadow(0 0 12px rgba(0, 245, 255, 0.55)); }
+}
+
+@keyframes neonArrowFlowLeft {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(-4px); }
+}
+
+@keyframes neonArrowFlowRight {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(4px); }
+}
+
+@keyframes neonArrowFlowUp {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+#lane-controls.brick-lane-controls {
   position: fixed !important;
   left: 0 !important;
   right: 0 !important;
@@ -5938,9 +5965,11 @@ body.start-screen-active #lane-controls.brick-lane-controls {
 
 #lane-controls.brick-lane-controls .neon-arrow-shape {
   fill: transparent !important;
-  stroke-width: 2.8px !important;
+  stroke: #00f5ff;
+  stroke-width: 3px !important;
   stroke-linejoin: round !important;
   stroke-linecap: round !important;
+  filter: drop-shadow(0 0 6px #00f5ff) drop-shadow(0 0 12px rgba(0, 245, 255, 0.55));
   animation: neonArrowStrokeCycle 3.2s linear infinite !important;
 }
 
