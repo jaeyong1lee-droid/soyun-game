@@ -5879,22 +5879,24 @@ body.start-screen-active #lane-controls.brick-lane-controls {
 
 #lane-controls.brick-lane-controls {
   position: fixed !important;
-  left: 8px !important;
-  right: 8px !important;
+  left: 50% !important;
+  right: auto !important;
   bottom: calc(136px + env(safe-area-inset-bottom, 0px)) !important;
-  transform: none !important;
-  width: auto !important;
+  width: min(500px, calc(100vw - 34px)) !important;
   max-width: none !important;
-  height: 53px !important;
-  min-height: 53px !important;
-  max-height: 53px !important;
+  height: 64px !important;
+  min-height: 64px !important;
+  max-height: 64px !important;
+  transform: translateX(calc(-50% + var(--road-ground-sway-x, 0px))) perspective(280px) rotateX(48deg) !important;
+  transform-origin: center bottom !important;
   z-index: 65 !important;
   display: grid !important;
   grid-template-columns: repeat(3, 1fr) !important;
-  gap: 6px !important;
+  gap: 8px !important;
   padding: 0 !important;
   margin: 0 !important;
   pointer-events: auto !important;
+  will-change: transform !important;
 }
 
 @keyframes neonArrowStrokeCycle {
@@ -5934,9 +5936,9 @@ body.start-screen-active #lane-controls.brick-lane-controls {
 #lane-controls.brick-lane-controls .brick-lane-btn.active-lane {
   position: relative !important;
   width: 100% !important;
-  height: 53px !important;
-  min-height: 53px !important;
-  max-height: 53px !important;
+  height: 64px !important;
+  min-height: 64px !important;
+  max-height: 64px !important;
   padding: 0 8px !important;
   margin: 0 !important;
   border-radius: 0 !important;
@@ -5981,7 +5983,21 @@ body.start-screen-active #lane-controls.brick-lane-controls {
 }
 
 #lane-controls.brick-lane-controls .brick-lane-btn.active-lane .neon-arrow-shape {
-  stroke-width: 3.6px !important;
+  stroke-width: 4.4px !important;
+  fill: rgba(255, 230, 0, 0.08) !important;
+}
+
+@keyframes groundChevronPulse {
+  0%, 100% { opacity: 0.42; }
+  50% { opacity: 0.98; }
+}
+
+#lane-controls.brick-lane-controls .ground-pad-inner-chevrons {
+  fill: none !important;
+  stroke-width: 2.5px !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+  animation: neonArrowStrokeCycle 3.2s linear infinite, groundChevronPulse 0.75s ease-in-out infinite !important;
 }
 
 #lane-controls.brick-lane-controls .brick-lane-arrow {

@@ -7181,6 +7181,18 @@
         } else {
           this.camera.lookAt(this.carGroup.position.x * (0.2 + pf * 0.12) + lookCurveX, 1.8 - pf * 0.35 + (this.stairClimbedY || 0) * 0.8, -30);
         }
+
+        // Sync Ground-Projected Road Direction Pads (#lane-controls) horizontally with the moving 3D road (Fixed Y, slight X sway)
+        if (!this._laneControlsDomEl) {
+          this._laneControlsDomEl = document.getElementById('lane-controls');
+        }
+        if (this._laneControlsDomEl) {
+          const roadCurveNearX = this._getRoadCurveX(-16) * 2.2;
+          const rhythmSwayX = Math.sin((this.roadCurvePhase || 0) * 1.35) * 6.5;
+          const steerShiftX = -(this.carGroup.position.x || 0) * 2.4;
+          const totalGroundSwayX = Math.max(-18, Math.min(18, roadCurveNearX + rhythmSwayX + steerShiftX));
+          this._laneControlsDomEl.style.setProperty('--road-ground-sway-x', totalGroundSwayX.toFixed(1) + 'px');
+        }
       }
 
       // 5. Update 3-Lane Quiz Gates & Collision Check (gliding along the curved highway!)
