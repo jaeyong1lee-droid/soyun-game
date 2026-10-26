@@ -5028,19 +5028,18 @@
       const laneColors = ['#00f3ff', '#ffe600', '#ff2a85'];
       const borderColor = accentHex ? hexToCss(accentHex) : laneColors[laneIndex] || '#00f3ff';
 
-      // High-contrast dark backdrop
-      const bgGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
-      bgGrad.addColorStop(0, 'rgba(6, 10, 32, 0.98)');
-      bgGrad.addColorStop(1, 'rgba(20, 6, 42, 0.98)');
-      ctx.fillStyle = bgGrad;
-      roundRectPath(ctx, 10, 10, canvas.width - 20, canvas.height - 20, 28);
-      ctx.fill();
+      // 100% Transparent Signboard Interior (no opaque fill so 3D road/sky/boss shows through!)
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Thick glowing neon border
+      // Thick glowing neon border on transparent glass
+      ctx.save();
       ctx.strokeStyle = borderColor;
-      ctx.lineWidth = 16;
-      roundRectPath(ctx, 14, 14, canvas.width - 28, canvas.height - 28, 24);
+      ctx.lineWidth = 14;
+      ctx.shadowColor = borderColor;
+      ctx.shadowBlur = 20;
+      roundRectPath(ctx, 16, 16, canvas.width - 32, canvas.height - 32, 26);
       ctx.stroke();
+      ctx.restore();
 
       // Only show top badge for Speech Microphone sign; normal 3-lane boards use 100% of board for HUGE Answer text!
       const rawChoiceStr = String(choiceText !== undefined && choiceText !== null ? choiceText : '');
@@ -5238,7 +5237,7 @@
         const curtainMat = new THREE.MeshBasicMaterial({
           color: laneColors[i],
           transparent: true,
-          opacity: 0.26,
+          opacity: 0.06,
           side: THREE.DoubleSide
         });
         disposables.materials.push(curtainMat);
