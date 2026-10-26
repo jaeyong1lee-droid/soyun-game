@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&family=Press+Start+2P&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
-  <link rel="stylesheet" href="css/style.css?v=20261026_57" />
+  <link rel="stylesheet" href="css/style.css?v=20261026_60" />
 </head>
 <body>
   <!-- 3D WebGL Viewport Container -->
@@ -229,34 +229,30 @@
     </button>
   </div>
 
-  <!-- Bottom 3-Lane Option 3: Cyber Corner Brackets + Arcade Dancepad Large Arrows (┏ ◁◀ 좌측 ┓ | ┏ △ 중앙 △ ┓ | ┏ 우측 ▶▷ ┓) -->
-  <div id="lane-controls" class="lane-controls brick-lane-controls cyber-bracket-lane-controls" role="group" aria-label="하단 3열 사이버 코너 브래킷 방향키 패드">
-    <button id="btn-lane-0" class="lane-btn brick-lane-btn opt3-cyber-btn" type="button" data-lane="0" title="1번 좌측 레인으로 이동 (←)">
-      <span class="hud-corner c-tl" aria-hidden="true"></span>
-      <span class="hud-corner c-tr" aria-hidden="true"></span>
-      <span class="hud-corner c-bl" aria-hidden="true"></span>
-      <span class="hud-corner c-br" aria-hidden="true"></span>
-      <span class="brick-lane-arrow neon-flow-left">◁◀</span>
+  <!-- Bottom Full-Width 3-Lane Option 2 Shaped Neon Arrow Frame Buttons (좌우 가득 채운 화살표 모양 네온 외곽선 버튼) -->
+  <div id="lane-controls" class="lane-controls brick-lane-controls neon-arrow-lane-controls" role="group" aria-label="하단 3열 화살표 모양 네온 외곽선 방향키">
+    <button id="btn-lane-0" class="lane-btn brick-lane-btn neon-arrow-btn neon-arrow-left" type="button" data-lane="0" title="1번 좌측 레인으로 이동 (←)">
+      <svg class="neon-arrow-svg" viewBox="0 0 180 52" preserveAspectRatio="none" aria-hidden="true">
+        <polygon class="neon-arrow-shape" points="22,3 176,3 176,49 22,49 3,26" />
+      </svg>
+      <span class="brick-lane-arrow neon-flow-left">⬅</span>
       <span class="brick-lane-label">좌측</span>
       <span id="lane-btn-choice-0" class="lane-btn-choice"></span>
     </button>
-    <button id="btn-lane-1" class="lane-btn brick-lane-btn opt3-cyber-btn active-lane" type="button" data-lane="1" title="2번 중앙 레인으로 이동 (↑)">
-      <span class="hud-corner c-tl" aria-hidden="true"></span>
-      <span class="hud-corner c-tr" aria-hidden="true"></span>
-      <span class="hud-corner c-bl" aria-hidden="true"></span>
-      <span class="hud-corner c-br" aria-hidden="true"></span>
-      <span class="brick-lane-arrow neon-flow-up">△</span>
+    <button id="btn-lane-1" class="lane-btn brick-lane-btn neon-arrow-btn neon-arrow-center active-lane" type="button" data-lane="1" title="2번 중앙 레인으로 이동 (↑)">
+      <svg class="neon-arrow-svg" viewBox="0 0 180 52" preserveAspectRatio="none" aria-hidden="true">
+        <polygon class="neon-arrow-shape" points="14,10 90,2 166,10 176,49 4,49" />
+      </svg>
+      <span class="brick-lane-arrow neon-flow-up">⬆</span>
       <span class="brick-lane-label">중앙</span>
-      <span class="brick-lane-arrow neon-flow-up">△</span>
       <span id="lane-btn-choice-1" class="lane-btn-choice"></span>
     </button>
-    <button id="btn-lane-2" class="lane-btn brick-lane-btn opt3-cyber-btn" type="button" data-lane="2" title="3번 우측 레인으로 이동 (→)">
-      <span class="hud-corner c-tl" aria-hidden="true"></span>
-      <span class="hud-corner c-tr" aria-hidden="true"></span>
-      <span class="hud-corner c-bl" aria-hidden="true"></span>
-      <span class="hud-corner c-br" aria-hidden="true"></span>
+    <button id="btn-lane-2" class="lane-btn brick-lane-btn neon-arrow-btn neon-arrow-right" type="button" data-lane="2" title="3번 우측 레인으로 이동 (→)">
+      <svg class="neon-arrow-svg" viewBox="0 0 180 52" preserveAspectRatio="none" aria-hidden="true">
+        <polygon class="neon-arrow-shape" points="4,3 158,3 177,26 158,49 4,49" />
+      </svg>
       <span class="brick-lane-label">우측</span>
-      <span class="brick-lane-arrow neon-flow-right">▶▷</span>
+      <span class="brick-lane-arrow neon-flow-right">➡</span>
       <span id="lane-btn-choice-2" class="lane-btn-choice"></span>
     </button>
   </div>
@@ -405,7 +401,7 @@
         </div>
       </div>
 
-      <!-- Middle-Right Character / Vehicle Change Button (메인화면 중간 오른쪽 캐릭터 변경 버튼 - 10종) -->
+<!-- Middle-Right Character / Vehicle Change Button (메인화면 중간 오른쪽 캐릭터 변경 버튼 - 10종) -->
       <button
         id="btn-open-character-modal"
         class="btn-character-change-midright"
@@ -590,6 +586,28 @@
 
         <!-- TAB 2: ⚙️ 속도·학습·화면 설정창 -->
         <div id="parent-tab-settings" class="parent-tab-pane hidden">
+          <!-- 3-Way Game Graphic Style Selector (스무스 3D / 카툰·애니 3D / 도트·블록식) -->
+          <section class="parent-section" aria-label="보호자 전용 게임 그래픽 방식 3종 선택">
+            <div class="parent-section-header">
+              <h3 class="parent-section-title">🎨 게임 그래픽 방식 선택 <small>(3가지 3D 렌더링 스타일 즉시 전환)</small></h3>
+              <span id="parent-current-graphic-badge" class="parent-status-pill">✨ 스무스 3D</span>
+            </div>
+            <div id="parent-graphic-style-selector" class="subject-mode-group" role="radiogroup" aria-label="게임 그래픽 방식 3종 선택">
+              <button type="button" class="mode-pill graphic-style-pill active" data-gstyle="smooth">
+                <span class="mode-icon">✨</span>
+                <span class="mode-name">스무스 3D (자연스러운 곡선)</span>
+              </button>
+              <button type="button" class="mode-pill graphic-style-pill" data-gstyle="cartoon">
+                <span class="mode-icon">🎨</span>
+                <span class="mode-name">카툰·애니 3D (선명한 툰)</span>
+              </button>
+              <button type="button" class="mode-pill graphic-style-pill" data-gstyle="pixel">
+                <span class="mode-icon">🧱</span>
+                <span class="mode-name">도트·블록식 (로블록스)</span>
+              </button>
+            </div>
+          </section>
+
           <!-- Speed Multiplier Control Selector -->
           <section class="parent-section" aria-label="보호자 전용 주행 속도 배속 설정">
             <div class="parent-section-header">
@@ -907,16 +925,16 @@
   <!-- Three.js r128 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <!-- Nano Banana Generated Retro 3D Assets Bundle (CORS-free on file:// & http://) -->
-  <script src="js/assets_data.js?v=20261026_57"></script>
+  <script src="js/assets_data.js?v=20261026_60"></script>
   <!-- Shared Game Modules -->
-  <script src="js/config.js?v=20261026_57"></script>
-  <script src="js/storage.js?v=20261026_57"></script>
-  <script src="js/questionEngine.js?v=20261026_57"></script>
-  <script src="js/sound.js?v=20261026_57"></script>
-  <script src="js/engine3d.js?v=20261026_57"></script>
+  <script src="js/config.js?v=20261026_60"></script>
+  <script src="js/storage.js?v=20261026_60"></script>
+  <script src="js/questionEngine.js?v=20261026_60"></script>
+  <script src="js/sound.js?v=20261026_60"></script>
+  <script src="js/engine3d.js?v=20261026_60"></script>
   <!-- UI & Game Controller -->
-  <script src="js/ui.js?v=20261026_57"></script>
-  <script src="js/game.js?v=20261026_57"></script>
+  <script src="js/ui.js?v=20261026_60"></script>
+  <script src="js/game.js?v=20261026_60"></script>
 
   <!-- Google Chrome / Mobile PWA Service Worker & One-Click App Install Handler -->
   <script>
@@ -924,7 +942,7 @@
       var deferredInstallPrompt = null;
       var installBtn = document.getElementById('btn-install-pwa');
 
-      window.__SOYUN_CLIENT_BUILD__ = '20261026_57';
+      window.__SOYUN_CLIENT_BUILD__ = '20261026_60';
       if ('serviceWorker' in navigator && window.location.protocol !== 'file:') {
         window.addEventListener('load', function () {
           var refreshing = false;
@@ -934,7 +952,7 @@
               window.location.reload();
             }
           });
-          navigator.serviceWorker.register('sw.js?v=20261026_57', { updateViaCache: 'none' }).then(function (reg) {
+          navigator.serviceWorker.register('sw.js?v=20261026_60', { updateViaCache: 'none' }).then(function (reg) {
             reg.update();
           }).catch(function () {});
         });

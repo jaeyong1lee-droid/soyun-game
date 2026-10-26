@@ -585,6 +585,7 @@
         console.error('Engine3D: THREE.js is not loaded.');
         return this;
       }
+      this._installGraphicStyleAdapter();
 
       const width = this.container.clientWidth || global.innerWidth || 1280;
       const height = this.container.clientHeight || global.innerHeight || 720;
@@ -648,6 +649,225 @@
     /**
      * Initialize shared geometries & materials for 3D Roblox Brick Shatter & Studs
      */
+    graphicStyle: 'smooth',
+
+    getGraphicStyle: function () {
+      if (!this._graphicStyleLoaded) {
+        this._graphicStyleLoaded = true;
+        try {
+          const saved = global.localStorage && global.localStorage.getItem('soyun_graphic_style_v1');
+          if (saved === 'pixel' || saved === 'cartoon' || saved === 'smooth') {
+            this.graphicStyle = saved;
+          }
+        } catch (_e) {}
+      }
+      return this.graphicStyle || 'smooth';
+    },
+
+    _getSoftGlowDotTexture: function () {
+      const THREE = global.THREE;
+      if (this._softGlowDotTex) return this._softGlowDotTex;
+      const c = document.createElement('canvas');
+      c.width = 64;
+      c.height = 64;
+      const ctx = c.getContext('2d');
+      const g = ctx.createRadialGradient(32, 32, 2, 32, 32, 30);
+      g.addColorStop(0, 'rgba(255, 255, 255, 1)');
+      g.addColorStop(0.4, 'rgba(255, 255, 255, 0.85)');
+      g.addColorStop(0.75, 'rgba(255, 255, 255, 0.25)');
+      g.addColorStop(1, 'rgba(255, 255, 255, 0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, 64, 64);
+      this._softGlowDotTex = new THREE.CanvasTexture(c);
+      this._softGlowDotTex.needsUpdate = true;
+      return this._softGlowDotTex;
+    },
+
+    _installGraphicStyleAdapter: function () {
+      const THREE = global.THREE;
+      if (!THREE || THREE.__SOYUN_SMOOTH_ADAPTER_INSTALLED__) return;
+      THREE.__SOYUN_SMOOTH_ADAPTER_INSTALLED__ = true;
+
+      const self = this;
+      const OrigBox = THREE.BoxGeometry;
+      const OrigCone = THREE.ConeGeometry;
+      const OrigCyl = THREE.CylinderGeometry;
+      const OrigDodec = THREE.DodecahedronGeometry;
+      const OrigOcta = THREE.OctahedronGeometry;
+      const OrigStdMat = THREE.MeshStandardMaterial;
+      const OrigPointsMat = THREE.PointsMaterial;
+
+      THREE.__OrigBoxGeometry = OrigBox;
+
+      // 1. BoxGeometry: In 'smooth' mode, convert 1x1x1 cubes into smooth rounded 3D super-ellipsoids!
+      const PatchedBox = function (w, h, d, ws, hs, ds) {
+        const gMode = self.getGraphicStyle(); const isSmooth = gMode === 'smooth' || gMode === 'cartoon';
+        const bw = w !== undefined ? w : 1;
+        const bh = h !== undefined ? h : 1;
+        const bd = d !== undefined ? d : 1;
+        if (isSmooth && (!ws || ws === 1) && (!hs || hs === 1) && (!ds || ds === 1)) {
+          const segs = 8;
+          const geo = new OrigBox(bw, bh, bd, segs, segs, segs);
+          const pos = geo.attributes.position;
+          const norm = geo.attributes.normal;
+          const hw = bw * 0.5 || 0.5;
+          const hh = bh * 0.5 || 0.5;
+          const hd = bd * 0.5 || 0.5;
+          for (let i = 0; i < pos.count; i++) {
+            const vx = pos.getX(i);
+            const vy = pos.getY(i);
+            const vz = pos.getZ(i);
+            const nx = vx / hw;
+            const ny = vy / hh;
+            const nz = vz / hd;
+            const r2 = nx * nx + ny * ny + nz * nz;
+            if (r2 > 0.0001) {
+              // Smoothly round edges & corners (super-ellipsoid spherize)
+              const factor = 1.0 / Math.pow(r2, 0.28);
+              pos.setXYZ(i, vx * factor, vy * factor, vz * factor);
+              // Smooth continuous outward normal
+              const fnx = norm.getX(i);
+              const fny = norm.getY(i);
+              const fnz = norm.getZ(i);
+              let snx = nx / hw;
+              let sny = ny / hh;
+              let snz = nz / hd;
+              const slen = Math.hypot(snx, sny, snz) || 1;
+              snx /= slen;
+              sny /= slen;
+              snz /= slen;
+              let bx = fnx * 0.22 + snx * 0.78;
+              let by = fny * 0.22 + sny * 0.78;
+              let bz = fnz * 0.22 + snz * 0.78;
+              const blen = Math.hypot(bx, by, bz) || 1;
+              norm.setXYZ(i, bx / blen, by / blen, bz / blen);
+            }
+          }
+          pos.needsUpdate = true;
+          norm.needsUpdate = true;
+          return geo;
+        }
+        return new OrigBox(bw, bh, bd, ws, hs, ds);
+      };
+      PatchedBox.prototype = OrigBox.prototype;
+      THREE.BoxGeometry = PatchedBox;
+      THREE.BoxBufferGeometry = PatchedBox;
+
+      // 2. ConeGeometry: In 'smooth' mode, upgrade low-poly cones (4~12 segs) to 32 smooth segments!
+      const PatchedCone = function (r, h, radialSegs, heightSegs, openEnded, thetaStart, thetaLength) {
+        const gMode = self.getGraphicStyle(); const isSmooth = gMode === 'smooth' || gMode === 'cartoon';
+        const segs = isSmooth ? Math.max(32, radialSegs || 32) : radialSegs;
+        return new OrigCone(r, h, segs, heightSegs, openEnded, thetaStart, thetaLength);
+      };
+      PatchedCone.prototype = OrigCone.prototype;
+      THREE.ConeGeometry = PatchedCone;
+      THREE.ConeBufferGeometry = PatchedCone;
+
+      // 3. CylinderGeometry: In 'smooth' mode, upgrade low-poly cylinders (6~16 segs) to 28 smooth segments!
+      const PatchedCyl = function (rt, rb, h, radialSegs, heightSegs, openEnded, thetaStart, thetaLength) {
+        const gMode = self.getGraphicStyle(); const isSmooth = gMode === 'smooth' || gMode === 'cartoon';
+        const segs = isSmooth ? Math.max(28, radialSegs || 28) : radialSegs;
+        return new OrigCyl(rt, rb, h, segs, heightSegs, openEnded, thetaStart, thetaLength);
+      };
+      PatchedCyl.prototype = OrigCyl.prototype;
+      THREE.CylinderGeometry = PatchedCyl;
+      THREE.CylinderBufferGeometry = PatchedCyl;
+
+      // 4. Dodecahedron / Octahedron: In 'smooth' mode, subdivide to detail=3 for smooth spheres!
+      if (OrigDodec) {
+        const PatchedDodec = function (r, detail) {
+          const gMode = self.getGraphicStyle(); const isSmooth = gMode === 'smooth' || gMode === 'cartoon';
+          return new OrigDodec(r, isSmooth ? Math.max(3, detail || 0) : detail);
+        };
+        PatchedDodec.prototype = OrigDodec.prototype;
+        THREE.DodecahedronGeometry = PatchedDodec;
+      }
+      if (OrigOcta) {
+        const PatchedOcta = function (r, detail) {
+          const gMode = self.getGraphicStyle(); const isSmooth = gMode === 'smooth' || gMode === 'cartoon';
+          return new OrigOcta(r, isSmooth ? Math.max(3, detail || 0) : detail);
+        };
+        PatchedOcta.prototype = OrigOcta.prototype;
+        THREE.OctahedronGeometry = PatchedOcta;
+      }
+
+      // 5. MeshStandardMaterial: Smooth in 'smooth' mode, vivid cel-pop in 'cartoon' mode, faceted in 'pixel' mode!
+      const PatchedStdMat = function (params) {
+        const gMode = self.getGraphicStyle();
+        if (gMode !== 'pixel' && params) {
+          params = Object.assign({}, params, { flatShading: false });
+          if (gMode === 'cartoon') {
+            params.roughness = 0.12;
+            params.metalness = 0.05;
+            if (params.color !== undefined && params.emissive === undefined) {
+              params.emissive = params.color;
+              params.emissiveIntensity = 0.28;
+            } else if (typeof params.emissiveIntensity === 'number') {
+              params.emissiveIntensity = Math.min(1.0, params.emissiveIntensity * 1.45);
+            }
+          }
+        }
+        return new OrigStdMat(params);
+      };
+      PatchedStdMat.prototype = OrigStdMat.prototype;
+      THREE.MeshStandardMaterial = PatchedStdMat;
+
+      // 6. PointsMaterial: Attach soft glowing circle texture in 'smooth' mode so stars/particles aren't square pixels!
+      const PatchedPointsMat = function (params) {
+        const gMode = self.getGraphicStyle(); const isSmooth = gMode === 'smooth' || gMode === 'cartoon';
+        if (isSmooth && params && !params.map) {
+          params = Object.assign({}, params, {
+            map: self._getSoftGlowDotTexture(),
+            transparent: true,
+            alphaTest: 0.02
+          });
+        }
+        return new OrigPointsMat(params);
+      };
+      PatchedPointsMat.prototype = OrigPointsMat.prototype;
+      THREE.PointsMaterial = PatchedPointsMat;
+    },
+
+    setGraphicStyle: function (style) {
+      const nextStyle = (style === 'pixel' || style === 'cartoon') ? style : 'smooth';
+      this.graphicStyle = nextStyle;
+      this._graphicStyleLoaded = true;
+      try {
+        if (global.localStorage) {
+          global.localStorage.setItem('soyun_graphic_style_v1', nextStyle);
+        }
+      } catch (_e) {}
+      if (typeof document !== 'undefined' && document.body) {
+        document.body.classList.toggle('graphic-mode-smooth', nextStyle === 'smooth');
+        document.body.classList.toggle('graphic-mode-cartoon', nextStyle === 'cartoon');
+        document.body.classList.toggle('graphic-mode-pixel', nextStyle === 'pixel');
+      }
+      if (!this.isInitialized || !this.scene) return;
+
+      // Rebuild entire 3D world immediately in the selected graphic style!
+      const savedStage = this.currentStage || 1;
+      while (this.scene.children.length > 0) {
+        this.scene.remove(this.scene.children[0]);
+      }
+      this.activeGates = [];
+      this.activeObstacles = [];
+      this.activeProjectiles = [];
+      this.particles = [];
+      this._initSharedBrickAssets();
+      this._initTextures();
+      this._buildLighting();
+      this._buildSkyAndHorizon();
+      this._buildHighwayAndScenery();
+      if (this.mountainWireMat) {
+        this.mountainWireMat.opacity = nextStyle === 'smooth' ? 0.0 : (nextStyle === 'cartoon' ? 0.65 : 0.42);
+      }
+      this._buildPlayerCar();
+      this._buildSpeedLines();
+      this._buildBossModel();
+      this.setStageTheme(savedStage);
+      this.renderSingleFrame();
+    },
+
     _initSharedBrickAssets: function () {
       const THREE = global.THREE;
       if (!THREE) return;
@@ -1033,42 +1253,60 @@
         this.textures.soyunFace = new THREE.CanvasTexture(faceCanvas);
         this.textures.soyunFace.needsUpdate = true;
 
-        // 6. Floating 3D Cube Pet Kawaii Face Texture
+        // 6. Pet Face Texture (Switches between Smooth Kawaii and Retro Pixel!)
         const petCanvas = document.createElement('canvas');
-        petCanvas.width = 256;
-        petCanvas.height = 256;
+        petCanvas.width = 512;
+        petCanvas.height = 512;
         const pctx = petCanvas.getContext('2d');
-        const petGrad = pctx.createLinearGradient(0, 0, 0, 256);
-        petGrad.addColorStop(0, '#72efdd');
-        petGrad.addColorStop(1, '#ff5ec4');
+        const petGrad = pctx.createLinearGradient(0, 0, 0, 512);
+        petGrad.addColorStop(0, '#a8ffef');
+        petGrad.addColorStop(0.55, '#fbcfe8');
+        petGrad.addColorStop(1, '#f472b6');
         pctx.fillStyle = petGrad;
-        pctx.fillRect(0, 0, 256, 256);
+        pctx.fillRect(0, 0, 512, 512);
 
-        pctx.strokeStyle = '#ffffff';
-        pctx.lineWidth = 10;
-        pctx.strokeRect(8, 8, 240, 240);
-
-        // Big pixel eyes
-        pctx.fillStyle = '#120824';
-        pctx.fillRect(46, 86, 48, 56);
-        pctx.fillRect(162, 86, 48, 56);
-        pctx.fillStyle = '#ffffff';
-        pctx.fillRect(54, 94, 18, 18);
-        pctx.fillRect(170, 94, 18, 18);
-        pctx.fillStyle = '#00f3ff';
-        pctx.fillRect(72, 120, 14, 14);
-        pctx.fillRect(188, 120, 14, 14);
-
-        // Cute cat/dragon mouth "w"
-        pctx.strokeStyle = '#120824';
-        pctx.lineWidth = 8;
+        if (this.getGraphicStyle && this.getGraphicStyle() === 'pixel') {
+          pctx.strokeStyle = '#ff2a85'; pctx.lineWidth = 24; pctx.strokeRect(12, 12, 488, 488);
+          pctx.fillStyle = '#0f172a'; pctx.fillRect(120, 170, 68, 96); pctx.fillRect(324, 170, 68, 96);
+          pctx.fillStyle = '#ffffff'; pctx.fillRect(136, 184, 28, 28); pctx.fillRect(340, 184, 28, 28);
+          pctx.fillStyle = 'rgba(255, 42, 133, 0.55)'; pctx.beginPath(); pctx.arc(96, 300, 36, 0, Math.PI * 2); pctx.arc(416, 300, 36, 0, Math.PI * 2); pctx.fill();
+          pctx.strokeStyle = '#0f172a'; pctx.lineWidth = 16; pctx.lineCap = 'round'; pctx.beginPath(); pctx.arc(256, 290, 44, 0.15 * Math.PI, 0.85 * Math.PI); pctx.stroke();
+        } else {
+        // Rosy soft cheeks
+        pctx.fillStyle = 'rgba(255, 42, 133, 0.45)';
         pctx.beginPath();
-        pctx.moveTo(98, 166);
-        pctx.lineTo(114, 182);
-        pctx.lineTo(128, 168);
-        pctx.lineTo(142, 182);
-        pctx.lineTo(158, 166);
+        pctx.ellipse(120, 310, 38, 22, 0, 0, Math.PI * 2);
+        pctx.ellipse(392, 310, 38, 22, 0, 0, Math.PI * 2);
+        pctx.fill();
+
+        // Smooth round glossy eyes
+        [176, 336].forEach((ex) => {
+          pctx.fillStyle = '#1e1035';
+          pctx.beginPath();
+          pctx.ellipse(ex, 240, 36, 44, 0, 0, Math.PI * 2);
+          pctx.fill();
+
+          pctx.fillStyle = '#00f5ff';
+          pctx.beginPath();
+          pctx.ellipse(ex, 254, 24, 24, 0, 0, Math.PI * 2);
+          pctx.fill();
+
+          pctx.fillStyle = '#ffffff';
+          pctx.beginPath();
+          pctx.arc(ex - 12, 222, 13, 0, Math.PI * 2);
+          pctx.arc(ex + 12, 258, 6, 0, Math.PI * 2);
+          pctx.fill();
+        });
+
+        // Smooth cute smile
+        pctx.strokeStyle = '#1e1035';
+        pctx.lineWidth = 10;
+        pctx.lineCap = 'round';
+        pctx.lineJoin = 'round';
+        pctx.beginPath();
+        pctx.arc(256, 296, 28, 0.15 * Math.PI, 0.85 * Math.PI);
         pctx.stroke();
+        }
 
         this.textures.petFace = new THREE.CanvasTexture(petCanvas);
         this.textures.petFace.needsUpdate = true;
@@ -2020,7 +2258,7 @@
         color: this.currentTheme.mountainEdge,
         wireframe: true,
         transparent: true,
-        opacity: 0.42
+        opacity: this.getGraphicStyle() === 'smooth' ? 0.0 : 0.42
       });
       this.mountainSnowCapMat = new THREE.MeshBasicMaterial({
         color: 0xf4fbff
@@ -3194,7 +3432,8 @@
       const vType = this.currentVehicleType || 'kart_saber';
 
       this.carGroup = new THREE.Group();
-      this.carGroup.position.set(0, 0, getCfg().GATE_PASS_Z);
+      this.carGroup.scale.set(0.8, 0.8, 0.8);
+      this.carGroup.position.set(0, 0, getCfg().GATE_PASS_Z - 4.2);
       this.scene.add(this.carGroup);
 
       this.carWheels = [];
@@ -3531,105 +3770,124 @@
         //    - 'kart_solid'  (솔리드 골드: 황금 중장갑 범퍼 + 사이드 실드)
         //    - 'girl_unicorn'(유니콘 마법카트: 유니콘 머리와 황금 뿔 + 날개)
         // =====================================================================
-        // 1. Low-slung KartRider Racing Chassis Frame
-        const baseMesh = new THREE.Mesh(new THREE.BoxGeometry(2.28, 0.38, 4.15), primaryMat);
-        baseMesh.position.set(0, 0.42, 0);
+        // 1. Smooth Sculpted Aerodynamic KartRider Chassis
+        const bodyGeo = new THREE.CylinderGeometry(0.78, 1.08, 3.85, 28);
+        const baseMesh = new THREE.Mesh(bodyGeo, primaryMat);
+        baseMesh.rotation.x = Math.PI / 2;
+        baseMesh.scale.set(1.15, 1.0, 0.36);
+        baseMesh.position.set(0, 0.44, 0.05);
         this.carGroup.add(baseMesh);
 
-        // Aerodynamic KartRider Front Nose Cone & Splitter Wing
-        const noseCone = new THREE.Mesh(new THREE.BoxGeometry(1.65, 0.34, 1.65), secondaryMat);
-        noseCone.position.set(0, 0.64, -1.42);
-        noseCone.rotation.x = 0.14;
-        const frontWing = new THREE.Mesh(new THREE.BoxGeometry(2.58, 0.14, 0.62), primaryMat);
-        frontWing.position.set(0, 0.32, -2.18);
-        const frontGoldTrim = new THREE.Mesh(new THREE.BoxGeometry(2.62, 0.08, 0.22), goldMat);
-        frontGoldTrim.position.set(0, 0.38, -2.42);
+        // Smooth Tapered Aerodynamic Nose Cone & Rounded Front Wing
+        const noseCone = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.82, 1.65, 28), secondaryMat);
+        noseCone.rotation.x = Math.PI / 2;
+        noseCone.scale.set(1.1, 1.0, 0.46);
+        noseCone.position.set(0, 0.56, -1.45);
+        const frontWing = new THREE.Mesh(new THREE.CylinderGeometry(1.22, 1.28, 0.56, 28), primaryMat);
+        frontWing.scale.set(1.05, 0.22, 0.48);
+        frontWing.position.set(0, 0.32, -2.12);
+        const frontGoldTrim = new THREE.Mesh(new THREE.TorusGeometry(1.18, 0.055, 14, 32, Math.PI), goldMat);
+        frontGoldTrim.rotation.x = Math.PI / 2;
+        frontGoldTrim.scale.set(1.05, 0.36, 1.0);
+        frontGoldTrim.position.set(0, 0.35, -2.05);
         this.carGroup.add(noseCone, frontWing, frontGoldTrim);
 
-        // Sculpted KartRider Side Booster Pontoons (Left & Right)
-        [-1.12, 1.12].forEach((px) => {
-          const pod = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.44, 2.35), secondaryMat);
-          pod.position.set(px, 0.66, 0.1);
-          const intake = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.24, 0.45), primaryMat);
-          intake.position.set(px, 0.68, -0.95);
-          this.carGroup.add(pod, intake);
+        // Smooth Cylindrical Side Booster Pontoons with Spherical Caps
+        [-1.08, 1.08].forEach((px) => {
+          const podGroup = new THREE.Group();
+          podGroup.position.set(px, 0.58, 0.08);
+          const podCyl = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.26, 2.1, 24), secondaryMat);
+          podCyl.rotation.x = Math.PI / 2;
+          const podFrontCap = new THREE.Mesh(new THREE.SphereGeometry(0.24, 24, 18), primaryMat);
+          podFrontCap.position.set(0, 0, -1.05);
+          const podRearCap = new THREE.Mesh(new THREE.SphereGeometry(0.25, 24, 18), goldMat);
+          podRearCap.position.set(0, 0, 1.05);
+          podGroup.add(podCyl, podFrontCap, podRearCap);
+          this.carGroup.add(podGroup);
         });
 
-        // Vehicle-specific signature KartRider centerpiece!
+        // Vehicle-specific signature KartRider centerpiece (Smooth sculpted!)
         if (vType === 'kart_saber') {
-          // Saber Pro Signature Center Fin & Red/White Aero Blades
-          const saberBlade = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.42, 1.85), primaryMat);
-          saberBlade.position.set(0, 0.84, -1.25);
+          const saberBlade = new THREE.Mesh(new THREE.ConeGeometry(0.22, 1.75, 24), primaryMat);
+          saberBlade.rotation.x = -Math.PI / 2;
+          saberBlade.scale.set(0.55, 1.0, 0.85);
+          saberBlade.position.set(0, 0.82, -1.15);
           this.carGroup.add(saberBlade);
         } else if (vType === 'kart_burst') {
-          // Burst Z7 Giant Chrome V8 Supercharger Blower on the Hood!
-          const blower = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.52, 0.95), chromeMat);
-          blower.position.set(0, 0.95, -1.25);
-          const scoop = new THREE.Mesh(new THREE.BoxGeometry(0.76, 0.24, 0.62), goldMat);
-          scoop.position.set(0, 1.28, -1.32);
+          const blower = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.48, 0.88, 24), chromeMat);
+          blower.rotation.x = Math.PI / 2;
+          blower.position.set(0, 0.88, -1.2);
+          const scoop = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.34, 0.58, 24), goldMat);
+          scoop.rotation.x = Math.PI / 2;
+          scoop.position.set(0, 1.18, -1.26);
           this.carGroup.add(blower, scoop);
         } else if (vType === 'kart_solid') {
-          // Solid Gold Heavy Bumper Ram & Side Armor Shields
-          const ram = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 2.68, 12), goldMat);
+          const ram = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 2.55, 24), goldMat);
           ram.rotation.z = Math.PI / 2;
-          ram.position.set(0, 0.52, -2.38);
+          ram.position.set(0, 0.5, -2.28);
           this.carGroup.add(ram);
         } else if (vType === 'girl_unicorn') {
-          // Unicorn Royal Kart Figurehead + Golden Horn + Flapping Side Wings!
-          const uniHead = new THREE.Mesh(new THREE.BoxGeometry(0.68, 0.68, 0.68), primaryMat);
-          uniHead.position.set(0, 1.15, -1.85);
-          const uniHorn = new THREE.Mesh(new THREE.ConeGeometry(0.14, 0.68, 8), goldMat);
-          uniHorn.position.set(0, 1.65, -2.02);
+          const uniHead = new THREE.Mesh(new THREE.SphereGeometry(0.38, 24, 20), primaryMat);
+          uniHead.position.set(0, 1.12, -1.78);
+          const uniHorn = new THREE.Mesh(new THREE.ConeGeometry(0.11, 0.65, 20), goldMat);
+          uniHorn.position.set(0, 1.58, -1.96);
           uniHorn.rotation.x = 0.45;
           this.carGroup.add(uniHead, uniHorn);
-          [-1.38, 1.38].forEach((wx) => {
-            const uWing = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.12, 0.95), secondaryMat);
-            uWing.position.set(wx, 0.96, 0.2);
+          [-1.32, 1.32].forEach((wx) => {
+            const uWing = new THREE.Mesh(new THREE.SphereGeometry(0.45, 20, 16), secondaryMat);
+            uWing.scale.set(1.0, 0.18, 0.9);
+            uWing.position.set(wx, 0.94, 0.18);
             uWing.rotation.z = wx > 0 ? 0.32 : -0.32;
             this.carGroup.add(uWing);
           });
         }
 
-        // KartRider Bucket Seat Backrest
-        const seatBack = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.88, 0.24), secondaryMat);
-        seatBack.position.set(0, 1.02, 0.68);
+        // Smooth Curved KartRider Bucket Seat Backrest
+        const seatBack = new THREE.Mesh(new THREE.CylinderGeometry(0.44, 0.5, 0.82, 24), secondaryMat);
+        seatBack.scale.set(1.0, 1.0, 0.38);
+        seatBack.position.set(0, 0.98, 0.66);
         seatBack.rotation.x = -0.15;
-        this.carGroup.add(seatBack);
+        const headRest = new THREE.Mesh(new THREE.SphereGeometry(0.32, 24, 18), primaryMat);
+        headRest.scale.set(1.2, 0.75, 0.42);
+        headRest.position.set(0, 1.42, 0.72);
+        this.carGroup.add(seatBack, headRest);
 
         // Sporty KartRider Steering Column & Wheel
-        const colMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.55, 8), chromeMat);
-        colMesh.position.set(0, 0.98, -0.58);
+        const colMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.52, 16), chromeMat);
+        colMesh.position.set(0, 0.96, -0.56);
         colMesh.rotation.x = -0.55;
         this.carGroup.add(colMesh);
 
-        this.steeringWheelMesh = new THREE.Mesh(new THREE.TorusGeometry(0.24, 0.048, 8, 16), goldMat);
-        this.steeringWheelMesh.position.set(0, 1.15, -0.42);
+        this.steeringWheelMesh = new THREE.Mesh(new THREE.TorusGeometry(0.22, 0.045, 14, 28), goldMat);
+        this.steeringWheelMesh.position.set(0, 1.12, -0.4);
         this.steeringWheelMesh.rotation.x = -0.55;
         this.carGroup.add(this.steeringWheelMesh);
 
-        // Rear Dual-Deck KartRider Aero Spoiler Wing
-        [-0.86, 0.86].forEach((sx) => {
-          const strut = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.62, 0.34), goldMat);
-          strut.position.set(sx, 0.98, 1.78);
+        // Smooth Curved Rear Aero Spoiler Wing
+        [-0.78, 0.78].forEach((sx) => {
+          const strut = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.09, 0.58, 16), goldMat);
+          strut.position.set(sx, 0.94, 1.72);
+          strut.rotation.x = -0.18;
           this.carGroup.add(strut);
         });
-        const wingBlade = new THREE.Mesh(new THREE.BoxGeometry(2.56, 0.14, 0.64), primaryMat);
-        wingBlade.position.set(0, 1.32, 1.88);
+        const wingBlade = new THREE.Mesh(new THREE.CylinderGeometry(1.22, 1.22, 0.52, 28), primaryMat);
+        wingBlade.scale.set(1.04, 0.18, 0.48);
+        wingBlade.position.set(0, 1.24, 1.82);
         this.carGroup.add(wingBlade);
 
         // Quad KartRider Rear Nitro Booster Pipes!
-        [-0.74, -0.28, 0.28, 0.74].forEach((bx) => {
-          addBoosterPipe(bx, 0.48, 2.12, -0.08);
+        [-0.68, -0.24, 0.24, 0.68].forEach((bx) => {
+          addBoosterPipe(bx, 0.46, 2.04, -0.06);
         });
 
-        // 4 Wide KartRider Racing Slicks with Glowing Star Rims
-        const wheelGeo = new THREE.CylinderGeometry(0.46, 0.46, 0.46, 16);
-        const rimGeo = new THREE.TorusGeometry(0.29, 0.055, 8, 16);
+        // 4 Smooth High-Segment Racing Slicks with Glowing Rims
+        const wheelGeo = new THREE.CylinderGeometry(0.44, 0.44, 0.42, 28);
+        const rimGeo = new THREE.TorusGeometry(0.27, 0.052, 14, 24);
         [
-          [-1.28, 0.46, -1.32],
-          [1.28, 0.46, -1.32],
-          [-1.34, 0.48, 1.32],
-          [1.34, 0.48, 1.32]
+          [-1.24, 0.44, -1.28],
+          [1.24, 0.44, -1.28],
+          [-1.28, 0.46, 1.28],
+          [1.28, 0.46, 1.28]
         ].forEach(([wx, wy, wz]) => {
           const wheelHolder = new THREE.Group();
           wheelHolder.position.set(wx, wy, wz);
@@ -3638,7 +3896,7 @@
           wheelHolder.add(tire);
           const rim = new THREE.Mesh(rimGeo, goldMat);
           rim.rotation.y = Math.PI / 2;
-          rim.position.x = wx > 0 ? 0.24 : -0.24;
+          rim.position.x = wx > 0 ? 0.22 : -0.22;
           wheelHolder.add(rim);
           this.carGroup.add(wheelHolder);
           this.carWheels.push(wheelHolder);
@@ -3646,137 +3904,171 @@
       }
 
       // =======================================================================
-      // 2. 3D Avatar for "이소윤 (Soyun)" riding the selected vehicle!
+      // 2. Smooth Natural 3D Avatar for "이소윤 (Soyun)" (No blocky BoxGeometry!)
       // =======================================================================
       this.soyunAvatarGroup = new THREE.Group();
       this.soyunAvatarGroup.position.set(0, avatarY, avatarZ);
       this.carGroup.add(this.soyunAvatarGroup);
 
-      const skinMat = new THREE.MeshStandardMaterial({ color: 0xffdfb8, roughness: 0.35 });
+      const skinMat = new THREE.MeshStandardMaterial({ color: 0xffe3c4, roughness: 0.3, metalness: 0.05 });
       const torsoMat = new THREE.MeshStandardMaterial({
         color: pal.jacket,
-        roughness: 0.28,
+        roughness: 0.25,
+        metalness: 0.1,
         emissive: pal.jacket,
-        emissiveIntensity: 0.25
+        emissiveIntensity: 0.22
       });
       const sleeveMat = new THREE.MeshStandardMaterial({
         color: pal.sleeve,
-        roughness: 0.3
+        roughness: 0.28
       });
 
-      // Articulated Legs for Bicycle / Motorcycle / Kickboard / Roller / Hoverboard!
+      // Smooth Articulated Legs for Bicycle / Motorcycle / Kickboard / Roller / Hoverboard!
       if (buildLegs) {
-        const legGeo = new THREE.BoxGeometry(0.28, 0.62, 0.28);
-        const legMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.4 });
+        const legGeo = new THREE.CylinderGeometry(0.12, 0.10, 0.58, 20);
+        const shoeGeo = new THREE.SphereGeometry(0.13, 20, 16);
+        const legMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.35 });
         this.soyunLeftLeg = new THREE.Group();
-        this.soyunLeftLeg.position.set(-0.22, 0.08, 0);
+        this.soyunLeftLeg.position.set(-0.2, 0.08, 0);
         const lMesh = new THREE.Mesh(legGeo, legMat);
         lMesh.position.y = -0.28;
-        this.soyunLeftLeg.add(lMesh);
+        const lShoe = new THREE.Mesh(shoeGeo, primaryMat);
+        lShoe.scale.set(1.0, 0.7, 1.35);
+        lShoe.position.set(0, -0.56, -0.04);
+        this.soyunLeftLeg.add(lMesh, lShoe);
 
         this.soyunRightLeg = new THREE.Group();
-        this.soyunRightLeg.position.set(0.22, 0.08, 0);
+        this.soyunRightLeg.position.set(0.2, 0.08, 0);
         const rMesh = new THREE.Mesh(legGeo, legMat);
         rMesh.position.y = -0.28;
-        this.soyunRightLeg.add(rMesh);
+        const rShoe = new THREE.Mesh(shoeGeo, primaryMat);
+        rShoe.scale.set(1.0, 0.7, 1.35);
+        rShoe.position.set(0, -0.56, -0.04);
+        this.soyunRightLeg.add(rMesh, rShoe);
 
         this.soyunAvatarGroup.add(this.soyunLeftLeg, this.soyunRightLeg);
       }
 
-      // Blocky Torso + Gold Back Star Emblem
-      const torsoMesh = new THREE.Mesh(new THREE.BoxGeometry(0.82, 0.74, 0.46), torsoMat);
+      // Smooth Rounded Torso + Collar + Star Emblem
+      const torsoMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.31, 0.36, 0.66, 28), torsoMat);
+      torsoMesh.scale.set(1.08, 1.0, 0.74);
       torsoMesh.position.set(0, 0.42, 0);
-      this.soyunAvatarGroup.add(torsoMesh);
+      const shoulderCap = new THREE.Mesh(new THREE.SphereGeometry(0.32, 28, 20), torsoMat);
+      shoulderCap.scale.set(1.12, 0.48, 0.74);
+      shoulderCap.position.set(0, 0.72, 0);
+      this.soyunAvatarGroup.add(torsoMesh, shoulderCap);
 
-      const backBadge = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.46, 0.06), goldMat);
-      backBadge.position.set(0, 0.44, 0.24);
-      backBadge.rotation.z = Math.PI / 4;
+      const backBadge = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.05, 24), goldMat);
+      backBadge.rotation.x = Math.PI / 2;
+      backBadge.position.set(0, 0.45, 0.25);
       this.soyunAvatarGroup.add(backBadge);
 
-      // Left & Right Arms
-      const armGeo = new THREE.BoxGeometry(0.28, 0.66, 0.28);
-      const handGeo = new THREE.BoxGeometry(0.26, 0.22, 0.26);
+      // Smooth Rounded Left & Right Arms + Spherical Hands
+      const armGeo = new THREE.CylinderGeometry(0.11, 0.095, 0.56, 20);
+      const shoulderJointGeo = new THREE.SphereGeometry(0.12, 20, 16);
+      const handGeo = new THREE.SphereGeometry(0.115, 20, 16);
 
       this.soyunLeftArm = new THREE.Group();
-      this.soyunLeftArm.position.set(-0.54, 0.66, 0);
+      this.soyunLeftArm.position.set(-0.44, 0.66, 0);
+      const leftShoulder = new THREE.Mesh(shoulderJointGeo, sleeveMat);
       const leftArmMesh = new THREE.Mesh(armGeo, sleeveMat);
-      leftArmMesh.position.set(0, -0.22, 0);
+      leftArmMesh.position.set(0, -0.24, 0);
       const leftHand = new THREE.Mesh(handGeo, skinMat);
-      leftHand.position.set(0, -0.56, 0);
-      this.soyunLeftArm.add(leftArmMesh, leftHand);
+      leftHand.position.set(0, -0.54, 0);
+      this.soyunLeftArm.add(leftShoulder, leftArmMesh, leftHand);
       this.soyunLeftArm.rotation.x = armAngleX;
       this.soyunLeftArm.rotation.z = -0.18;
       this.soyunAvatarGroup.add(this.soyunLeftArm);
 
       this.soyunRightArm = new THREE.Group();
-      this.soyunRightArm.position.set(0.54, 0.66, 0);
+      this.soyunRightArm.position.set(0.44, 0.66, 0);
+      const rightShoulder = new THREE.Mesh(shoulderJointGeo, sleeveMat);
       const rightArmMesh = new THREE.Mesh(armGeo, sleeveMat);
-      rightArmMesh.position.set(0, -0.22, 0);
+      rightArmMesh.position.set(0, -0.24, 0);
       const rightHand = new THREE.Mesh(handGeo, skinMat);
-      rightHand.position.set(0, -0.56, 0);
-      this.soyunRightArm.add(rightArmMesh, rightHand);
+      rightHand.position.set(0, -0.54, 0);
+      this.soyunRightArm.add(rightShoulder, rightArmMesh, rightHand);
       this.soyunRightArm.rotation.x = armAngleX;
       this.soyunRightArm.rotation.z = 0.18;
       this.soyunAvatarGroup.add(this.soyunRightArm);
 
-      // Head + Pigtails + Racing Goggles/Visor + Golden Crown (👑)
+      // Smooth Spherical Head + Glossy Flowing Twin Pigtails + Curved Visor + Royal Crown (👑)
       const headGroup = new THREE.Group();
       headGroup.position.set(0, 1.12, 0);
       this.soyunAvatarGroup.add(headGroup);
       this.soyunHeadMesh = headGroup;
 
-      const hairDarkMat = new THREE.MeshStandardMaterial({ color: 0x1e132d, roughness: 0.4 });
+      const hairDarkMat = new THREE.MeshStandardMaterial({ color: 0x231438, roughness: 0.28, metalness: 0.12 });
+      const headGeoMode = this.getGraphicStyle() === 'pixel' ? new (THREE.__OrigBoxGeometry || THREE.BoxGeometry)(0.74, 0.74, 0.74) : new THREE.SphereGeometry(0.38, 32, 28);
       const faceMat = new THREE.MeshBasicMaterial({ map: this.textures.soyunFace });
-      const headBox = new THREE.Mesh(new THREE.BoxGeometry(0.74, 0.74, 0.74), [
-        skinMat, skinMat, hairDarkMat, skinMat, faceMat, faceMat
-      ]);
-      headGroup.add(headBox);
+      const headSphere = new THREE.Mesh(headGeoMode, this.getGraphicStyle() === 'pixel' ? [skinMat, skinMat, hairDarkMat, skinMat, faceMat, faceMat] : skinMat);
+      if (this.getGraphicStyle() === 'cartoon') {
+        const outlineHead = new THREE.Mesh(new THREE.SphereGeometry(0.415, 28, 24), new THREE.MeshBasicMaterial({ color: 0x090418, side: THREE.BackSide }));
+        headGroup.add(outlineHead);
+      }
+      headGroup.add(headSphere);
 
-      const hairCap = new THREE.Mesh(new THREE.BoxGeometry(0.78, 0.24, 0.78), hairDarkMat);
-      hairCap.position.set(0, 0.3, 0);
-      const hairBack = new THREE.Mesh(new THREE.BoxGeometry(0.76, 0.68, 0.18), hairDarkMat);
-      hairBack.position.set(0, 0.02, 0.34);
-      headGroup.add(hairCap, hairBack);
+      // Smooth Glossy Hair Dome & Rounded Back Hair
+      const hairDome = new THREE.Mesh(
+        new THREE.SphereGeometry(0.405, 32, 24, 0, Math.PI * 2, 0, Math.PI * 0.58),
+        hairDarkMat
+      );
+      hairDome.position.set(0, 0.03, 0.02);
+      const hairBack = new THREE.Mesh(new THREE.SphereGeometry(0.395, 28, 24), hairDarkMat);
+      hairBack.scale.set(0.98, 1.05, 0.65);
+      hairBack.position.set(0, -0.02, 0.15);
+      headGroup.add(hairDome, hairBack);
 
-      // KartRider Racing Goggles / Visor on Forehead
+      // Smooth Curved Wrap-Around Racing Goggles / Visor
       const visorMesh = new THREE.Mesh(
-        new THREE.BoxGeometry(0.8, 0.18, 0.82),
+        new THREE.CylinderGeometry(0.415, 0.415, 0.15, 32, 1, false, Math.PI * 0.55, Math.PI * 0.9),
         new THREE.MeshBasicMaterial({ color: 0x00f5ff, transparent: true, opacity: 0.82 })
       );
-      visorMesh.position.set(0, 0.22, -0.02);
+      visorMesh.position.set(0, 0.16, -0.02);
       headGroup.add(visorMesh);
 
+      // Smooth Flowing Rounded Twin Pigtails + Cute Bow Ribbons
       const ribbonMat = new THREE.MeshBasicMaterial({ color: 0xff2a85 });
-      const pigtailGeo = new THREE.BoxGeometry(0.26, 0.64, 0.28);
-      const ribbonGeo = new THREE.BoxGeometry(0.32, 0.18, 0.32);
+      const pigtailTopGeo = new THREE.SphereGeometry(0.15, 24, 20);
+      const pigtailLockGeo = new THREE.ConeGeometry(0.16, 0.56, 24);
+      const ribbonBowGeo = new THREE.SphereGeometry(0.11, 20, 16);
 
       this.soyunLeftPigtail = new THREE.Group();
-      this.soyunLeftPigtail.position.set(-0.48, 0.1, 0.08);
-      const leftTail = new THREE.Mesh(pigtailGeo, hairDarkMat);
-      leftTail.position.set(-0.06, -0.28, 0);
-      leftTail.rotation.z = -0.22;
-      this.soyunLeftPigtail.add(new THREE.Mesh(ribbonGeo, ribbonMat), leftTail);
+      this.soyunLeftPigtail.position.set(-0.4, 0.08, 0.12);
+      const leftBow = new THREE.Mesh(ribbonBowGeo, ribbonMat);
+      leftBow.scale.set(1.35, 0.85, 0.95);
+      const leftTailTop = new THREE.Mesh(pigtailTopGeo, hairDarkMat);
+      leftTailTop.position.set(-0.05, -0.12, 0);
+      const leftTailLock = new THREE.Mesh(pigtailLockGeo, hairDarkMat);
+      leftTailLock.position.set(-0.08, -0.34, 0);
+      leftTailLock.rotation.z = 0.22;
+      this.soyunLeftPigtail.add(leftBow, leftTailTop, leftTailLock);
       headGroup.add(this.soyunLeftPigtail);
 
       this.soyunRightPigtail = new THREE.Group();
-      this.soyunRightPigtail.position.set(0.48, 0.1, 0.08);
-      const rightTail = new THREE.Mesh(pigtailGeo, hairDarkMat);
-      rightTail.position.set(0.06, -0.28, 0);
-      rightTail.rotation.z = 0.22;
-      this.soyunRightPigtail.add(new THREE.Mesh(ribbonGeo, ribbonMat), rightTail);
+      this.soyunRightPigtail.position.set(0.4, 0.08, 0.12);
+      const rightBow = new THREE.Mesh(ribbonBowGeo, ribbonMat);
+      rightBow.scale.set(1.35, 0.85, 0.95);
+      const rightTailTop = new THREE.Mesh(pigtailTopGeo, hairDarkMat);
+      rightTailTop.position.set(0.05, -0.12, 0);
+      const rightTailLock = new THREE.Mesh(pigtailLockGeo, hairDarkMat);
+      rightTailLock.position.set(0.08, -0.34, 0);
+      rightTailLock.rotation.z = -0.22;
+      this.soyunRightPigtail.add(rightBow, rightTailTop, rightTailLock);
       headGroup.add(this.soyunRightPigtail);
 
-      // Golden 3D Crown (👑)
+      // Smooth Circular Golden 3D Crown (👑)
       this.soyunCrownGroup = new THREE.Group();
-      this.soyunCrownGroup.position.set(0, 0.5, 0);
+      this.soyunCrownGroup.position.set(0, 0.44, 0);
       headGroup.add(this.soyunCrownGroup);
-      this.soyunCrownGroup.add(new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.16, 0.56), goldMat));
-      const spikeGeo = new THREE.ConeGeometry(0.11, 0.26, 4);
-      [[-0.2, 0.2, -0.2], [0.2, 0.2, -0.2], [-0.2, 0.2, 0.2], [0.2, 0.2, 0.2], [0, 0.24, 0]].forEach(([cx, cy, cz], idx) => {
-        const spike = new THREE.Mesh(spikeGeo, idx === 4 ? new THREE.MeshBasicMaterial({ color: 0x00f3ff }) : goldMat);
-        spike.position.set(cx, cy, cz);
+      this.soyunCrownGroup.add(new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.21, 0.14, 28), goldMat));
+      const spikeGeo = new THREE.ConeGeometry(0.055, 0.18, 18);
+      for (let c = 0; c < 6; c++) {
+        const ang = (c / 6) * Math.PI * 2;
+        const spike = new THREE.Mesh(spikeGeo, c % 2 === 0 ? new THREE.MeshBasicMaterial({ color: 0x00f3ff }) : goldMat);
+        spike.position.set(Math.cos(ang) * 0.19, 0.15, Math.sin(ang) * 0.19);
         this.soyunCrownGroup.add(spike);
-      });
+      }
 
       // 3. Nameplate Sprite
       if (this.textures.soyunNameplate) {
@@ -3786,46 +4078,53 @@
           depthTest: false
         });
         this.soyunNameSprite = new THREE.Sprite(spriteMat);
-        this.soyunNameSprite.position.set(0, avatarY + 2.02, 0.15);
-        this.soyunNameSprite.scale.set(3.2, 0.8, 1);
+        this.soyunNameSprite.position.set(0, avatarY + 1.92, 0.15);
+        this.soyunNameSprite.scale.set(2.9, 0.72, 1);
         this.carGroup.add(this.soyunNameSprite);
       }
 
-      // 4. Floating 3D Cube Pet
+      // 4. Smooth Round 3D Fairy Mascot Pet (No square voxel cube!)
       this.petGroup = new THREE.Group();
-      this.petGroup.position.set(1.65, 1.9, 0.3);
+      this.petGroup.position.set(1.55, 1.85, 0.25);
       this.carGroup.add(this.petGroup);
 
-      const petSideMat = new THREE.MeshStandardMaterial({
-        color: 0x72efdd,
-        emissive: 0xff2a85,
-        emissiveIntensity: 0.35,
-        roughness: 0.25
+      const petBodyMat = new THREE.MeshStandardMaterial({
+        map: this.textures.petFace,
+        roughness: 0.22,
+        metalness: 0.08,
+        emissive: 0xff70a6,
+        emissiveIntensity: 0.18
       });
-      const petFaceMat = new THREE.MeshBasicMaterial({ map: this.textures.petFace });
-      const petCube = new THREE.Mesh(new THREE.BoxGeometry(0.68, 0.68, 0.68), [
-        petSideMat, petSideMat, petSideMat, petSideMat, petFaceMat, petFaceMat
-      ]);
-      this.petGroup.add(petCube);
+      const petGeoMode = this.getGraphicStyle() === 'pixel' ? new (THREE.__OrigBoxGeometry || THREE.BoxGeometry)(0.68, 0.68, 0.68) : new THREE.SphereGeometry(0.36, 32, 28);
+      const petSphere = new THREE.Mesh(petGeoMode, petBodyMat);
+      if (this.getGraphicStyle() === 'cartoon') {
+        const outlinePet = new THREE.Mesh(new THREE.SphereGeometry(0.40, 28, 24), new THREE.MeshBasicMaterial({ color: 0x090418, side: THREE.BackSide }));
+        this.petGroup.add(outlinePet);
+      }
+      petSphere.rotation.y = Math.PI * 0.5;
+      this.petGroup.add(petSphere);
 
-      const hornMesh = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.42, 4), new THREE.MeshBasicMaterial({ color: 0xffe600 }));
-      hornMesh.position.set(0, 0.52, 0);
+      // Smooth Halo Ring & Golden Horn on Fairy Pet
+      const hornMesh = new THREE.Mesh(new THREE.ConeGeometry(0.085, 0.34, 24), new THREE.MeshBasicMaterial({ color: 0xffe600 }));
+      hornMesh.position.set(0, 0.44, 0);
       this.petGroup.add(hornMesh);
 
-      const wingGeo = new THREE.BoxGeometry(0.46, 0.1, 0.32);
+      const wingGeo = new THREE.SphereGeometry(0.24, 24, 18);
       const wingMat = new THREE.MeshBasicMaterial({ color: 0xffe600 });
       this.petLeftWing = new THREE.Mesh(wingGeo, wingMat);
-      this.petLeftWing.position.set(-0.5, 0.08, 0);
+      this.petLeftWing.scale.set(1.15, 0.32, 0.55);
+      this.petLeftWing.position.set(-0.42, 0.06, 0);
       this.petRightWing = new THREE.Mesh(wingGeo, wingMat);
-      this.petRightWing.position.set(0.5, 0.08, 0);
+      this.petRightWing.scale.set(1.15, 0.32, 0.55);
+      this.petRightWing.position.set(0.42, 0.06, 0);
       this.petGroup.add(this.petLeftWing, this.petRightWing);
 
       // 5. Undercarriage Neon Glow
-      const glowGeo = new THREE.PlaneGeometry(3.1, 5.2);
+      const glowGeo = new THREE.PlaneGeometry(2.8, 4.6);
       const glowMat = new THREE.MeshBasicMaterial({
         color: pal.glow,
         transparent: true,
-        opacity: 0.42,
+        opacity: 0.38,
         side: THREE.DoubleSide
       });
       this.carUnderGlow = new THREE.Mesh(glowGeo, glowMat);

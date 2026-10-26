@@ -2852,6 +2852,50 @@
         });
       }
 
+      // 🎨 Parent Window 3-Way Graphic Style Selector (✨ 스무스 3D / 🎨 카툰·애니 3D / 🧱 도트·블록식)
+      const parentGraphicSelector = document.getElementById('parent-graphic-style-selector');
+      const parentGraphicBadge = document.getElementById('parent-current-graphic-badge');
+      const gstyleLabels = {
+        smooth: '✨ 스무스 3D',
+        cartoon: '🎨 카툰·애니 3D',
+        pixel: '🧱 도트·블록식'
+      };
+      const syncGStyleUI = function (mode) {
+        const activeMode = (mode === 'pixel' || mode === 'cartoon') ? mode : 'smooth';
+        if (parentGraphicSelector) {
+          const btns = parentGraphicSelector.querySelectorAll('[data-gstyle]');
+          btns.forEach(function (b) {
+            b.classList.toggle('active', b.getAttribute('data-gstyle') === activeMode);
+          });
+        }
+        if (parentGraphicBadge) {
+          parentGraphicBadge.textContent = gstyleLabels[activeMode] || '✨ 스무스 3D';
+        }
+        if (document.body) {
+          document.body.classList.toggle('graphic-mode-smooth', activeMode === 'smooth');
+          document.body.classList.toggle('graphic-mode-cartoon', activeMode === 'cartoon');
+          document.body.classList.toggle('graphic-mode-pixel', activeMode === 'pixel');
+        }
+      };
+      if (window.Engine3D && typeof window.Engine3D.getGraphicStyle === 'function') {
+        syncGStyleUI(window.Engine3D.getGraphicStyle());
+      }
+      if (parentGraphicSelector) {
+        parentGraphicSelector.addEventListener('click', function (e) {
+          const btn = e.target.closest('[data-gstyle]');
+          if (!btn) return;
+          e.preventDefault();
+          const mode = btn.getAttribute('data-gstyle') || 'smooth';
+          if (window.Engine3D && typeof window.Engine3D.setGraphicStyle === 'function') {
+            window.Engine3D.setGraphicStyle(mode);
+          }
+          syncGStyleUI(mode);
+          if (window.SoundEngine && typeof window.SoundEngine.playClick === 'function') {
+            window.SoundEngine.playClick();
+          }
+        });
+      }
+
       // 🏎️ Middle-Right Character / Vehicle Change Button & Modal (10 types)
       const btnOpenChar = document.getElementById('btn-open-character-modal');
       if (btnOpenChar) {
