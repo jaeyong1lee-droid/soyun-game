@@ -1,16 +1,16 @@
-const CACHE_NAME = 'soyun-obby-racer-pwa-v62';
+const CACHE_NAME = 'soyun-obby-racer-pwa-v63';
 const PRECACHE_URLS = [
   './',
   './index.html',
   './manifest.json',
-  './css/style.css?v=20261026_62',
-  './js/config.js?v=20261026_62',
-  './js/storage.js?v=20261026_62',
-  './js/questionEngine.js?v=20261026_62',
-  './js/sound.js?v=20261026_62',
-  './js/engine3d.js?v=20261026_62',
-  './js/ui.js?v=20261026_62',
-  './js/game.js?v=20261026_62',
+  './css/style.css?v=20261026_63',
+  './js/config.js?v=20261026_63',
+  './js/storage.js?v=20261026_63',
+  './js/questionEngine.js?v=20261026_63',
+  './js/sound.js?v=20261026_63',
+  './js/engine3d.js?v=20261026_63',
+  './js/ui.js?v=20261026_63',
+  './js/game.js?v=20261026_63',
   './assets/icon-192.png',
   './assets/icon-512.png'
 ];

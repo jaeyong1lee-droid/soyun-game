@@ -1575,6 +1575,10 @@
      */
     triggerBrake: function () {
       if (!state.isPlaying || state.isGameOver || state.isPaused) return false;
+      // 브레이크 사용 중에는 끝날 때까지 재사용(중복 차감) 불가!
+      if (state.isBrakeActive || (window.Engine3D && window.Engine3D.kartBrakeTimer > 0)) {
+        return false;
+      }
       const self = this;
 
       if ((state.brakeCount || 0) <= 0) {
@@ -1637,6 +1641,7 @@
         state.activeSpeedFactor = 1.0;
         document.body.classList.remove('kart-brake-fx-active');
         if (window.Engine3D) {
+          window.Engine3D.kartBrakeTimer = 0;
           window.Engine3D.setSpeed(getEffectiveSpeed());
         }
         if (window.SoundEngine) {
