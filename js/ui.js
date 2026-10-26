@@ -2291,9 +2291,10 @@
         brakeBtn.classList.toggle('brake-active-glow', Boolean(isBrakeActive));
       }
       if (boosterLbl) {
-        boosterLbl.textContent = isBoosterActive ? '🚀2.0배속!' : '부스터x2';
+        boosterLbl.textContent = isBoosterActive ? '🚀사용중...' : '부스터x2';
       }
       if (boosterBtn) {
+        boosterBtn.disabled = Boolean(isBoosterActive);
         boosterBtn.classList.toggle('booster-active-glow', Boolean(isBoosterActive));
       }
     },

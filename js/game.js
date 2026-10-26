@@ -748,6 +748,7 @@
         state.speed = Math.min(maxSpeedCap, state.speed + speedInc);
 
         if (window.Engine3D) {
+          window.Engine3D.kartBoosterTimer = 0;
           window.Engine3D.setSpeed(getEffectiveSpeed());
         }
         if (window.SoundEngine) {
@@ -1500,6 +1501,10 @@
      */
     triggerBooster: function () {
       if (!state.isPlaying || state.isGameOver || state.isPaused) return false;
+      // 부스터 사용 중에는 끝날 때까지 재사용 불가!
+      if (state.isBoosterActive || (window.Engine3D && window.Engine3D.kartBoosterTimer > 0)) {
+        return false;
+      }
       const self = this;
 
       state.brakeCount = (state.brakeCount || 0) + 1;
