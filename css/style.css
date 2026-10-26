@@ -5870,49 +5870,12 @@ body.obby-mode-active #question-prompt {
    - Brick height = 1.1x Jump button diameter (48px * 1.1 = 53px)
    - Realistic Roblox / Masonry Brick texture via inline SVG data URI
    ============================================================================ */
-body.start-screen-active #lane-controls.brick-lane-controls {
-  opacity: 0 !important;
-  pointer-events: none !important;
-  visibility: hidden !important;
-  display: none !important;
-}
-
-#lane-controls.brick-lane-controls {
-  position: fixed !important;
-  left: 50% !important;
-  right: auto !important;
-  bottom: calc(130px + env(safe-area-inset-bottom, 0px)) !important;
-  width: min(560px, calc(100vw - 8px)) !important;
-  max-width: none !important;
-  height: 83px !important;
-  min-height: 83px !important;
-  max-height: 83px !important;
-  transform: translateX(calc(-50% + var(--road-ground-sway-x, 0px))) perspective(300px) rotateX(40deg) !important;
-  transform-origin: center bottom !important;
-  z-index: 65 !important;
-  display: grid !important;
-  grid-template-columns: 1.07fr 0.90fr 1.07fr !important;
-  gap: 4px !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  pointer-events: auto !important;
-  will-change: transform !important;
-}
-
-@keyframes neonArrowStrokeCycle {
-  0%   { stroke: #00f5ff; filter: drop-shadow(0 0 6px #00f5ff) drop-shadow(0 0 12px rgba(0, 245, 255, 0.55)); }
-  25%  { stroke: #ff2a85; filter: drop-shadow(0 0 6px #ff2a85) drop-shadow(0 0 12px rgba(255, 42, 133, 0.55)); }
-  50%  { stroke: #ffe600; filter: drop-shadow(0 0 6px #ffe600) drop-shadow(0 0 12px rgba(255, 230, 0, 0.55)); }
-  75%  { stroke: #00ff88; filter: drop-shadow(0 0 6px #00ff88) drop-shadow(0 0 12px rgba(0, 255, 136, 0.55)); }
-  100% { stroke: #00f5ff; filter: drop-shadow(0 0 6px #00f5ff) drop-shadow(0 0 12px rgba(0, 245, 255, 0.55)); }
-}
-
-@keyframes neonArrowTextCycle {
-  0%   { color: #00f5ff; }
-  25%  { color: #ff70a6; }
-  50%  { color: #ffe600; }
-  75%  { color: #00ff88; }
-  100% { color: #00f5ff; }
+body.start-screen-active @keyframes opt3NeonCycle {
+  0%   { border-color: rgba(0, 245, 255, 0.72); box-shadow: 0 0 12px rgba(0, 245, 255, 0.55), inset 0 0 8px rgba(0, 245, 255, 0.35); color: #00f5ff; }
+  25%  { border-color: rgba(255, 42, 133, 0.72); box-shadow: 0 0 12px rgba(255, 42, 133, 0.55), inset 0 0 8px rgba(255, 42, 133, 0.35); color: #ff2a85; }
+  50%  { border-color: rgba(255, 230, 0, 0.72); box-shadow: 0 0 12px rgba(255, 230, 0, 0.55), inset 0 0 8px rgba(255, 230, 0, 0.35); color: #ffe600; }
+  75%  { border-color: rgba(0, 255, 136, 0.72); box-shadow: 0 0 12px rgba(0, 255, 136, 0.55), inset 0 0 8px rgba(0, 255, 136, 0.35); color: #00ff88; }
+  100% { border-color: rgba(0, 245, 255, 0.72); box-shadow: 0 0 12px rgba(0, 245, 255, 0.55), inset 0 0 8px rgba(0, 245, 255, 0.35); color: #00f5ff; }
 }
 
 @keyframes neonArrowFlowLeft {
@@ -5930,23 +5893,44 @@ body.start-screen-active #lane-controls.brick-lane-controls {
   50% { transform: translateY(-3px); }
 }
 
+#lane-controls.brick-lane-controls {
+  position: fixed !important;
+  left: 50% !important;
+  right: auto !important;
+  bottom: calc(130px + env(safe-area-inset-bottom, 0px)) !important;
+  width: min(560px, calc(100vw - 12px)) !important;
+  max-width: none !important;
+  height: 68px !important;
+  min-height: 68px !important;
+  max-height: 68px !important;
+  transform: translateX(calc(-50% + var(--road-ground-sway-x, 0px))) !important;
+  z-index: 65 !important;
+  display: grid !important;
+  grid-template-columns: 1.06fr 0.92fr 1.06fr !important;
+  gap: 6px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  pointer-events: auto !important;
+  will-change: transform !important;
+}
+
 #lane-controls.brick-lane-controls .brick-lane-btn,
 #lane-controls.brick-lane-controls .brick-lane-btn:hover,
 #lane-controls.brick-lane-controls .brick-lane-btn:active,
 #lane-controls.brick-lane-controls .brick-lane-btn.active-lane {
   position: relative !important;
   width: 100% !important;
-  height: 83px !important;
-  min-height: 83px !important;
-  max-height: 83px !important;
+  height: 68px !important;
+  min-height: 68px !important;
+  max-height: 68px !important;
   padding: 0 8px !important;
   margin: 0 !important;
-  border-radius: 0 !important;
+  border-radius: 10px !important;
   display: flex !important;
   flex-direction: row !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 6px !important;
+  gap: 8px !important;
   cursor: pointer !important;
   touch-action: manipulation !important;
   user-select: none !important;
@@ -5954,85 +5938,96 @@ body.start-screen-active #lane-controls.brick-lane-controls {
   background: transparent !important;
   background-color: transparent !important;
   background-image: none !important;
-  border: none !important;
-  box-shadow: none !important;
+  border: 1.8px dashed rgba(0, 245, 255, 0.72) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
+  animation: opt3NeonCycle 3.2s linear infinite !important;
   transition: transform 0.08s ease !important;
+}
+
+#lane-controls.brick-lane-controls .brick-lane-btn.active-lane {
+  border-width: 2.4px !important;
 }
 
 #lane-controls.brick-lane-controls .brick-lane-btn:active {
   transform: scale(0.95) !important;
 }
 
-#lane-controls.brick-lane-controls .neon-arrow-svg {
+/* 4 Cyber Neon Corner Brackets (┏ ┓ ┗ ┛) */
+#lane-controls.brick-lane-controls .hud-corner {
   position: absolute !important;
-  inset: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
+  width: 13px !important;
+  height: 13px !important;
+  border-color: currentColor !important;
   pointer-events: none !important;
-  overflow: visible !important;
+  filter: drop-shadow(0 0 6px currentColor) !important;
 }
 
-#lane-controls.brick-lane-controls .neon-arrow-shape {
-  fill: transparent !important;
-  stroke-width: 2.8px !important;
-  stroke-linejoin: round !important;
-  stroke-linecap: round !important;
-  animation: neonArrowStrokeCycle 3.2s linear infinite !important;
+#lane-controls.brick-lane-controls .hud-corner.c-tl {
+  top: -2px !important;
+  left: -2px !important;
+  border-top: 3.5px solid currentColor !important;
+  border-left: 3.5px solid currentColor !important;
+  border-top-left-radius: 5px !important;
 }
 
-#lane-controls.brick-lane-controls .brick-lane-btn.active-lane .neon-arrow-shape {
-  stroke-width: 4.4px !important;
-  fill: rgba(255, 230, 0, 0.08) !important;
+#lane-controls.brick-lane-controls .hud-corner.c-tr {
+  top: -2px !important;
+  right: -2px !important;
+  border-top: 3.5px solid currentColor !important;
+  border-right: 3.5px solid currentColor !important;
+  border-top-right-radius: 5px !important;
 }
 
-@keyframes groundChevronPulse {
-  0%, 100% { opacity: 0.42; }
-  50% { opacity: 0.98; }
+#lane-controls.brick-lane-controls .hud-corner.c-bl {
+  bottom: -2px !important;
+  left: -2px !important;
+  border-bottom: 3.5px solid currentColor !important;
+  border-left: 3.5px solid currentColor !important;
+  border-bottom-left-radius: 5px !important;
 }
 
-#lane-controls.brick-lane-controls .ground-pad-inner-chevrons {
-  fill: none !important;
-  stroke-width: 2.5px !important;
-  stroke-linecap: round !important;
-  stroke-linejoin: round !important;
-  animation: neonArrowStrokeCycle 3.2s linear infinite, groundChevronPulse 0.75s ease-in-out infinite !important;
+#lane-controls.brick-lane-controls .hud-corner.c-br {
+  bottom: -2px !important;
+  right: -2px !important;
+  border-bottom: 3.5px solid currentColor !important;
+  border-right: 3.5px solid currentColor !important;
+  border-bottom-right-radius: 5px !important;
 }
 
 #lane-controls.brick-lane-controls .brick-lane-arrow {
   position: relative !important;
   z-index: 2 !important;
-  font-size: 19px !important;
+  font-size: 22px !important;
   font-weight: 900 !important;
   line-height: 1 !important;
-  animation: neonArrowTextCycle 3.2s linear infinite !important;
+  color: #ffffff !important;
   text-shadow:
     -1.5px -1.5px 0 #040614,
      1.5px -1.5px 0 #040614,
     -1.5px  1.5px 0 #040614,
      1.5px  1.5px 0 #040614,
-     0 0 10px currentColor !important;
+     0 0 12px currentColor !important;
   pointer-events: none !important;
 }
 
 #lane-controls.brick-lane-controls .brick-lane-arrow.neon-flow-left {
-  animation: neonArrowTextCycle 3.2s linear infinite, neonArrowFlowLeft 0.75s ease-in-out infinite !important;
+  animation: neonArrowFlowLeft 0.75s ease-in-out infinite !important;
 }
 
 #lane-controls.brick-lane-controls .brick-lane-arrow.neon-flow-right {
-  animation: neonArrowTextCycle 3.2s linear infinite, neonArrowFlowRight 0.75s ease-in-out infinite !important;
+  animation: neonArrowFlowRight 0.75s ease-in-out infinite !important;
 }
 
 #lane-controls.brick-lane-controls .brick-lane-arrow.neon-flow-up {
-  animation: neonArrowTextCycle 3.2s linear infinite, neonArrowFlowUp 0.75s ease-in-out infinite !important;
+  animation: neonArrowFlowUp 0.75s ease-in-out infinite !important;
 }
 
 #lane-controls.brick-lane-controls .brick-lane-label {
   position: relative !important;
   z-index: 2 !important;
   font-family: var(--font-kr) !important;
-  font-size: 15.5px !important;
+  font-size: 16.5px !important;
   font-weight: 900 !important;
   color: #ffffff !important;
   letter-spacing: -0.02em !important;
@@ -6043,18 +6038,8 @@ body.start-screen-active #lane-controls.brick-lane-controls {
     -1.5px  1.5px 0 #040614,
      1.5px  1.5px 0 #040614,
      0 2px 6px rgba(0, 0, 0, 0.95),
-     0 0 10px rgba(0, 245, 255, 0.75) !important;
+     0 0 10px currentColor !important;
   pointer-events: none !important;
-}
-
-#lane-controls.brick-lane-controls .brick-lane-btn.active-lane .brick-lane-label {
-  color: #ffffff !important;
-  text-shadow:
-    -1.5px -1.5px 0 #040614,
-     1.5px -1.5px 0 #040614,
-    -1.5px  1.5px 0 #040614,
-     1.5px  1.5px 0 #040614,
-     0 0 14px rgba(255, 230, 0, 0.95) !important;
 }
 
 #lane-controls.brick-lane-controls .lane-btn-choice {
