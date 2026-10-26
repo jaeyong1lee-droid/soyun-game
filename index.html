@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&family=Press+Start+2P&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
-  <link rel="stylesheet" href="css/style.css?v=20261026_64" />
+  <link rel="stylesheet" href="css/style.css?v=20261026_65" />
 </head>
 <body>
   <!-- 3D WebGL Viewport Container -->
@@ -925,16 +925,16 @@
   <!-- Three.js r128 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <!-- Nano Banana Generated Retro 3D Assets Bundle (CORS-free on file:// & http://) -->
-  <script src="js/assets_data.js?v=20261026_64"></script>
+  <script src="js/assets_data.js?v=20261026_65"></script>
   <!-- Shared Game Modules -->
-  <script src="js/config.js?v=20261026_64"></script>
-  <script src="js/storage.js?v=20261026_64"></script>
-  <script src="js/questionEngine.js?v=20261026_64"></script>
-  <script src="js/sound.js?v=20261026_64"></script>
-  <script src="js/engine3d.js?v=20261026_64"></script>
+  <script src="js/config.js?v=20261026_65"></script>
+  <script src="js/storage.js?v=20261026_65"></script>
+  <script src="js/questionEngine.js?v=20261026_65"></script>
+  <script src="js/sound.js?v=20261026_65"></script>
+  <script src="js/engine3d.js?v=20261026_65"></script>
   <!-- UI & Game Controller -->
-  <script src="js/ui.js?v=20261026_64"></script>
-  <script src="js/game.js?v=20261026_64"></script>
+  <script src="js/ui.js?v=20261026_65"></script>
+  <script src="js/game.js?v=20261026_65"></script>
 
   <!-- Google Chrome / Mobile PWA Service Worker & One-Click App Install Handler -->
   <script>
@@ -942,7 +942,7 @@
       var deferredInstallPrompt = null;
       var installBtn = document.getElementById('btn-install-pwa');
 
-      window.__SOYUN_CLIENT_BUILD__ = '20261026_64';
+      window.__SOYUN_CLIENT_BUILD__ = '20261026_65';
       if ('serviceWorker' in navigator && window.location.protocol !== 'file:') {
         window.addEventListener('load', function () {
           var refreshing = false;
@@ -952,7 +952,7 @@
               window.location.reload();
             }
           });
-          navigator.serviceWorker.register('sw.js?v=20261026_64', { updateViaCache: 'none' }).then(function (reg) {
+          navigator.serviceWorker.register('sw.js?v=20261026_65', { updateViaCache: 'none' }).then(function (reg) {
             reg.update();
           }).catch(function () {});
         });

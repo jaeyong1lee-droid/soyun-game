@@ -1,36 +1,28 @@
 /**
  * Run & Learn Racer 3D (런앤런 레이서 3D)
- * Elementary 5th~6th Grade Progressive Quiz Generator & Spaced Repetition System
+ * Fast Mental Arithmetic & Progressive Elementary English Quiz Engine (Infinite Stages)
  *
- * Features:
- * 1. Step-by-Step Progressive Elementary Math (Stage 1 ~ 20+):
- *    - Stage 1~2 : 2-digit Addition/Subtraction with carry/borrow, Basic 2-digit × 1-digit, Division
- *    - Stage 3~5 : Intermediate Multiplication/Division, 5th-Grade Mixed Operations (혼합계산), Basic GCD/LCM (최대공약수·최소공배수)
- *    - Stage 6~9 : Fraction Reduction (약분) & Decimal Operations (소수 연산), Polygon Area (다각형 넓이), Intermediate Mixed Ops & GCD/LCM
- *    - Stage 10~14: 6th-Grade Proportions (비례식 a:b=c:□), Percentages (백분율 %), Fraction ×/÷ Whole Numbers, Decimal ×/÷
- *    - Stage 15+ : Unknown □ Equations (등식 □ 구하기), Averages (평균), & Full 5th~6th Grade Mastery Mix
- * 2. Step-by-Step Progressive Elementary English (Stage 1 ~ 20+):
- *    - Sliding-window vocabulary levels (Level 1 -> Level 5, phasing out overly easy words as Stage increases)
- *    - 5th~6th Grade Irregular Past Tense / Antonyms / Key Idioms & Prepositions (replacing toddler phonetic reading on higher stages)
- *    - Progressive Conversational English & Q&A Responses (Level 1 -> Level 4)
- * 3. Spaced Repetition Wrong Answer Re-Appearance System (Every 3rd question, stage-aware)
+ * Design Principles:
+ * 1. Fast Mental Math ("머리로 빠른 암산"):
+ *    - 100% glanceable number equations (e.g. "38 + 27 = ?", "16 × 4 = ?", "72 ÷ 6 = ?", "12 + 4 × 3 = ?")
+ *    - No wordy textbook sentences that slow down reading while driving!
+ * 2. Ultra-Gradual Infinite-Stage Progression ("천천히 올려. 한단계 올랐다고 확 바꾸지 말고"):
+ *    - Spread smoothly across 60+ stages (~1.6% nudge per stage) so Stage N and Stage N+1 feel natural and seamless.
+ * 3. Spaced Repetition Wrong Answer Re-Appearance System
  */
 (function (window) {
   'use strict';
 
   /**
    * Curated Elementary School English Vocabulary (165+ words across 5 progressive difficulty levels)
-   * - Level 1: Stage 1~3 Warm-up (Elementary 3~4 core)
-   * - Level 2: Stage 2~6 Core (Elementary 4~5 core)
-   * - Level 3: Stage 4~10 Intermediate (Elementary 5 core)
-   * - Level 4: Stage 7~15 Advanced (Elementary 6 core)
-   * - Level 5: Stage 11+ Mastery (Elementary 6 Challenge ~ Middle 1)
+   * Scales gradually from Level 1 -> Level 5 across Stage 1 -> Stage 60+
    */
   const ENGLISH_DICTIONARY = [
-    // Level 1: Warm-up Core Words (Stage 1~3 only; phased out from Stage 4+)
+    // Level 1: Stage 1~12 Warm-up & Basic Elementary Words
     { en: 'school', kr: '학교', pron: '스쿨', emoji: '🏫', theme: 'school', level: 1 },
     { en: 'teacher', kr: '선생님', pron: '티처', emoji: '👩‍🏫', theme: 'school', level: 1 },
     { en: 'student', kr: '학생', pron: '스튜던트', emoji: '🧑‍🎓', theme: 'school', level: 1 },
+    { en: 'pencil', kr: '연필', pron: '펜슬', emoji: '✏️', theme: 'school', level: 1 },
     { en: 'notebook', kr: '공책', pron: '노트북', emoji: '📓', theme: 'school', level: 1 },
     { en: 'family', kr: '가족', pron: '패밀리', emoji: '👨‍👩‍👧‍👦', theme: 'family', level: 1 },
     { en: 'friend', kr: '친구', pron: '프렌드', emoji: '🤝', theme: 'family', level: 1 },
@@ -39,17 +31,24 @@
     { en: 'cheese', kr: '치즈', pron: '치즈', emoji: '🧀', theme: 'food', level: 1 },
     { en: 'watermelon', kr: '수박', pron: '워터멜론', emoji: '🍉', theme: 'food', level: 1 },
     { en: 'strawberry', kr: '딸기', pron: '스트로베리', emoji: '🍓', theme: 'food', level: 1 },
+    { en: 'peach', kr: '복숭아', pron: '피치', emoji: '🍑', theme: 'food', level: 1 },
+    { en: 'grape', kr: '포도', pron: '그레이프', emoji: '🍇', theme: 'food', level: 1 },
     { en: 'tiger', kr: '호랑이', pron: '타이거', emoji: '🐯', theme: 'animal', level: 1 },
     { en: 'rabbit', kr: '토끼', pron: '래빗', emoji: '🐰', theme: 'animal', level: 1 },
     { en: 'monkey', kr: '원숭이', pron: '멍키', emoji: '🐵', theme: 'animal', level: 1 },
     { en: 'horse', kr: '말', pron: '홀스', emoji: '🐴', theme: 'animal', level: 1 },
+    { en: 'sheep', kr: '양', pron: '쉽', emoji: '🐑', theme: 'animal', level: 1 },
+    { en: 'duck', kr: '오리', pron: '덕', emoji: '🦆', theme: 'animal', level: 1 },
     { en: 'clock', kr: '시계', pron: '클락', emoji: '⏰', theme: 'object', level: 1 },
     { en: 'window', kr: '창문', pron: '윈도우', emoji: '🪟', theme: 'object', level: 1 },
     { en: 'cloud', kr: '구름', pron: '클라우드', emoji: '☁️', theme: 'nature', level: 1 },
     { en: 'wind', kr: '바람', pron: '윈드', emoji: '🌬️', theme: 'nature', level: 1 },
     { en: 'music', kr: '음악', pron: '뮤직', emoji: '🎵', theme: 'subject', level: 1 },
+    { en: 'happy', kr: '행복한', pron: '해피', emoji: '😊', theme: 'adjective', level: 1 },
+    { en: 'fast', kr: '빠른', pron: '패스트', emoji: '⚡', theme: 'adjective', level: 1 },
+    { en: 'slow', kr: '느린', pron: '슬로우', emoji: '🐢', theme: 'adjective', level: 1 },
 
-    // Level 2: Elementary 4~5 Core Words (Stage 1~6)
+    // Level 2: Elementary 4~5 Core Words
     { en: 'ruler', kr: '자(학용품)', pron: '룰러', emoji: '📏', theme: 'school', level: 2 },
     { en: 'scissors', kr: '가위', pron: '시저스', emoji: '✂️', theme: 'school', level: 2 },
     { en: 'calendar', kr: '달력', pron: '캘린더', emoji: '📅', theme: 'school', level: 2 },
@@ -61,6 +60,8 @@
     { en: 'kangaroo', kr: '캥거루', pron: '캥거루', emoji: '🦘', theme: 'animal', level: 2 },
     { en: 'butterfly', kr: '나비', pron: '버터플라이', emoji: '🦋', theme: 'animal', level: 2 },
     { en: 'turtle', kr: '거북이', pron: '터틀', emoji: '🐢', theme: 'animal', level: 2 },
+    { en: 'whale', kr: '고래', pron: '웨일', emoji: '🐋', theme: 'animal', level: 2 },
+    { en: 'shark', kr: '상어', pron: '샤크', emoji: '🦈', theme: 'animal', level: 2 },
     { en: 'library', kr: '도서관', pron: '라이브러리', emoji: '📚', theme: 'place', level: 2 },
     { en: 'hospital', kr: '병원', pron: '하스피털', emoji: '🏥', theme: 'place', level: 2 },
     { en: 'museum', kr: '박물관', pron: '뮤지엄', emoji: '🏛️', theme: 'place', level: 2 },
@@ -86,7 +87,10 @@
     { en: 'ocean', kr: '바다/대양', pron: '오션', emoji: '🌊', theme: 'nature', level: 2 },
     { en: 'forest', kr: '숲', pron: '포레스트', emoji: '🌲', theme: 'nature', level: 2 },
     { en: 'weather', kr: '날씨', pron: '웨더', emoji: '⛅', theme: 'nature', level: 2 },
+    { en: 'spring', kr: '봄', pron: '스프링', emoji: '🌸', theme: 'nature', level: 2 },
+    { en: 'summer', kr: '여름', pron: '서머', emoji: '🌻', theme: 'nature', level: 2 },
     { en: 'autumn', kr: '가을', pron: '오텀', emoji: '🍁', theme: 'nature', level: 2 },
+    { en: 'winter', kr: '겨울', pron: '윈터', emoji: '⛄', theme: 'nature', level: 2 },
     { en: 'brave', kr: '용감한', pron: '브레이브', emoji: '🦁', theme: 'adjective', level: 2 },
     { en: 'smart', kr: '똑똑한', pron: '스마트', emoji: '🧠', theme: 'adjective', level: 2 },
     { en: 'strong', kr: '강한', pron: '스트롱', emoji: '💪', theme: 'adjective', level: 2 },
@@ -100,7 +104,7 @@
     { en: 'homework', kr: '숙제', pron: '홈워크', emoji: '📝', theme: 'study', level: 2 },
     { en: 'earth', kr: '지구', pron: '어스', emoji: '🌍', theme: 'space', level: 2 },
 
-    // Level 3: Elementary 5th Grade Essential Vocabulary (Stage 3~10)
+    // Level 3: Elementary 5th Grade Essential Vocabulary
     { en: 'island', kr: '섬', pron: '아일랜드', emoji: '🏝️', theme: 'nature', level: 3 },
     { en: 'desert', kr: '사막', pron: '데저트', emoji: '🏜️', theme: 'nature', level: 3 },
     { en: 'valley', kr: '계곡/골짜기', pron: '밸리', emoji: '🏞️', theme: 'nature', level: 3 },
@@ -140,7 +144,7 @@
     { en: 'medicine', kr: '약(의약품)', pron: '메디슨', emoji: '💊', theme: 'object', level: 3 },
     { en: 'exercise', kr: '운동하다/운동', pron: '엑서사이즈', emoji: '🏃', theme: 'daily', level: 3 },
 
-    // Level 4: Elementary 5th~6th Grade Core & Advanced Vocabulary (Stage 6~15)
+    // Level 4: Elementary 5th~6th Grade Core & Advanced Vocabulary
     { en: 'environment', kr: '환경/자연환경', pron: '인바이런먼트', emoji: '🌱', theme: 'nature', level: 4 },
     { en: 'temperature', kr: '온도/기온', pron: '템퍼러처', emoji: '🌡️', theme: 'science', level: 4 },
     { en: 'experiment', kr: '실험', pron: '익스페리먼트', emoji: '🧪', theme: 'science', level: 4 },
@@ -170,7 +174,7 @@
     { en: 'proud', kr: '자랑스러워하는', pron: '프라우드', emoji: '🏅', theme: 'adjective', level: 4 },
     { en: 'curious', kr: '호기심이 많은', pron: '큐리어스', emoji: '🧐', theme: 'adjective', level: 4 },
 
-    // Level 5: Elementary 6th Mastery ~ Middle School 1st Grade Bridge (Stage 10+)
+    // Level 5: Elementary 6th Mastery ~ Middle School 1st Grade Bridge
     { en: 'imagination', kr: '상상력', pron: '이매지네이션', emoji: '🦄', theme: 'concept', level: 5 },
     { en: 'communication', kr: '의사소통/대화', pron: '커뮤니케이션', emoji: '💬', theme: 'concept', level: 5 },
     { en: 'opportunity', kr: '기회', pron: '오퍼튜니티', emoji: '🚪', theme: 'concept', level: 5 },
@@ -194,63 +198,19 @@
   ];
 
   /**
-   * 5th~6th Grade Essential Grammar, Irregular Verbs, Antonyms & Key Idioms (단계별 출제)
-   * - Replaces toddler phonetic reading ("APPLE -> 애플") from Stage 3+!
-   */
-  const GRAMMAR_AND_WORD_RELATIONS = [
-    // Level 1 (Stage 2~5): Basic Past Tense & Antonyms
-    { level: 1, prompt: "🔤 동사 'go (가다)'의 과거형은?", answer: 'went', d1: 'goed', d2: 'gone', label: '초등 영문법 · 불규칙 과거형' },
-    { level: 1, prompt: "🔤 동사 'see (보다)'의 과거형은?", answer: 'saw', d1: 'seed', d2: 'seen', label: '초등 영문법 · 불규칙 과거형' },
-    { level: 1, prompt: "🔤 동사 'eat (먹다)'의 과거형은?", answer: 'ate', d1: 'eated', d2: 'eaten', label: '초등 영문법 · 불규칙 과거형' },
-    { level: 1, prompt: "🔤 동사 'have (가지다)'의 과거형은?", answer: 'had', d1: 'haved', d2: 'has', label: '초등 영문법 · 불규칙 과거형' },
-    { level: 1, prompt: "🔤 동사 'make (만들다)'의 과거형은?", answer: 'made', d1: 'maked', d2: 'making', label: '초등 영문법 · 불규칙 과거형' },
-    { level: 1, prompt: "🔤 'fast (빠른)'의 반대말(반의어)은?", answer: 'slow', d1: 'high', d2: 'long', label: '초등 어휘 · 반대말 찾기' },
-    { level: 1, prompt: "🔤 'easy (쉬운)'의 반대말(반의어)은?", answer: 'difficult', d1: 'different', d2: 'delicious', label: '초등 어휘 · 반대말 찾기' },
-    { level: 1, prompt: "🔤 'hot (뜨거운)'의 반대말(반의어)은?", answer: 'cold', d1: 'cool', d2: 'warm', label: '초등 어휘 · 반대말 찾기' },
-
-    // Level 2 (Stage 4~9): 5th Grade Irregular Past, Comparatives & Antonyms
-    { level: 2, prompt: "🔤 동사 'buy (사다)'의 과거형은?", answer: 'bought', d1: 'buyed', d2: 'brought', label: '초등 5학년 · 불규칙 과거형' },
-    { level: 2, prompt: "🔤 동사 'take (가져가다)'의 과거형은?", answer: 'took', d1: 'taked', d2: 'taken', label: '초등 5학년 · 불규칙 과거형' },
-    { level: 2, prompt: "🔤 동사 'write (쓰다)'의 과거형은?", answer: 'wrote', d1: 'writed', d2: 'written', label: '초등 5학년 · 불규칙 과거형' },
-    { level: 2, prompt: "🔤 동사 'run (달리다)'의 과거형은?", answer: 'ran', d1: 'runned', d2: 'running', label: '초등 5학년 · 불규칙 과거형' },
-    { level: 2, prompt: "🔤 동사 'swim (수영하다)'의 과거형은?", answer: 'swam', d1: 'swimmed', d2: 'swum', label: '초등 5학년 · 불규칙 과거형' },
-    { level: 2, prompt: "🔤 'expensive (비싼)'의 반대말은?", answer: 'cheap', d1: 'heavy', d2: 'rich', label: '초등 5학년 · 반의어 퀴즈' },
-    { level: 2, prompt: "🔤 'heavy (무거운)'의 반대말은?", answer: 'light', d1: 'short', d2: 'weak', label: '초등 5학년 · 반의어 퀴즈' },
-    { level: 2, prompt: "🔤 'dangerous (위험한)'의 반대말은?", answer: 'safe', d1: 'strong', d2: 'careful', label: '초등 5학년 · 반의어 퀴즈' },
-    { level: 2, prompt: "🔤 'early (이른/일찍)'의 반대말은?", answer: 'late', d1: 'fast', d2: 'last', label: '초등 5학년 · 반의어 퀴즈' },
-    { level: 2, prompt: "🔤 'good (좋은)'의 비교급(더 좋은)은?", answer: 'better', d1: 'gooder', d2: 'best', label: '초등 5~6학년 · 비교급' },
-
-    // Level 3 (Stage 7~14): 6th Grade Irregular Verbs, Superlatives & Key Idioms
-    { level: 3, prompt: "🔤 동사 'teach (가르치다)'의 과거형은?", answer: 'taught', d1: 'teached', d2: 'thought', label: '초등 6학년 · 불규칙 과거형' },
-    { level: 3, prompt: "🔤 동사 'catch (잡다)'의 과거형은?", answer: 'caught', d1: 'catched', d2: 'coated', label: '초등 6학년 · 불규칙 과거형' },
-    { level: 3, prompt: "🔤 동사 'bring (가져오다)'의 과거형은?", answer: 'brought', d1: 'bringed', d2: 'bought', label: '초등 6학년 · 불규칙 과거형' },
-    { level: 3, prompt: "🔤 동사 'think (생각하다)'의 과거형은?", answer: 'thought', d1: 'thinked', d2: 'taught', label: '초등 6학년 · 불규칙 과거형' },
-    { level: 3, prompt: "🔤 동사 'speak (말하다)'의 과거형은?", answer: 'spoke', d1: 'speaked', d2: 'spoken', label: '초등 6학년 · 불규칙 과거형' },
-    { level: 3, prompt: "🔤 'borrow (빌리다)'의 반대말(빌려주다)은?", answer: 'lend', d1: 'send', d2: 'spend', label: '초등 6학년 · 핵심 반의어' },
-    { level: 3, prompt: '🔤 빈칸: "I am interested ___ science." (~에 관심 있다)', answer: 'in', d1: 'on', d2: 'at', label: '초등 6학년 · 핵심 숙어' },
-    { level: 3, prompt: '🔤 빈칸: "She is good ___ swimming." (~을 잘하다)', answer: 'at', d1: 'in', d2: 'for', label: '초등 6학년 · 핵심 숙어' },
-    { level: 3, prompt: '🔤 빈칸: "Please take care ___ my dog." (~을 돌보다)', answer: 'of', d1: 'to', d2: 'with', label: '초등 6학년 · 핵심 숙어' },
-    { level: 3, prompt: '🔤 빈칸: "I am looking ___ my bag." (~을 찾다)', answer: 'for', d1: 'at', d2: 'after', label: '초등 6학년 · 핵심 숙어' },
-
-    // Level 4 (Stage 11+): Advanced 6th Grade ~ Middle 1 Grammar & Idioms
-    { level: 4, prompt: '🔤 빈칸: "I am proud ___ you!" (~을 자랑스러워하다)', answer: 'of', d1: 'for', d2: 'with', label: '초6 심화 · 필수 숙어' },
-    { level: 4, prompt: '🔤 빈칸: "I look forward ___ the trip." (~을 학수고대하다)', answer: 'to', d1: 'for', d2: 'at', label: '초6 심화 · 필수 숙어' },
-    { level: 4, prompt: '🔤 빈칸: "Turn ___ the light, please." (불을 끄다)', answer: 'off', d1: 'out', d2: 'down', label: '초6 심화 · 필수 숙어' },
-    { level: 4, prompt: "🔤 'important (중요한)'의 비교급 표현은?", answer: 'more important', d1: 'importanter', d2: 'most important', label: '초6 심화 · 비교급 문법' },
-    { level: 4, prompt: "🔤 동사 'choose (선택하다)'의 과거형은?", answer: 'chose', d1: 'choosed', d2: 'chosen', label: '초6 심화 · 불규칙 과거형' },
-    { level: 4, prompt: "🔤 동사 'forget (잊다)'의 과거형은?", answer: 'forgot', d1: 'forgetted', d2: 'forgotten', label: '초6 심화 · 불규칙 과거형' }
-  ];
-
-  /**
-   * Curated Elementary Conversational / Everyday English Expressions (생활영어 회화 & Q&A 응답)
+   * Curated Elementary Conversational / Everyday English Expressions
    */
   const DAILY_ENGLISH_EXPRESSIONS = [
-    // Level 1: Basic Everyday Expressions (Stage 1~4 only)
+    // Level 1: Essential Everyday Expressions
     { en: "It's my turn.", kr: '내 차례야', emoji: '🎲', theme: 'turn', level: 1 },
+    { en: "It's your turn.", kr: '네 차례야', emoji: '👉', theme: 'turn', level: 1 },
     { en: 'Wait a minute.', kr: '잠시만 기다려', emoji: '⏳', theme: 'daily', level: 1 },
     { en: 'Watch out!', kr: '조심해!', emoji: '⚠️', theme: 'daily', level: 1 },
+    { en: 'Good job!', kr: '잘했어!', emoji: '👍', theme: 'praise', level: 1 },
     { en: 'Hurry up!', kr: '서둘러!', emoji: '🏃', theme: 'daily', level: 1 },
     { en: 'Cheer up!', kr: '힘내!', emoji: '💪', theme: 'praise', level: 1 },
+    { en: "I'm hungry.", kr: '배고파요', emoji: '🍔', theme: 'feeling', level: 1 },
+    { en: "I'm thirsty.", kr: '목말라요', emoji: '🥤', theme: 'feeling', level: 1 },
     { en: "I'm ready!", kr: '준비됐어!', emoji: '🚀', theme: 'turn', level: 1 },
     { en: 'Are you ready?', kr: '준비됐니?', emoji: '🏁', theme: 'turn', level: 1 },
     { en: 'Follow me.', kr: '나를 따라와', emoji: '👣', theme: 'daily', level: 1 },
@@ -258,7 +218,7 @@
     { en: "Don't worry.", kr: '걱정하지 마', emoji: '💖', theme: 'praise', level: 1 },
     { en: 'Excuse me.', kr: '실례합니다', emoji: '🙇', theme: 'greeting', level: 1 },
 
-    // Level 2: Practical Elementary 4~5 Conversation (Stage 2~8)
+    // Level 2: Practical Elementary Conversation
     { en: 'Calm down.', kr: '진정해', emoji: '😌', theme: 'feeling', level: 2 },
     { en: 'Have a nice day!', kr: '좋은 하루 보내!', emoji: '☀️', theme: 'greeting', level: 2 },
     { en: 'Go ahead.', kr: '먼저 해 / 어서 해', emoji: '💁', theme: 'turn', level: 2 },
@@ -266,6 +226,7 @@
     { en: 'Never mind.', kr: '신경 쓰지 마 / 괜찮아', emoji: '🙂', theme: 'opinion', level: 2 },
     { en: 'Of course!', kr: '물론이지!', emoji: '⭕', theme: 'opinion', level: 2 },
     { en: 'No way!', kr: '말도 안 돼!', emoji: '😲', theme: 'feeling', level: 2 },
+    { en: 'What time is it?', kr: '지금 몇 시야?', emoji: '⌚', theme: 'question', level: 2 },
     { en: 'How much is it?', kr: '이거 얼마예요?', emoji: '💵', theme: 'shopping', level: 2 },
     { en: 'Where are you going?', kr: '어디 가고 있니?', emoji: '🧭', theme: 'question', level: 2 },
     { en: 'What happened?', kr: '무슨 일 있었어?', emoji: '❓', theme: 'question', level: 2 },
@@ -277,7 +238,7 @@
     { en: 'May I help you?', kr: '무엇을 도와드릴까요?', emoji: '💁‍♀️', theme: 'shopping', level: 2 },
     { en: "How's the weather?", kr: '오늘 날씨가 어때?', emoji: '⛅', theme: 'question', level: 2 },
 
-    // Level 3: Elementary 5~6 Conversational Expressions (Stage 5~13)
+    // Level 3: Upper Elementary Conversational Expressions
     { en: 'I have no idea.', kr: '전혀 모르겠어', emoji: '🤷', theme: 'opinion', level: 3 },
     { en: "It's up to you.", kr: '네 마음대로 해 (너에게 달렸어)', emoji: '✨', theme: 'opinion', level: 3 },
     { en: 'Make yourself at home.', kr: '내 집처럼 편하게 있어', emoji: '🏠', theme: 'daily', level: 3 },
@@ -292,33 +253,20 @@
     { en: 'Can I try this on?', kr: '이거 입어 봐도 될까요?', emoji: '👗', theme: 'shopping', level: 3 },
     { en: 'Keep your promise.', kr: '약속을 꼭 지켜라', emoji: '🤙', theme: 'daily', level: 3 },
     { en: 'How often do you exercise?', kr: '얼마나 자주 운동하니?', emoji: '🏃', theme: 'question', level: 3 },
-    { en: 'How long does it take?', kr: '시간이 얼마나 걸리나요?', emoji: '⏱️', theme: 'question', level: 3 },
-
-    // Level 4: Elementary 6th Grade Key Situational Dialogues (Stage 9+)
-    { en: 'What do you recommend?', kr: '무엇을 추천하시나요?', emoji: '🍽️', theme: 'shopping', level: 4 },
-    { en: 'Could you explain that again?', kr: '다시 한번 설명해 주실래요?', emoji: '🙋', theme: 'request', level: 4 },
-    { en: "I'm looking forward to it.", kr: '그것이 정말 기대돼요', emoji: '🌟', theme: 'feeling', level: 4 },
-    { en: 'Practice makes perfect.', kr: '연습이 완벽을 만든다', emoji: '🏆', theme: 'praise', level: 4 },
-    { en: 'Better late than never.', kr: '늦더라도 안 하는 것보다 낫다', emoji: '⏰', theme: 'opinion', level: 4 },
-    { en: 'Why don’t we join the club?', kr: '우리 동아리에 함께 가입하는 게 어때?', emoji: '🤝', theme: 'question', level: 4 },
-    { en: 'May I take your order?', kr: '주문하시겠어요?', emoji: '🧾', theme: 'shopping', level: 4 },
-    { en: 'How can I get to the museum?', kr: '박물관에 어떻게 가나요?', emoji: '🗺️', theme: 'question', level: 4 }
+    { en: 'How long does it take?', kr: '시간이 얼마나 걸리나요?', emoji: '⏱️', theme: 'question', level: 3 }
   ];
 
-  // Track recent prompts to prevent immediate back-to-back duplicates
   const _recentIds = [];
   const MAX_RECENT = 14;
   let _currentQuestion = null;
 
-  // Spaced repetition counter: serve a review question every 3rd question so current-stage progression stays strong!
   const REVIEW_INTERVAL = 3;
   let _questionsSinceLastReview = 0;
 
-  // Per-stage cap for special reading/grammar questions
   const _stageReadingTracker = {
     stage: 0,
     count: 0,
-    limit: 3
+    limit: 2
   };
 
   function ensureStageReadingTracker(stageNum) {
@@ -326,7 +274,7 @@
     if (_stageReadingTracker.stage !== stg) {
       _stageReadingTracker.stage = stg;
       _stageReadingTracker.count = 0;
-      _stageReadingTracker.limit = randomInt(2, 4);
+      _stageReadingTracker.limit = randomInt(2, 3);
     }
   }
 
@@ -374,10 +322,9 @@
     if (opType === 'multiplication') {
       candidates.push(correctVal + a, correctVal - a, correctVal + b, correctVal - b);
       candidates.push(correctVal + 10, correctVal - 10, correctVal + 2, correctVal - 2, correctVal + 1, correctVal - 1);
-    } else if (opType === 'division' || opType === 'gcd_lcm' || opType === 'equation' || opType === 'proportion') {
+    } else if (opType === 'division') {
       candidates.push(correctVal + 1, correctVal - 1, correctVal + 2, correctVal - 2);
-      candidates.push(correctVal + 3, correctVal - 3, correctVal + 4, correctVal - 4, correctVal + 6, correctVal - 6);
-      if (correctVal >= 6) candidates.push(correctVal * 2, Math.max(2, Math.floor(correctVal / 2)));
+      candidates.push(correctVal + 3, correctVal - 3, correctVal + 4, correctVal - 4, correctVal + 10, correctVal - 10);
     } else {
       const isAddition = (opType === 'addition' || opType === true);
       candidates.push(correctVal + 10, correctVal - 10, correctVal + 1, correctVal - 1, correctVal + 2, correctVal - 2);
@@ -388,7 +335,7 @@
       if (isAddition && ((a % 10) + (b % 10) >= 10)) {
         candidates.push(correctVal - 10);
       }
-      candidates.push(correctVal + 9, correctVal - 9, correctVal + 3, correctVal - 3, correctVal + 5, correctVal - 5);
+      candidates.push(correctVal + 9, correctVal - 9, correctVal + 3, correctVal - 3);
     }
 
     const validDistinct = [];
@@ -413,447 +360,199 @@
     return [String(validDistinct[0]), String(validDistinct[1])];
   }
 
-  function gcd(x, y) {
-    let a = Math.abs(x);
-    let b = Math.abs(y);
-    while (b) {
-      const t = b;
-      b = a % b;
-      a = t;
-    }
-    return a || 1;
-  }
-
   /**
-   * Generates a Stage-Progressive Elementary 5th~6th Grade Math Question!
-   * Difficulty rises moderately and smoothly stage-by-stage (Stage 1 -> Stage 20+):
-   * - Stage 1~2 : 2-digit +/-, Basic ×/÷ (4th~5th warm-up)
-   * - Stage 3~5 : Intermediate ×/÷ + 5th Grade Mixed Calculation (혼합계산) + Basic GCD/LCM (약수·배수)
-   * - Stage 6~9 : Fraction Reduction (약분) + Decimal +/-/× (소수 연산) + Polygon Area (도형 넓이) + Mixed Ops
-   * - Stage 10~14: 6th Grade Proportions (비례식 a:b=c:□) + Percentages (백분율 %) + Fraction ×/÷
-   * - Stage 15+ : Unknown □ Equations (방정식 □) + Averages (평균) + Full 5th~6th Mastery
+   * Generates a Fast Mental Arithmetic Question ("머리로 빠른 암산" + "천천히 단계별 상승"):
+   * - 100% instant equation format ("🧮 24 + 18 = ?", "🧮 14 × 3 = ?", "🧮 48 ÷ 4 = ?", "🧮 10 + 3 × 4 = ?")
+   * - Spread across 60+ stages so going up 1 stage nudges number ranges by only ~1.5%!
    */
   function generateMathQuestion(stageNum) {
     const stage = Math.max(1, parseInt(stageNum, 10) || 1);
 
-    // Smooth stage-by-stage weighted pool of math question types
-    let weightedTypes = [];
-    if (stage === 1) {
-      weightedTypes = ['addition', 'addition', 'subtraction', 'subtraction', 'multiplication', 'division'];
-    } else if (stage === 2) {
-      weightedTypes = ['addition', 'subtraction', 'multiplication', 'multiplication', 'division', 'division'];
-    } else if (stage === 3) {
-      weightedTypes = ['addition', 'subtraction', 'multiplication', 'multiplication', 'division', 'division', 'mixed_calc'];
-    } else if (stage === 4) {
-      weightedTypes = ['multiplication', 'multiplication', 'division', 'division', 'mixed_calc', 'mixed_calc', 'gcd_lcm'];
-    } else if (stage === 5) {
-      weightedTypes = ['multiplication', 'division', 'mixed_calc', 'mixed_calc', 'gcd_lcm', 'gcd_lcm', 'decimal_op'];
-    } else if (stage <= 7) {
-      weightedTypes = ['multiplication', 'division', 'mixed_calc', 'mixed_calc', 'gcd_lcm', 'fraction_reduce', 'decimal_op', 'polygon_area'];
-    } else if (stage <= 9) {
-      weightedTypes = ['mixed_calc', 'gcd_lcm', 'fraction_reduce', 'fraction_op', 'decimal_op', 'polygon_area', 'proportion'];
-    } else if (stage <= 12) {
-      weightedTypes = ['mixed_calc', 'gcd_lcm', 'fraction_op', 'decimal_op', 'polygon_area', 'proportion', 'proportion', 'percentage'];
-    } else if (stage <= 15) {
-      weightedTypes = ['mixed_calc', 'fraction_op', 'decimal_op', 'proportion', 'percentage', 'percentage', 'equation_box'];
-    } else {
-      weightedTypes = ['mixed_calc', 'fraction_op', 'decimal_op', 'proportion', 'percentage', 'equation_box', 'equation_box', 'average_stat'];
+    // Smooth continuous weights across Stage 1 -> Stage 60+
+    // Stage 1~11: Pure +, -, ×, ÷ mental arithmetic
+    // Stage 12+ : Gradually mixes 10% -> 24% short 3-number mental chain (e.g., 10 + 4 × 3 = ?)
+    const s = stage;
+    const wAdd  = Math.max(18, Math.round(30 - s * 0.22));
+    const wSub  = Math.max(18, Math.round(28 - s * 0.20));
+    const wMult = Math.min(34, Math.round(22 + s * 0.22));
+    const wDiv  = Math.min(34, Math.round(20 + s * 0.22));
+    const wMix  = s < 12 ? 0 : Math.min(22, Math.round((s - 11) * 0.45));
+
+    const table = [
+      { op: 'addition',       w: wAdd },
+      { op: 'subtraction',    w: wSub },
+      { op: 'multiplication', w: wMult },
+      { op: 'division',       w: wDiv },
+      { op: 'mixed_calc',     w: wMix }
+    ];
+
+    let totalW = 0;
+    for (let i = 0; i < table.length; i++) totalW += table[i].w;
+    let roll = Math.random() * totalW;
+    let chosenOp = 'addition';
+    for (let i = 0; i < table.length; i++) {
+      if (roll < table[i].w) {
+        chosenOp = table[i].op;
+        break;
+      }
+      roll -= table[i].w;
     }
 
-    const chosenOp = weightedTypes[randomInt(0, weightedTypes.length - 1)];
+    // Ultra-gradual progression index: rises by only 0.25 per stage (takes 48 stages to reach diffStep = 12!)
+    const diffStep = Math.min(14, (stage - 1) * 0.25);
+
+    let a = 20;
+    let b = 15;
+    let answerVal = 35;
+    let promptStr = '';
+    let categoryLabel = '초등 수학 · 빠른 암산';
+    let subPrompt = '빠르게 머리로 암산하여 정답 차선으로 달리세요!';
+    let candidateId = '';
 
     for (let attempt = 0; attempt < 25; attempt++) {
-      let prompt = '';
-      let subPrompt = '암산하여 정답 게이트로 차선을 변경하세요!';
-      let categoryLabel = '초등 5~6학년 수학';
-      let answerStr = '';
-      let d1 = '';
-      let d2 = '';
-      let qId = '';
-
-      if (chosenOp === 'mixed_calc') {
-        // 5학년 1학기 1단원: 자연수의 혼합계산 (곱셈·나눗셈 먼저, 또는 괄호 먼저!)
-        categoryLabel = '초등 5학년 수학 · 자연수의 혼합계산';
-        subPrompt = '곱셈·나눗셈이나 괄호 안을 먼저 계산하세요!';
-        const pat = randomInt(1, stage >= 7 ? 4 : 3);
+      if (chosenOp === 'multiplication') {
+        categoryLabel = '초등 수학 · 곱셈 빠른 암산';
+        // Stage 1~4: diffStep < 1 -> very easy mental multiplication (11~15 × 2~3, 20×2, 30×2)
+        // Stage 5~16: diffStep 1~3.75 -> 11~22 × 2~4
+        // Stage 17~36: diffStep 4~8.75 -> 12~28 × 2~5
+        // Stage 37+: diffStep 9~14 -> 12~32 × 2~6
+        if (diffStep < 1.2) {
+          const easyPoolA = [11, 12, 13, 14, 15, 20, 21, 22, 30];
+          a = easyPoolA[randomInt(0, easyPoolA.length - 1)];
+          b = randomInt(2, 3);
+        } else if (diffStep < 4.0) {
+          const medPoolA = [11, 12, 13, 14, 15, 16, 17, 18, 20, 21, 22, 24, 25, 30];
+          a = medPoolA[randomInt(0, medPoolA.length - 1)];
+          b = a >= 22 ? randomInt(2, 3) : randomInt(2, 4);
+        } else {
+          const maxA = Math.min(32, Math.round(16 + diffStep));
+          a = randomInt(11, maxA);
+          b = a >= 24 ? randomInt(2, 3) : (a >= 18 ? randomInt(2, 4) : randomInt(2, Math.min(6, 3 + Math.floor(diffStep / 4))));
+        }
+        answerVal = a * b;
+        promptStr = `🧮 ${a} × ${b} = ?`;
+        candidateId = `math_mult_${a}_${b}`;
+      } else if (chosenOp === 'division') {
+        categoryLabel = '초등 수학 · 나눗셈 빠른 암산';
+        const maxB = Math.min(9, 4 + Math.floor(diffStep * 0.4));
+        const minQ = Math.min(8, 3 + Math.floor(diffStep * 0.35));
+        const maxQ = Math.min(22, Math.round(9 + diffStep));
+        b = randomInt(2, maxB);
+        const quotient = randomInt(minQ, maxQ);
+        a = b * quotient;
+        answerVal = quotient;
+        promptStr = `🧮 ${a} ÷ ${b} = ?`;
+        candidateId = `math_div_${a}_${b}`;
+      } else if (chosenOp === 'mixed_calc') {
+        categoryLabel = '초등 수학 · 혼합 암산';
+        subPrompt = '곱셈·나눗셈이나 괄호 안을 먼저 암산하세요!';
+        const pat = randomInt(1, 3);
         if (pat === 1) {
           // c + a × b
-          const a = randomInt(3, Math.min(9, 4 + Math.floor(stage / 2)));
-          const b = randomInt(2, Math.min(8, 3 + Math.floor(stage / 3)));
-          const c = randomInt(6, 25);
-          const ans = c + a * b;
-          prompt = `🧮 ${c} + ${a} × ${b} = ?`;
-          answerStr = String(ans);
-          // Common mistake: (c + a) * b
-          const wrongOrder = (c + a) * b;
-          const dists = generateMathDistractors(ans, a, b, 'addition');
-          d1 = wrongOrder !== ans ? String(wrongOrder) : dists[0];
-          d2 = dists[1] !== d1 ? dists[1] : String(ans + 4);
-          qId = `math_mix1_${c}_${a}_${b}`;
+          const m1 = randomInt(2, Math.min(8, 3 + Math.floor(diffStep * 0.4)));
+          const m2 = randomInt(2, Math.min(6, 3 + Math.floor(diffStep * 0.3)));
+          const c = randomInt(5, Math.min(30, Math.round(10 + diffStep * 1.5)));
+          a = m1;
+          b = m2;
+          answerVal = c + m1 * m2;
+          promptStr = `🧮 ${c} + ${m1} × ${m2} = ?`;
+          candidateId = `math_mix1_${c}_${m1}_${m2}`;
         } else if (pat === 2) {
-          // c - a × b (ensure positive result)
-          const a = randomInt(2, 7);
-          const b = randomInt(2, 6);
-          const c = a * b + randomInt(5, 24);
-          const ans = c - a * b;
-          prompt = `🧮 ${c} - ${a} × ${b} = ?`;
-          answerStr = String(ans);
-          const dists = generateMathDistractors(ans, a, b, 'subtraction');
-          d1 = dists[0];
-          d2 = dists[1];
-          qId = `math_mix2_${c}_${a}_${b}`;
-        } else if (pat === 3) {
-          // (a + b) ÷ c
-          const c = randomInt(2, 6);
-          const ans = randomInt(4, 12);
-          const sum = c * ans;
-          const a = randomInt(Math.floor(sum * 0.3), Math.floor(sum * 0.7));
-          const b = sum - a;
-          prompt = `🧮 (${a} + ${b}) ÷ ${c} = ?`;
-          answerStr = String(ans);
-          const dists = generateMathDistractors(ans, a, c, 'division');
-          d1 = dists[0];
-          d2 = dists[1];
-          qId = `math_mix3_${a}_${b}_${c}`;
+          // c - a × b
+          const m1 = randomInt(2, Math.min(7, 3 + Math.floor(diffStep * 0.35)));
+          const m2 = randomInt(2, Math.min(5, 3 + Math.floor(diffStep * 0.25)));
+          const c = m1 * m2 + randomInt(4, Math.min(25, Math.round(8 + diffStep)));
+          a = m1;
+          b = m2;
+          answerVal = c - m1 * m2;
+          promptStr = `🧮 ${c} - ${m1} × ${m2} = ?`;
+          candidateId = `math_mix2_${c}_${m1}_${m2}`;
         } else {
-          // a × b - c ÷ d
-          const a = randomInt(4, 8);
-          const b = randomInt(3, 6);
-          const d = randomInt(2, 5);
-          const q = randomInt(2, 5);
-          const c = d * q;
-          const ans = a * b - q;
-          prompt = `🧮 ${a} × ${b} - ${c} ÷ ${d} = ?`;
-          answerStr = String(ans);
-          const dists = generateMathDistractors(ans, a, b, 'subtraction');
-          d1 = dists[0];
-          d2 = dists[1];
-          qId = `math_mix4_${a}_${b}_${c}_${d}`;
+          // (x + y) ÷ b
+          b = randomInt(2, 5);
+          answerVal = randomInt(3, Math.min(12, Math.round(5 + diffStep * 0.5)));
+          const sum = b * answerVal;
+          const x = Math.max(2, Math.floor(sum * 0.4));
+          const y = sum - x;
+          a = sum;
+          promptStr = `🧮 (${x} + ${y}) ÷ ${b} = ?`;
+          candidateId = `math_mix3_${x}_${y}_${b}`;
         }
-      } else if (chosenOp === 'gcd_lcm') {
-        // 5학년 1학기 2단원: 최대공약수(GCD) & 최소공배수(LCM)
-        const pairs = stage <= 6
-          ? [
-              [4, 6], [6, 8], [6, 9], [4, 10], [8, 12], [6, 15], [9, 12], [10, 15]
-            ]
-          : [
-              [6, 8], [8, 12], [9, 12], [12, 16], [12, 18], [15, 20], [14, 21], [16, 24], [18, 24]
-            ];
-        const pair = pairs[randomInt(0, pairs.length - 1)];
-        const x = pair[0];
-        const y = pair[1];
-        const g = gcd(x, y);
-        const l = (x * y) / g;
-        const askLcm = Math.random() < 0.5;
-        if (askLcm) {
-          categoryLabel = '초등 5학년 수학 · 최소공배수';
-          subPrompt = '두 수의 공통된 배수 중 가장 작은 수를 찾으세요!';
-          prompt = `🧮 ${x}과(와) ${y}의 최소공배수는?`;
-          answerStr = String(l);
-          d1 = String(x * y !== l ? x * y : l + x);
-          d2 = String(g !== l ? (l + y) : l + 4);
-          if (d1 === answerStr) d1 = String(l + 6);
-          if (d2 === answerStr || d2 === d1) d2 = String(Math.max(4, l - g));
-          qId = `math_lcm_${x}_${y}`;
+      } else if (chosenOp === 'addition') {
+        categoryLabel = '초등 수학 · 두 자리 덧셈 암산';
+        const maxNum = Math.min(82, Math.round(24 + diffStep * 4.2));
+        const carryProb = Math.min(0.72, 0.15 + diffStep * 0.042);
+        a = randomInt(11, maxNum);
+        if (Math.random() > carryProb) {
+          const maxOnesB = Math.max(0, 9 - (a % 10));
+          const maxTensB = Math.max(1, Math.min(4, Math.floor((maxNum - 10) / 10)));
+          b = randomInt(1, maxTensB) * 10 + randomInt(0, maxOnesB);
         } else {
-          categoryLabel = '초등 5학년 수학 · 최대공약수';
-          subPrompt = '두 수를 동시에 나누는 가장 큰 약수를 찾으세요!';
-          prompt = `🧮 ${x}과(와) ${y}의 최대공약수는?`;
-          answerStr = String(g);
-          const dists = generateMathDistractors(g, x, y, 'gcd_lcm');
-          d1 = dists[0];
-          d2 = dists[1];
-          qId = `math_gcd_${x}_${y}`;
+          b = randomInt(11, Math.min(59, maxNum));
         }
-      } else if (chosenOp === 'fraction_reduce') {
-        // 5학년 1학기 4단원: 약분과 통분 (기약분수 만들기)
-        categoryLabel = '초등 5학년 수학 · 분수의 약분';
-        subPrompt = '분자와 분모를 최대공약수로 나누어 기약분수로 만드세요!';
-        const baseFracs = [
-          { n: 1, d: 2 }, { n: 1, d: 3 }, { n: 2, d: 3 },
-          { n: 1, d: 4 }, { n: 3, d: 4 }, { n: 2, d: 5 },
-          { n: 3, d: 5 }, { n: 4, d: 5 }, { n: 3, d: 7 }
-        ];
-        const f = baseFracs[randomInt(0, baseFracs.length - 1)];
-        const mult = randomInt(2, stage >= 9 ? 5 : 3);
-        const rawN = f.n * mult;
-        const rawD = f.d * mult;
-        prompt = `🧮 분수 ${rawN}/${rawD} 을 기약분수로 약분하면?`;
-        answerStr = `${f.n}/${f.d}`;
-        d1 = `${Math.min(f.d - 1, f.n + 1)}/${f.d + 1}`;
-        d2 = `${f.n}/${f.d + 2}`;
-        if (d1 === answerStr) d1 = `${f.n + 1}/${f.d + 2}`;
-        qId = `math_red_${rawN}_${rawD}`;
-      } else if (chosenOp === 'fraction_op') {
-        // 5~6학년: 분수의 곱셈·나눗셈 (자연수 결과가 나오는 깔끔한 암산 문제!)
-        categoryLabel = '초등 5~6학년 수학 · 분수의 곱셈·나눗셈';
-        subPrompt = '분모와 자연수를 먼저 약분하면 암산이 쉬워요!';
-        const isDiv = stage >= 10 && Math.random() < 0.45;
-        if (!isDiv) {
-          // Whole * (num/den)
-          const den = randomInt(3, 7);
-          const num = randomInt(1, den - 1);
-          const k = randomInt(2, 5);
-          const whole = den * k;
-          const ans = num * k;
-          prompt = `🧮 ${whole} × ${num}/${den} = ?`;
-          answerStr = String(ans);
-          const dists = generateMathDistractors(ans, num, den, 'division');
-          d1 = dists[0];
-          d2 = dists[1];
-          qId = `math_fmult_${whole}_${num}_${den}`;
-        } else {
-          // Whole ÷ (1/den) or Whole ÷ (num/den)
-          const den = randomInt(2, 6);
-          const whole = randomInt(2, 6);
-          const ans = whole * den;
-          prompt = `🧮 ${whole} ÷ 1/${den} = ?`;
-          answerStr = String(ans);
-          const dists = generateMathDistractors(ans, whole, den, 'multiplication');
-          d1 = dists[0];
-          d2 = dists[1];
-          qId = `math_fdiv_${whole}_${den}`;
-        }
-      } else if (chosenOp === 'decimal_op') {
-        // 5~6학년: 소수의 덧셈·뺄셈·곱셈·나눗셈
-        categoryLabel = '초등 5~6학년 수학 · 소수 암산';
-        subPrompt = '소수점의 위치를 잘 보고 계산하세요!';
-        if (stage <= 7) {
-          // Decimal addition or subtraction: e.g. 0.6 + 0.8 = 1.4, 2.3 - 0.7 = 1.6
-          const a10 = randomInt(4, 18);
-          const b10 = randomInt(3, 14);
-          const isAdd = Math.random() < 0.55 || a10 <= b10 + 1;
-          const ans10 = isAdd ? (a10 + b10) : (a10 - b10);
-          const fmt = function (v) { return (v / 10).toFixed(1).replace(/\.0$/, ''); };
-          prompt = `🧮 ${(a10 / 10).toFixed(1)} ${isAdd ? '+' : '-'} ${(b10 / 10).toFixed(1)} = ?`;
-          answerStr = (ans10 / 10).toFixed(1);
-          d1 = ((ans10 + 2) / 10).toFixed(1);
-          d2 = (Math.max(1, ans10 - 1) / 10).toFixed(1);
-          if (d2 === answerStr) d2 = ((ans10 + 4) / 10).toFixed(1);
-          qId = `math_dec1_${a10}_${b10}_${isAdd ? 'p' : 'm'}`;
-        } else {
-          // Decimal multiplication or division: e.g. 1.5 × 4 = 6, 3.6 ÷ 0.9 = 4
-          if (Math.random() < 0.5) {
-            const pairs = [
-              ['0.5', 4, '2'], ['0.5', 6, '3'], ['1.5', 2, '3'], ['1.5', 4, '6'],
-              ['2.5', 2, '5'], ['2.5', 4, '10'], ['1.2', 5, '6'], ['0.4', 5, '2'],
-              ['0.8', 5, '4'], ['1.5', 6, '9']
-            ];
-            const p = pairs[randomInt(0, pairs.length - 1)];
-            prompt = `🧮 ${p[0]} × ${p[1]} = ?`;
-            answerStr = p[2];
-            const ansNum = parseInt(p[2], 10);
-            d1 = String(ansNum + 2);
-            d2 = String(Math.max(1, ansNum - 1));
-            qId = `math_decm_${p[0]}_${p[1]}`;
-          } else {
-            const d = randomInt(2, 9);
-            const q = randomInt(3, 9);
-            const prod10 = d * q;
-            prompt = `🧮 ${(prod10 / 10).toFixed(1)} ÷ 0.${d} = ?`;
-            answerStr = String(q);
-            const dists = generateMathDistractors(q, d, q, 'division');
-            d1 = dists[0];
-            d2 = dists[1];
-            qId = `math_decd_${prod10}_${d}`;
-          }
-        }
-      } else if (chosenOp === 'polygon_area') {
-        // 5학년 1학기 6단원: 다각형의 둘레와 넓이 (직사각형, 평행사변형, 삼각형 넓이)
-        categoryLabel = '초등 5학년 수학 · 도형의 넓이';
-        const isTriangle = Math.random() < 0.5;
-        if (isTriangle) {
-          const base = randomInt(2, 6) * 2; // even base so base*height/2 is integer
-          const height = randomInt(3, 9);
-          const ans = (base * height) / 2;
-          prompt = `📐 밑변 ${base}cm, 높이 ${height}cm인 삼각형의 넓이는?`;
-          subPrompt = '삼각형의 넓이 = (밑변 × 높이) ÷ 2';
-          answerStr = String(ans);
-          d1 = String(base * height); // common mistake: forgetting ÷ 2
-          d2 = String(ans + base);
-          qId = `math_tri_${base}_${height}`;
-        } else {
-          const w = randomInt(4, 11);
-          const h = randomInt(3, 9);
-          const ans = w * h;
-          prompt = `📐 가로 ${w}cm, 세로 ${h}cm인 직사각형의 넓이는?`;
-          subPrompt = '직사각형의 넓이 = 가로 × 세로';
-          answerStr = String(ans);
-          d1 = String((w + h) * 2); // perimeter mistake
-          d2 = String(ans + w);
-          if (d1 === answerStr) d1 = String(ans - h);
-          qId = `math_rect_${w}_${h}`;
-        }
-      } else if (chosenOp === 'proportion') {
-        // 6학년 2학기 4단원: 비례식과 비례배분 (a : b = c : □)
-        categoryLabel = '초등 6학년 수학 · 비례식';
-        subPrompt = '전항과 후항에 같은 수를 곱하거나 외항의 곱 = 내항의 곱을 이용하세요!';
-        const a = randomInt(2, 6);
-        const b = randomInt(a + 1, 9);
-        const k = randomInt(2, 5);
-        const c = a * k;
-        const ans = b * k;
-        prompt = `🧮 비례식 ${a} : ${b} = ${c} : □ 에서 □는?`;
-        answerStr = String(ans);
-        const dists = generateMathDistractors(ans, a, b, 'proportion');
-        d1 = dists[0];
-        d2 = dists[1];
-        qId = `math_prop_${a}_${b}_${k}`;
-      } else if (chosenOp === 'percentage') {
-        // 6학년 1학기 4단원: 비와 비율 · 백분율(%)
-        categoryLabel = '초등 6학년 수학 · 비율과 백분율(%)';
-        subPrompt = '백분율(%)은 기준량을 100으로 할 때의 비율입니다!';
-        if (Math.random() < 0.5) {
-          const fracPct = [
-            { f: '1/2', p: 50 }, { f: '1/4', p: 25 }, { f: '3/4', p: 75 },
-            { f: '1/5', p: 20 }, { f: '2/5', p: 40 }, { f: '3/5', p: 60 },
-            { f: '4/5', p: 80 }, { f: '3/10', p: 30 }, { f: '7/10', p: 70 }
-          ];
-          const item = fracPct[randomInt(0, fracPct.length - 1)];
-          prompt = `🧮 분수 ${item.f} 을 백분율(%)로 나타내면?`;
-          answerStr = `${item.p}%`;
-          d1 = `${Math.min(95, item.p + 15)}%`;
-          d2 = `${Math.max(5, item.p - 10)}%`;
-          qId = `math_pctf_${item.f}`;
-        } else {
-          const bases = [100, 200, 300, 500];
-          const base = bases[randomInt(0, bases.length - 1)];
-          const pcts = [10, 20, 25, 30, 40, 50];
-          const pct = pcts[randomInt(0, pcts.length - 1)];
-          const ans = (base * pct) / 100;
-          prompt = `🧮 ${base}의 ${pct}%는 얼마일까요?`;
-          answerStr = String(ans);
-          const dists = generateMathDistractors(ans, 10, 5, 'addition');
-          d1 = dists[0];
-          d2 = dists[1];
-          qId = `math_pctv_${base}_${pct}`;
-        }
-      } else if (chosenOp === 'equation_box') {
-        // 초6 심화 ~ 중1 일차방정식 기초: a × □ + b = c
-        categoryLabel = '초등 6학년 심화 · 미지수 □ 구하기';
-        subPrompt = '등식이 성립하도록 □ 안에 들어갈 알맞은 수를 암산하세요!';
-        const a = randomInt(2, 6);
-        const x = randomInt(3, 9);
-        const b = randomInt(3, 12);
-        const c = a * x + b;
-        prompt = `🧮 ${a} × □ + ${b} = ${c} 에서 □는?`;
-        answerStr = String(x);
-        const dists = generateMathDistractors(x, a, b, 'equation');
-        d1 = dists[0];
-        d2 = dists[1];
-        qId = `math_eq_${a}_${x}_${b}`;
-      } else if (chosenOp === 'average_stat') {
-        // 5학년 2학기 6단원: 평균과 가능성
-        categoryLabel = '초등 5~6학년 수학 · 평균 구하기';
-        subPrompt = '세 수의 합을 3으로 나누거나 가운데 기준값을 찾으세요!';
-        const mid = randomInt(6, 18) * 5;
-        const step = randomInt(1, 4) * 5;
-        const n1 = mid - step;
-        const n2 = mid;
-        const n3 = mid + step;
-        prompt = `📊 세 수 (${n1}, ${n2}, ${n3})의 평균은?`;
-        answerStr = String(mid);
-        d1 = String(mid + 5);
-        d2 = String(mid - 5);
-        qId = `math_avg_${n1}_${n2}_${n3}`;
+        answerVal = a + b;
+        promptStr = `🧮 ${a} + ${b} = ?`;
+        candidateId = `math_add_${a}_${b}`;
       } else {
-        // Core arithmetic (+, -, ×, ÷) with smooth stage scaling
-        let a = 20;
-        let b = 15;
-        let answerVal = 35;
-        let opSymbol = '+';
-
-        if (chosenOp === 'multiplication') {
-          opSymbol = '×';
-          categoryLabel = '초등 수학 · 두 자리 곱셈 암산';
-          subPrompt = '십의 자리와 일의 자리를 나누어 암산해 보세요!';
-          const diffStep = Math.min(12, Math.floor((stage - 1) * 0.75));
-          if (diffStep <= 1) {
-            const easyPoolA = [12, 13, 14, 15, 16, 20, 21, 25];
-            a = easyPoolA[randomInt(0, easyPoolA.length - 1)];
-            b = randomInt(2, 4);
-          } else {
-            const maxA = Math.min(35, 16 + diffStep);
-            a = randomInt(12, maxA);
-            b = a >= 25 ? randomInt(2, 4) : randomInt(3, Math.min(7, 3 + Math.floor(diffStep / 2)));
-          }
-          answerVal = a * b;
-        } else if (chosenOp === 'division') {
-          opSymbol = '÷';
-          categoryLabel = '초등 수학 · 나눗셈 암산';
-          subPrompt = '나누어떨어지는 나눗셈의 몫을 찾으세요!';
-          const diffStep = Math.min(12, Math.floor((stage - 1) * 0.75));
-          const maxB = Math.min(9, 5 + Math.floor(diffStep * 0.5));
-          const minQ = Math.min(9, 4 + Math.floor(diffStep * 0.5));
-          const maxQ = Math.min(24, 11 + diffStep);
-          b = randomInt(3, maxB);
-          const quotient = randomInt(minQ, maxQ);
-          a = b * quotient;
-          answerVal = quotient;
-        } else if (chosenOp === 'addition') {
-          opSymbol = '+';
-          categoryLabel = '초등 수학 · 두 자리 덧셈 암산';
-          const diffStep = Math.min(12, stage);
-          const maxNum = Math.min(88, 32 + diffStep * 5);
-          a = randomInt(16, maxNum);
-          b = randomInt(14, Math.min(68, maxNum));
-          answerVal = a + b;
+        categoryLabel = '초등 수학 · 두 자리 뺄셈 암산';
+        const maxNum = Math.min(92, Math.round(30 + diffStep * 4.5));
+        const borrowProb = Math.min(0.72, 0.15 + diffStep * 0.042);
+        a = randomInt(24, maxNum);
+        if (Math.random() > borrowProb && (a % 10) >= 1) {
+          const tensA = Math.floor(a / 10);
+          const onesA = a % 10;
+          const tensB = randomInt(1, Math.max(1, tensA - 1));
+          const onesB = randomInt(0, onesA);
+          b = tensB * 10 + onesB;
         } else {
-          opSymbol = '-';
-          categoryLabel = '초등 수학 · 두 자리 뺄셈 암산';
-          const diffStep = Math.min(12, stage);
-          const maxNum = Math.min(96, 42 + diffStep * 5);
-          a = randomInt(32, maxNum);
-          b = randomInt(14, a - 8);
-          answerVal = a - b;
+          b = randomInt(11, a - 6);
         }
-
-        prompt = `🧮 ${a} ${opSymbol} ${b} = ?`;
-        answerStr = String(answerVal);
-        const dists = generateMathDistractors(answerVal, a, b, chosenOp);
-        d1 = dists[0];
-        d2 = dists[1];
-        qId = `math_${chosenOp}_${a}_${b}`;
+        if (b < 10) b = 10;
+        if (a <= b + 1) a = Math.min(99, b + randomInt(5, 18));
+        answerVal = a - b;
+        promptStr = `🧮 ${a} - ${b} = ?`;
+        candidateId = `math_sub_${a}_${b}`;
       }
 
-      if (!_recentIds.includes(qId) || attempt === 24) {
-        rememberQuestionId(qId);
-        const laneData = buildThreeLaneChoices(answerStr, d1, d2);
-        return {
-          id: qId,
-          category: 'math',
-          categoryLabel: categoryLabel,
-          subType: chosenOp,
-          stage: stage,
-          prompt: prompt,
-          subPrompt: subPrompt,
-          choices: laneData.choices,
-          correctLane: laneData.correctLane,
-          answerText: answerStr,
-          correctAnswer: answerStr,
-          isReview: false,
-          wrongCount: 0
-        };
+      if (!_recentIds.includes(candidateId)) {
+        rememberQuestionId(candidateId);
+        break;
       }
     }
+
+    const answerStr = String(answerVal);
+    const distractors = generateMathDistractors(answerVal, a, b, chosenOp);
+    const laneData = buildThreeLaneChoices(answerStr, distractors[0], distractors[1]);
+
+    return {
+      id: candidateId,
+      category: 'math',
+      categoryLabel: categoryLabel,
+      subType: chosenOp,
+      stage: stage,
+      prompt: promptStr,
+      subPrompt: subPrompt,
+      choices: laneData.choices,
+      correctLane: laneData.correctLane,
+      answerText: answerStr,
+      correctAnswer: answerStr,
+      isReview: false,
+      wrongCount: 0
+    };
   }
 
   /**
-   * Generates a Stage-Progressive Conversational English question
-   * Uses a sliding window [minExprLevel, maxExprLevel] so easy phrases phase out on higher stages!
+   * Generates a Conversational English question with ultra-gradual stage progression
    */
   function generateDailyEnglishQuestion(stageNum) {
     const stage = Math.max(1, parseInt(stageNum, 10) || 1);
-    const minExprLevel = stage <= 3 ? 1 : (stage <= 8 ? 2 : 3);
-    const maxExprLevel = stage <= 2 ? 1 : (stage <= 5 ? 2 : (stage <= 9 ? 3 : 4));
-
+    // Rises by only +0.04 per stage across 50+ stages!
+    const targetLv = Math.min(3.0, 1.0 + (stage - 1) * 0.04);
     let eligiblePool = DAILY_ENGLISH_EXPRESSIONS.filter(function (item) {
-      return item.level >= minExprLevel && item.level <= maxExprLevel;
+      return Math.abs(item.level - targetLv) <= 1.1;
     });
     if (eligiblePool.length < 5) {
-      eligiblePool = DAILY_ENGLISH_EXPRESSIONS.filter(function (item) {
-        return item.level <= maxExprLevel;
-      });
+      eligiblePool = DAILY_ENGLISH_EXPRESSIONS;
     }
 
     let targetExpr = eligiblePool[randomInt(0, eligiblePool.length - 1)];
@@ -891,7 +590,7 @@
       return {
         id: `expr_kr2en_${targetExpr.en}`,
         category: 'english',
-        categoryLabel: '초등 5~6학년 생활영어 · 한영 회화',
+        categoryLabel: '실전 생활영어 · 한영 회화 퀴즈',
         subType: 'expr_kr_to_en',
         stage: stage,
         prompt: `${emojiPrefix}"${targetExpr.kr}"를 영어로 하면?`,
@@ -914,7 +613,7 @@
       return {
         id: `expr_en2kr_${targetExpr.en}`,
         category: 'english',
-        categoryLabel: '초등 5~6학년 생활영어 · 영한 해석',
+        categoryLabel: '실전 생활영어 · 영한 뜻 퀴즈',
         subType: 'expr_en_to_kr',
         stage: stage,
         prompt: `${emojiPrefix}"${targetExpr.en}"의 알맞은 뜻은?`,
@@ -928,63 +627,6 @@
       };
     }
   }
-
-  /**
-   * Generates a 5th~6th Grade Grammar / Irregular Past / Antonym / Idiom Question
-   */
-  function generateGrammarRelationQuestion(stageNum) {
-    const stage = Math.max(1, parseInt(stageNum, 10) || 1);
-    const minLv = stage <= 4 ? 1 : (stage <= 8 ? 2 : 3);
-    const maxLv = stage <= 3 ? 1 : (stage <= 6 ? 2 : (stage <= 10 ? 3 : 4));
-
-    let pool = GRAMMAR_AND_WORD_RELATIONS.filter(function (g) {
-      return g.level >= minLv && g.level <= maxLv;
-    });
-    if (pool.length < 4) {
-      pool = GRAMMAR_AND_WORD_RELATIONS.filter(function (g) {
-        return g.level <= maxLv;
-      });
-    }
-
-    let item = pool[randomInt(0, pool.length - 1)];
-    for (let attempt = 0; attempt < 20; attempt++) {
-      const cand = pool[randomInt(0, pool.length - 1)];
-      const cid = `gram_${cand.answer}_${cand.d1}`;
-      if (!_recentIds.includes(cid)) {
-        item = cand;
-        rememberQuestionId(cid);
-        break;
-      }
-    }
-
-    const laneData = buildThreeLaneChoices(item.answer, item.d1, item.d2);
-    return {
-      id: `gram_${item.answer}_${item.d1}`,
-      category: 'english',
-      categoryLabel: item.label || '초등 5~6학년 핵심 영문법·어휘',
-      subType: 'grammar_relation',
-      stage: stage,
-      prompt: item.prompt,
-      subPrompt: '문법과 어휘 관계에 맞는 정답 레인으로 달리세요!',
-      choices: laneData.choices,
-      correctLane: laneData.correctLane,
-      answerText: item.answer,
-      correctAnswer: item.answer,
-      isReview: false,
-      wrongCount: 0
-    };
-  }
-
-  /**
-   * Stage-progressive English Pronunciation (Speaking) Word List
-   */
-  const PRONUNCIATION_WORDS = [
-    { en: 'apple', kr: '사과', pron: '애플', emoji: '🍎', level: 1, aliases: ['apples', '애플', '사과'] },
-    { en: 'library', kr: '도서관', pron: '라이브러리', emoji: '📚', level: 2, aliases: ['라이브러리', '도서관'] },
-    { en: 'hospital', kr: '병원', pron: '하스피털', emoji: '🏥', level: 2, aliases: ['하스피털', '병원'] },
-    { en: 'adventure', kr: '모험', pron: '어드벤처', emoji: '🧭', level: 3, aliases: ['어드벤처', '모험'] },
-    { en: 'environment', kr: '환경', pron: '인바이런먼트', emoji: '🌱', level: 4, aliases: ['인바이런먼트', '환경'] }
-  ];
 
   function levenshteinDistance(a, b) {
     const s = String(a || '');
@@ -1004,63 +646,43 @@
   }
 
   /**
-   * Generates a Stage-Progressive Elementary 5th~6th Grade English Question:
-   * - Sliding Window [minWordLevel, maxWordLevel] so Stage 4+ automatically phases out Level 1 words!
-   *   - Stage 1~2 : Level 1 ~ 2
-   *   - Stage 3~4 : Level 2 ~ 3
-   *   - Stage 5~7 : Level 2 ~ 3 (mostly Level 3)
-   *   - Stage 8~10: Level 3 ~ 4 (no Level 1 or 2!)
-   *   - Stage 11~14: Level 4 ~ 5
-   *   - Stage 15+ : Level 4 ~ 5 Mastery
+   * Generates an Elementary English Question with ultra-slow 60-stage progression
    */
   function generateEnglishQuestion(stageNum) {
     const stage = Math.max(1, parseInt(stageNum, 10) || 1);
     ensureStageReadingTracker(stage);
 
-    // 1. Everyday Conversational English (~26% -> 34%)
-    const dailyExprProb = Math.min(0.34, 0.24 + (stage - 1) * 0.01);
+    const dailyExprProb = Math.min(0.36, 0.24 + (stage - 1) * 0.004);
     if (Math.random() < dailyExprProb) {
       return generateDailyEnglishQuestion(stage);
     }
 
-    // 2. From Stage 2+, include 5th~6th Grade Grammar / Irregular Past / Antonyms / Idioms (2~4 per stage)
-    if (stage >= 2 && _stageReadingTracker.count < _stageReadingTracker.limit && Math.random() < 0.34) {
-      _stageReadingTracker.count += 1;
-      return generateGrammarRelationQuestion(stage);
+    // Ultra-gradual center level: starts at 1.25 on Stage 1 and rises by only +0.06 per stage!
+    // Stage 1: 1.25 -> Stage 5: 1.49 -> Stage 10: 1.79 -> Stage 20: 2.39 -> Stage 35: 3.29 -> Stage 50: 4.19 -> Stage 60+: 4.85
+    const centerLv = Math.min(4.85, 1.25 + (stage - 1) * 0.06);
+    const weightedWords = [];
+    for (let i = 0; i < ENGLISH_DICTIONARY.length; i++) {
+      const w = ENGLISH_DICTIONARY[i];
+      const dist = Math.abs(w.level - centerLv);
+      if (dist <= 1.35) {
+        const copies = dist <= 0.55 ? 3 : (dist <= 0.95 ? 2 : 1);
+        for (let c = 0; c < copies; c++) weightedWords.push(w);
+      }
     }
+    const eligiblePool = weightedWords.length >= 8 ? weightedWords : ENGLISH_DICTIONARY;
 
-    // 3. Sliding-Window Vocabulary Level Selection (Gradually rises with Stage!)
-    let minWordLevel = 1;
-    let maxWordLevel = 2;
-    if (stage === 1) {
-      minWordLevel = 1; maxWordLevel = 2;
-    } else if (stage === 2) {
-      minWordLevel = 1; maxWordLevel = 2;
-    } else if (stage <= 4) {
-      minWordLevel = 2; maxWordLevel = 3;
-    } else if (stage <= 6) {
-      minWordLevel = 2; maxWordLevel = 3;
-    } else if (stage <= 9) {
-      minWordLevel = 3; maxWordLevel = 4;
-    } else if (stage <= 13) {
-      minWordLevel = 3; maxWordLevel = 5;
-    } else {
-      minWordLevel = 4; maxWordLevel = 5;
-    }
+    const canAskReadingQuiz = _stageReadingTracker.count < _stageReadingTracker.limit;
+    const isReadingQuiz = canAskReadingQuiz && (Math.random() < 0.25);
 
-    let eligiblePool = ENGLISH_DICTIONARY.filter(function (w) {
-      return w.level >= minWordLevel && w.level <= maxWordLevel;
-    });
-    if (eligiblePool.length < 8) {
-      eligiblePool = ENGLISH_DICTIONARY.filter(function (w) {
-        return w.level <= maxWordLevel;
-      });
-    }
+    const readingPool = isReadingQuiz
+      ? eligiblePool.filter(function (w) { return Boolean(w.pron); })
+      : eligiblePool;
+    const activePool = readingPool.length > 0 ? readingPool : eligiblePool;
 
-    let targetWord = eligiblePool[randomInt(0, eligiblePool.length - 1)];
+    let targetWord = activePool[randomInt(0, activePool.length - 1)];
     for (let attempt = 0; attempt < 25; attempt++) {
-      const candidate = eligiblePool[randomInt(0, eligiblePool.length - 1)];
-      const candidateId = `eng_${candidate.en}`;
+      const candidate = activePool[randomInt(0, activePool.length - 1)];
+      const candidateId = isReadingQuiz ? `eng_pron_${candidate.en}` : `eng_${candidate.en}`;
       if (!_recentIds.includes(candidateId)) {
         targetWord = candidate;
         rememberQuestionId(candidateId);
@@ -1068,26 +690,24 @@
       }
     }
 
-    // Prefer distractors from the same difficulty band & theme for plausible challenge
-    const sameBandThemePool = ENGLISH_DICTIONARY.filter(function (w) {
-      return w.en !== targetWord.en && w.kr !== targetWord.kr &&
+    const sameThemePool = ENGLISH_DICTIONARY.filter(function (w) {
+      return w.en !== targetWord.en && w.kr !== targetWord.kr && w.pron !== targetWord.pron &&
              Math.abs(w.level - targetWord.level) <= 1 && w.theme === targetWord.theme;
     });
-    const sameBandPool = ENGLISH_DICTIONARY.filter(function (w) {
-      return w.en !== targetWord.en && w.kr !== targetWord.kr &&
+    const otherPool = ENGLISH_DICTIONARY.filter(function (w) {
+      return w.en !== targetWord.en && w.kr !== targetWord.kr && w.pron !== targetWord.pron &&
              Math.abs(w.level - targetWord.level) <= 1 && w.theme !== targetWord.theme;
     });
     const fallbackPool = ENGLISH_DICTIONARY.filter(function (w) {
-      return w.en !== targetWord.en && w.kr !== targetWord.kr;
+      return w.en !== targetWord.en && w.kr !== targetWord.kr && w.pron !== targetWord.pron;
     });
 
-    const combinedDistractorPool = shuffleArray(sameBandThemePool)
-      .concat(shuffleArray(sameBandPool))
+    const combinedDistractorPool = shuffleArray(sameThemePool)
+      .concat(shuffleArray(otherPool))
       .concat(shuffleArray(fallbackPool));
     const distractorWords = [combinedDistractorPool[0], combinedDistractorPool[1]];
 
-    // Stage 1 only: allow 1~2 phonetic warm-up questions if still under tracker limit
-    if (stage === 1 && _stageReadingTracker.count < 2 && Math.random() < 0.25 && targetWord.pron) {
+    if (isReadingQuiz && targetWord.pron) {
       _stageReadingTracker.count += 1;
       const upperEn = targetWord.en.toUpperCase();
       const answerStr = targetWord.pron;
@@ -1096,14 +716,15 @@
         distractorWords[0].pron || distractorWords[0].kr,
         distractorWords[1].pron || distractorWords[1].kr
       );
+
       return {
         id: `eng_pron_${targetWord.en}`,
         category: 'english',
-        categoryLabel: '초등 영어 · 영단어 발음 퀴즈',
+        categoryLabel: '초등 영어 · 영단어 발음 읽기 퀴즈',
         subType: 'en_to_pron',
         stage: stage,
         prompt: `🔊 "${upperEn}" 어떻게 읽을까요?`,
-        subPrompt: `영어 단어 "${upperEn}"(${targetWord.kr})의 발음 레인으로 달리세요!`,
+        subPrompt: `영어 단어 "${upperEn}"(${targetWord.kr})를 한국어로 읽은 발음 레인으로 달리세요!`,
         choices: laneData.choices,
         correctLane: laneData.correctLane,
         answerText: answerStr,
@@ -1127,7 +748,7 @@
       return {
         id: `eng_kr2en_${targetWord.en}`,
         category: 'english',
-        categoryLabel: `초등 영어 Lv.${targetWord.level} · 한영 어휘`,
+        categoryLabel: '초등 영어 · 한영 어휘 퀴즈',
         subType: 'kr_to_en',
         stage: stage,
         prompt: `${emojiPrefix}'${targetWord.kr}'의 영어 단어는?`,
@@ -1150,7 +771,7 @@
       return {
         id: `eng_en2kr_${targetWord.en}`,
         category: 'english',
-        categoryLabel: `초등 영어 Lv.${targetWord.level} · 영한 어휘`,
+        categoryLabel: '초등 영어 · 영한 뜻 퀴즈',
         subType: 'en_to_kr',
         stage: stage,
         prompt: `${emojiPrefix}'${targetWord.en}'의 알맞은 뜻은?`,
@@ -1222,12 +843,12 @@
       id: queuedItem.id || `review_${Date.now()}`,
       category: queuedItem.category || 'math',
       categoryLabel: queuedItem.category === 'english'
-        ? (isExpr ? '🔄 오답 복습 · 실전 생활영어' : '🔄 오답 복습 · 초등 필수 영어')
-        : '🔄 오답 복습 · 초등 수학',
+        ? (isExpr ? '🔄 오답 복습 · 실전 생활영어' : (isPron ? '🔄 오답 복습 · 영단어 발음 읽기' : '🔄 오답 복습 · 초등 영단어'))
+        : '🔄 오답 복습 · 초등 수학 연산',
       subType: queuedItem.subType || 'review',
       stage: stageNum || 1,
       prompt: cleanPrompt,
-      subPrompt: '⚠️ 이전에 틀렸던 문제입니다! 이번엔 꼭 맞혀서 오답 노트를 비워보세요!',
+      subPrompt: '⚠️ 이전에 틀렸던 문제입니다! 다시 도전해 마스터하세요!',
       choices: laneData.choices,
       correctLane: laneData.correctLane,
       answerText: answerStr,
@@ -1277,11 +898,7 @@
         _questionsSinceLastReview += 1;
         if (options.forceReview || _questionsSinceLastReview >= REVIEW_INTERVAL) {
           _questionsSinceLastReview = 0;
-          // Prefer review items that were missed recently or closer to current stage
-          const sortedQueue = activeQueue.slice().sort(function (a, b) {
-            return (b.stage || 1) - (a.stage || 1);
-          });
-          const queuedItem = sortedQueue[0] || activeQueue[0];
+          const queuedItem = activeQueue[0];
           if (queuedItem) {
             _currentQuestion = buildReviewQuestionFromQueueItem(queuedItem, stage);
             return _currentQuestion;
@@ -1358,9 +975,9 @@
           const idx = state.wrongAnswerQueue.findIndex(function (item) {
             return item && (item.id === q.id || item.prompt === q.prompt);
           });
-          if (idx >= 0) {
-            const picked = state.wrongAnswerQueue.splice(idx, 1)[0];
-            state.wrongAnswerQueue.push(picked);
+          if (idx === 0) {
+            const first = state.wrongAnswerQueue.shift();
+            state.wrongAnswerQueue.push(first);
             window.SaveManager.save();
           }
         }
@@ -1434,7 +1051,7 @@
       const stg = Math.max(1, parseInt(stageNum, 10) || 1);
       _stageReadingTracker.stage = stg;
       _stageReadingTracker.count = 0;
-      _stageReadingTracker.limit = randomInt(2, 4);
+      _stageReadingTracker.limit = randomInt(2, 3);
     },
 
     getDictionaryCount: function () {

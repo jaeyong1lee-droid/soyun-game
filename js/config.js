@@ -32,7 +32,7 @@
       bossName: '정글 킹 라이온 메카 (Lion Mecha)',
       bossTitle: '2단계 아마존 정글 수호신',
       bossHp: 10,
-      baseSpeed: 35.1, // 기존 속도(39.0)의 90% (+2.7씩 점진 가속, 최대 81까지)
+      baseSpeed: 33.6, // 단계당 +1.2씩 아주 완만하게 가속
       gateSolveSeconds: 9.8,
       themeColor: '#84cc16',
       roadColor: '#292514',
@@ -49,7 +49,7 @@
       bossName: '코블록스 스핑크스 (Korblox Sphinx)',
       bossTitle: '3단계 황금 피라미드 파라오 보스',
       bossHp: 10,
-      baseSpeed: 37.8, // 기존 속도(42.0)의 90% (+2.7씩 점진 가속, 최대 81까지)
+      baseSpeed: 34.8, // 단계당 +1.2씩 아주 완만하게 가속
       gateSolveSeconds: 9.0,
       themeColor: '#fbbf24',
       roadColor: '#3d2814',
@@ -66,7 +66,7 @@
       bossName: '아이스 프로스트 드래곤 (Frost Dragon)',
       bossTitle: '4단계 크리스탈 빙하 지배자',
       bossHp: 11,
-      baseSpeed: 40.5, // 기존 속도(45.0)의 90% (+2.7씩 점진 가속, 최대 81까지)
+      baseSpeed: 36.0, // 단계당 +1.2씩 아주 완만하게 가속
       gateSolveSeconds: 8.4,
       themeColor: '#38bdf8',
       roadColor: '#0f2942',
@@ -274,7 +274,7 @@
     MIN_SPEED_CAP: 16.2,
     MAX_SPEED_CAP: 81, // 1단계 속도(36)의 2.5배(90)가 최대 속도 상한선! 그 이후 단계는 단어·문제 난이도만 상승!
     SPEED_INCREMENT_PER_CORRECT: 0.135, // 문제 정답 시 소폭 가속 (최대 90 상한선 준수)
-    SPEED_STAGE_BONUS: 2.7, // 단계 상승 시 +3.0씩 점진 가속 (1단계 속도의 2.5배인 90 도달 후 속도 고정)
+    SPEED_STAGE_BONUS: 1.2, // 단계 상승 시 +3.0씩 점진 가속 (1단계 속도의 2.5배인 90 도달 후 속도 고정)
     SPEED_STEP_BUTTON: 5.4, // [ - / + ] 속도 조절 버튼 클릭 시 증감 폭
     SPEED_MULTIPLIERS: SPEED_MULTIPLIERS,
 
@@ -541,8 +541,8 @@
         bossName: baseBossName,
         bossTitle: baseBossTitle,
         bossHp: Math.min(18, 9 + Math.floor((s - 1) * 0.5)),
-        baseSpeed: Math.min(81, +(32.4 + (s - 1) * 2.7).toFixed(1)),
-        gateSolveSeconds: Math.max(4.2, +(10.6 / (Math.min(81, 32.4 + (s - 1) * 2.7) / 32.4)).toFixed(1)),
+        baseSpeed: Math.min(81, +(32.4 + (s - 1) * 1.2).toFixed(1)),
+        gateSolveSeconds: Math.max(4.5, +(10.6 / (Math.min(81, 32.4 + (s - 1) * 1.2) / 32.4)).toFixed(1)),
         themeColor: isJackpotStage ? '#ffd700' : tpl.themeColor,
         roadColor: tpl.roadColor,
         skyColor: tpl.skyColor,
