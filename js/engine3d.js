@@ -4488,13 +4488,17 @@
       this.clearHeavenStairs();
       this.clearObbyObstacles();
 
-      const numSteps = Math.max(5, Number(totalSteps) || 8);
+      const numSteps = Math.max(5, Number(totalSteps) || 30);
       const passZ = getCfg().GATE_PASS_Z;
 
       this.isHeavenStairsActive = true;
       this.heavenStairsTotal = numSteps;
       this.heavenStairsStepIndex = 0;
       this.stairClimbedY = 0;
+      this.heavenStairsCollapseActive = false;
+      this.heavenStairsCollapsedIndex = -1;
+      this.heavenStairsCollapseTimer = 0;
+      this.heavenStairsCollapseInterval = 0.68;
 
       // Build balanced zig-zag step directions so BOTH [⬆️ 오르기] and [🔄 방향전환] buttons are used!
       const steps = [
@@ -4679,6 +4683,19 @@
         this.heavenStairsFacingDir = attemptedDir;
         this.heavenStairsStepIndex = nextIdx;
 
+        // 3계단 올라가면(stepIndex >= 3) 시작 계단(step 0)부터 차례대로 사라지기 시작!
+        if (nextIdx >= 3 && !this.heavenStairsCollapseActive) {
+          this.heavenStairsCollapseActive = true;
+          this.heavenStairsCollapsedIndex = 0;
+          this.heavenStairsCollapseTimer = 0;
+          const startStep = this.heavenStairsSteps[0];
+          if (startStep) {
+            startStep.isCollapsing = true;
+            startStep.collapseAnim = 0;
+            this._spawnParticleBurst(startStep.x, startStep.y + 0.4, passZ + nextIdx * 2.5, 0xff5500, 16, 0.9);
+          }
+        }
+
         if (this.heavenFacingArrowGroup) {
           this.heavenFacingArrowGroup.scale.set(this.heavenStairsFacingDir, 1, 1);
         }
@@ -4755,6 +4772,9 @@
      */
     clearHeavenStairs: function () {
       this.isHeavenStairsActive = false;
+      this.heavenStairsCollapseActive = false;
+      this.heavenStairsCollapsedIndex = -1;
+      this.heavenStairsCollapseTimer = 0;
       this.heavenStairsSteps = [];
       this.heavenStairsStepIndex = 0;
       this.heavenNextStepRing = null;
@@ -7166,6 +7186,99 @@
         let targetX = lanes[this.targetLane] !== undefined ? lanes[this.targetLane] : 0;
         let targetBaseY = 0;
         if (this.isHeavenStairsActive && Array.isArray(this.heavenStairsSteps)) {
+          // 1) 계단 3개 오른 뒤 시작계단부터 적당한 속도로 차례대로 무너지는 타이머 & 애니메이션
+          if (this.heavenStairsCollapseActive && this.heavenStairsStepIndex < this.heavenStairsTotal) {
+            const leadGap = this.heavenStairsStepIndex - this.heavenStairsCollapsedIndex;
+            // 적당한 기본 붕괴 간격(0.68초/계단), 만약 플레이어가 6계단 이상 멀리 앞서가면 화면 안에서 보이도록 살짝 따라붙음(0.46초)
+            const effectiveInterval = leadGap > 6 ? 0.46 : (this.heavenStairsCollapseInterval || 0.68);
+            this.heavenStairsCollapseTimer = (this.heavenStairsCollapseTimer || 0) + dt;
+
+            if (this.heavenStairsCollapseTimer >= effectiveInterval) {
+              this.heavenStairsCollapseTimer = 0;
+              this.heavenStairsCollapsedIndex += 1;
+              const collapsingStep = this.heavenStairsSteps[this.heavenStairsCollapsedIndex];
+              if (collapsingStep) {
+                collapsingStep.isCollapsing = true;
+                collapsingStep.collapseAnim = 0;
+                const worldZ = (this.heavenStairsGroup ? this.heavenStairsGroup.position.z : cfg.GATE_PASS_Z) + collapsingStep.z;
+                this._spawnParticleBurst(collapsingStep.x, collapsingStep.y + 0.3, worldZ, 0xff5500, 14, 0.85);
+              }
+
+              // 무너지는 계단이 현재 서 있는 계단까지 따라잡은 경우: 피 1 감소 후 다음 안전 계단으로 밀어올림!
+              if (this.heavenStairsCollapsedIndex >= this.heavenStairsStepIndex && this.heavenStairsStepIndex < this.heavenStairsTotal) {
+                const curSt = this.heavenStairsSteps[this.heavenStairsStepIndex] || { x: 0, y: 0 };
+                this.triggerDamageEffect(curSt.x, 'stair_miss');
+
+                const rescuedIdx = Math.min(this.heavenStairsTotal, this.heavenStairsStepIndex + 1);
+                const rescuedStep = this.heavenStairsSteps[rescuedIdx];
+                this.heavenStairsStepIndex = rescuedIdx;
+                if (rescuedStep && rescuedStep.coinMesh) {
+                  rescuedStep.coinMesh.visible = false;
+                }
+
+                const upcomingAfterRescue = this.heavenStairsSteps[rescuedIdx + 1] || null;
+                if (upcomingAfterRescue) {
+                  this.heavenStairsFacingDir = upcomingAfterRescue.dir;
+                }
+                if (this.heavenFacingArrowGroup) {
+                  this.heavenFacingArrowGroup.scale.set(this.heavenStairsFacingDir, 1, 1);
+                }
+                if (this.heavenNextStepRing) {
+                  if (upcomingAfterRescue) {
+                    this.heavenNextStepRing.visible = true;
+                    this.heavenNextStepRing.position.set(upcomingAfterRescue.x, upcomingAfterRescue.y + 0.35, upcomingAfterRescue.z);
+                  } else {
+                    this.heavenNextStepRing.visible = false;
+                  }
+                }
+                // 연속 피격 방지를 위한 짧은 여유 시간 부여
+                this.heavenStairsCollapseTimer = -0.35;
+
+                const isFinishedAfterRescue = rescuedIdx >= this.heavenStairsTotal;
+                if (isFinishedAfterRescue) {
+                  this.triggerStageClearEffect();
+                }
+
+                if (typeof this.onHeavenStairStep === 'function') {
+                  this.onHeavenStairStep({
+                    cleared: false,
+                    collapsedCatchup: true,
+                    isFinished: isFinishedAfterRescue,
+                    stepIndex: rescuedIdx,
+                    totalSteps: this.heavenStairsTotal,
+                    facingDir: this.heavenStairsFacingDir,
+                    nextRequiredDir: upcomingAfterRescue ? upcomingAfterRescue.dir : this.heavenStairsFacingDir
+                  });
+                }
+              }
+            }
+          }
+
+          // 2) 무너지는 계단 낙하·축소 연출 및 곧 무너질 다음 계단 흔들림 경고 연출
+          const nextCollapseWarningIdx = this.heavenStairsCollapseActive ? (this.heavenStairsCollapsedIndex + 1) : -1;
+          for (let s = 0; s < this.heavenStairsSteps.length; s++) {
+            const st = this.heavenStairsSteps[s];
+            if (!st || !st.stepMesh) continue;
+            if (st.isCollapsing) {
+              if (st.stepMesh.visible) {
+                st.collapseAnim = (st.collapseAnim || 0) + dt * 2.8;
+                st.stepMesh.position.y = st.y - st.collapseAnim * st.collapseAnim * 9.5;
+                st.stepMesh.rotation.x = st.collapseAnim * 1.1;
+                st.stepMesh.rotation.z = st.collapseAnim * 0.7;
+                const sc = Math.max(0.01, 1 - st.collapseAnim * 0.85);
+                st.stepMesh.scale.set(sc, sc, sc);
+                if (st.collapseAnim >= 1.15) {
+                  st.stepMesh.visible = false;
+                }
+              }
+            } else if (s === nextCollapseWarningIdx && s <= this.heavenStairsStepIndex) {
+              // 곧 사라질 계단 진동 경고
+              st.stepMesh.position.x = st.x + Math.sin(this.elapsedTime * 46) * 0.12;
+            } else {
+              st.stepMesh.position.x = st.x;
+            }
+          }
+
           const curStepObj = this.heavenStairsSteps[this.heavenStairsStepIndex] || { x: 0, y: 0 };
           targetX = curStepObj.x;
           targetBaseY = curStepObj.y;

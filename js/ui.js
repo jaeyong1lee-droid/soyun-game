@@ -976,8 +976,8 @@
      */
     showHeavenStairsHUD: function (stepIndex, totalSteps, facingDir, nextRequiredDir) {
       document.body.classList.add('obby-mode-active');
-      const idx = Math.max(0, Math.min(totalSteps || 8, stepIndex || 0));
-      const tot = totalSteps || 8;
+      const idx = Math.max(0, Math.min(totalSteps || 30, stepIndex || 0));
+      const tot = totalSteps || 30;
       const needTurn = (facingDir !== nextRequiredDir);
 
       const catBadge = byId('question-category-badge');
@@ -994,7 +994,9 @@
       if (rightBtn) rightBtn.classList.toggle('stair-recommended-btn', !needTurn);
 
       if (catBadge) {
-        catBadge.textContent = `☁️ 천국의 계단 (${idx} / ${tot}계단)`;
+        catBadge.textContent = idx >= 3
+          ? `☁️🔥 무한의 계단 (${idx} / ${tot}계단 · 바닥 소멸 중!)`
+          : `☁️ 무한의 계단 (${idx} / ${tot}계단)`;
       }
       if (promptEl) {
         if (idx >= tot) {

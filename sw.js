@@ -1,4 +1,4 @@
-const CACHE_NAME = 'soyun-obby-racer-pwa-v67';
+const CACHE_NAME = 'soyun-obby-racer-pwa-v68';
 const PRECACHE_URLS = [
   './',
   './index.html',

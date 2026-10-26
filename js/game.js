@@ -1755,11 +1755,11 @@
       }
 
       if (gameType === 'heaven_stairs') {
-        // 🌈☁️ MINI-GAME 1: 로블록스 천국의 계단 (8 Steps 2-Button Climbing Game!)
-        state.obbyWavesTotal = 8;
-        let stairInfo = { stepIndex: 0, totalSteps: 8, facingDir: 1, nextRequiredDir: 1 };
+        // 🌈☁️ MINI-GAME 1: 로블록스 무한의 계단 (30 Steps 2-Button Climbing Game + Collapsing Stairs!)
+        state.obbyWavesTotal = 30;
+        let stairInfo = { stepIndex: 0, totalSteps: 30, facingDir: 1, nextRequiredDir: 1 };
         if (window.Engine3D && typeof window.Engine3D.startHeavenStairs === 'function') {
-          stairInfo = window.Engine3D.startHeavenStairs(8) || stairInfo;
+          stairInfo = window.Engine3D.startHeavenStairs(30) || stairInfo;
         }
         if (window.UIManager) {
           if (typeof window.UIManager.showHeavenStairsHUD === 'function') {
@@ -1767,7 +1767,7 @@
           }
           window.UIManager.showFeedbackToast(
             true,
-            '☁️🌈 [미니게임 1: 로블록스 천국의 계단!] 방향이 같으면 우측 [⬆️ 오르기], 꺾이면 좌측 [🔄 방향전환] 버튼을 눌러 천국의 문까지 올라가세요!'
+            '☁️🌈 [미니게임 1: 무한의 계단 30층!] 3계단 올라가면 시작 계단부터 무너집니다! 우측 [⬆️ 오르기]와 좌측 [🔄 방향전환]으로 빠르게 올라가세요!'
           );
         }
         syncHUD();
@@ -1874,6 +1874,13 @@
         }
         syncHUD();
 
+        if (res.stepIndex === 3 && window.UIManager) {
+          window.UIManager.showFeedbackToast(
+            true,
+            '⚡🔥 3계단 돌파! 시작 계단부터 차례대로 사라집니다! 멈추지 말고 빠르게 올라가세요!'
+          );
+        }
+
         if (res.isFinished || res.stepIndex >= res.totalSteps) {
           const self = this;
           if (this._obbyWaveTimer) clearTimeout(this._obbyWaveTimer);
@@ -1883,9 +1890,10 @@
           }, 550);
         }
       } else {
-        // Stepped in the wrong direction -> -1 HP & hurt feedback, then align facing direction for easy continuation!
+        // Stepped in the wrong direction OR collapsing stairs caught up -> -1 HP & hurt feedback!
         state.combo = 0;
         state.hp = Math.max(0, state.hp - 1);
+        state.obbyWavesCleared = res.stepIndex;
         if (window.SoundEngine) {
           window.SoundEngine.playWrong();
         }
@@ -1907,10 +1915,10 @@
               res.nextRequiredDir
             );
           }
-          window.UIManager.showFeedbackToast(
-            false,
-            `☁️💦 어이쿠!! 계단 반대쪽으로 헛디뎌 피가 1 깎였어요! (❤️ ${state.hp}/${state.maxHp} · 이제 우측 [⬆️ 오르기]를 누르세요!)`
-          );
+          const failMsg = res.collapsedCatchup
+            ? `☁️💥 바닥 계단이 사라져 피가 1 깎였어요! 빨리 올라가세요! (❤️ ${state.hp}/${state.maxHp})`
+            : `☁️💦 어이쿠!! 계단 반대쪽으로 헛디뎌 피가 1 깎였어요! (❤️ ${state.hp}/${state.maxHp} · 이제 우측 [⬆️ 오르기]를 누르세요!)`;
+          window.UIManager.showFeedbackToast(false, failMsg);
         }
         syncHUD();
 
@@ -1921,6 +1929,13 @@
             self._obbyWaveTimer = null;
             self.handleGameOver();
           }, 680);
+        } else if (res.isFinished || res.stepIndex >= res.totalSteps) {
+          const self = this;
+          if (this._obbyWaveTimer) clearTimeout(this._obbyWaveTimer);
+          this._obbyWaveTimer = setTimeout(function () {
+            self._obbyWaveTimer = null;
+            self.endObbyMinigame();
+          }, 550);
         }
       }
     },
