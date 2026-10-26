@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&family=Press+Start+2P&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
-  <link rel="stylesheet" href="css/style.css?v=20261026_55" />
+  <link rel="stylesheet" href="css/style.css?v=20261026_56" />
 </head>
 <body>
   <!-- 3D WebGL Viewport Container -->
@@ -229,36 +229,36 @@
     </button>
   </div>
 
-  <!-- Bottom 3-Lane Road-Ground Projected 3D Neon Direction Pads (땅바닥 원근 투영 + 위아래 고정 & 도로 좌우 연동) -->
+  <!-- Bottom 3-Lane Road-Ground Projected 3D Neon Direction Pads (높이 1.3배 확대 83px + 각 차선 시작~끝 폭 맞춤) -->
   <div id="lane-controls" class="lane-controls brick-lane-controls neon-arrow-lane-controls ground-road-pads" role="group" aria-label="도로 바닥 3열 네온 방향키 패드">
     <button id="btn-lane-0" class="lane-btn brick-lane-btn neon-arrow-btn neon-arrow-left" type="button" data-lane="0" title="1번 좌측 레인으로 이동 (←)">
-      <svg class="neon-arrow-svg" viewBox="0 0 150 76" preserveAspectRatio="none" aria-hidden="true">
-        <polygon class="neon-arrow-shape" points="30,6 144,6 138,70 10,70 4,38" />
-        <polyline class="ground-pad-inner-chevrons" points="48,22 26,38 48,54" />
-        <polyline class="ground-pad-inner-chevrons" points="64,22 42,38 64,54" />
+      <svg class="neon-arrow-svg" viewBox="0 0 150 83" preserveAspectRatio="none" aria-hidden="true">
+        <polygon class="neon-arrow-shape" points="20,4 147,4 144,79 4,79 2,41.5" />
+        <polyline class="ground-pad-inner-chevrons" points="44,22 20,41.5 44,61" />
+        <polyline class="ground-pad-inner-chevrons" points="62,22 38,41.5 62,61" />
       </svg>
-      <span class="brick-lane-arrow neon-flow-left" style="margin-left: 12px;">◀</span>
+      <span class="brick-lane-arrow neon-flow-left" style="margin-left: 10px;">◀</span>
       <span class="brick-lane-label">좌측</span>
       <span id="lane-btn-choice-0" class="lane-btn-choice"></span>
     </button>
     <button id="btn-lane-1" class="lane-btn brick-lane-btn neon-arrow-btn neon-arrow-center active-lane" type="button" data-lane="1" title="2번 중앙 레인으로 이동 (↑)">
-      <svg class="neon-arrow-svg" viewBox="0 0 150 76" preserveAspectRatio="none" aria-hidden="true">
-        <polygon class="neon-arrow-shape" points="22,12 75,3 128,12 142,70 8,70" />
-        <polyline class="ground-pad-inner-chevrons" points="52,30 75,15 98,30" />
+      <svg class="neon-arrow-svg" viewBox="0 0 150 83" preserveAspectRatio="none" aria-hidden="true">
+        <polygon class="neon-arrow-shape" points="8,12 75,3 142,12 148,79 2,79" />
+        <polyline class="ground-pad-inner-chevrons" points="48,30 75,14 102,30" />
       </svg>
-      <span class="brick-lane-arrow neon-flow-up" style="margin-top: 6px;">▲</span>
-      <span class="brick-lane-label" style="margin-top: 6px;">중앙</span>
-      <span class="brick-lane-arrow neon-flow-up" style="margin-top: 6px;">▲</span>
+      <span class="brick-lane-arrow neon-flow-up" style="margin-top: 8px;">▲</span>
+      <span class="brick-lane-label" style="margin-top: 8px;">중앙</span>
+      <span class="brick-lane-arrow neon-flow-up" style="margin-top: 8px;">▲</span>
       <span id="lane-btn-choice-1" class="lane-btn-choice"></span>
     </button>
     <button id="btn-lane-2" class="lane-btn brick-lane-btn neon-arrow-btn neon-arrow-right" type="button" data-lane="2" title="3번 우측 레인으로 이동 (→)">
-      <svg class="neon-arrow-svg" viewBox="0 0 150 76" preserveAspectRatio="none" aria-hidden="true">
-        <polygon class="neon-arrow-shape" points="6,6 120,6 146,38 140,70 12,70" />
-        <polyline class="ground-pad-inner-chevrons" points="102,22 124,38 102,54" />
-        <polyline class="ground-pad-inner-chevrons" points="86,22 108,38 86,54" />
+      <svg class="neon-arrow-svg" viewBox="0 0 150 83" preserveAspectRatio="none" aria-hidden="true">
+        <polygon class="neon-arrow-shape" points="3,4 130,4 148,41.5 146,79 6,79" />
+        <polyline class="ground-pad-inner-chevrons" points="106,22 130,41.5 106,61" />
+        <polyline class="ground-pad-inner-chevrons" points="88,22 112,41.5 88,61" />
       </svg>
       <span class="brick-lane-label">우측</span>
-      <span class="brick-lane-arrow neon-flow-right" style="margin-right: 12px;">▶</span>
+      <span class="brick-lane-arrow neon-flow-right" style="margin-right: 10px;">▶</span>
       <span id="lane-btn-choice-2" class="lane-btn-choice"></span>
     </button>
   </div>
@@ -909,16 +909,16 @@
   <!-- Three.js r128 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <!-- Nano Banana Generated Retro 3D Assets Bundle (CORS-free on file:// & http://) -->
-  <script src="js/assets_data.js?v=20261026_55"></script>
+  <script src="js/assets_data.js?v=20261026_56"></script>
   <!-- Shared Game Modules -->
-  <script src="js/config.js?v=20261026_55"></script>
-  <script src="js/storage.js?v=20261026_55"></script>
-  <script src="js/questionEngine.js?v=20261026_55"></script>
-  <script src="js/sound.js?v=20261026_55"></script>
-  <script src="js/engine3d.js?v=20261026_55"></script>
+  <script src="js/config.js?v=20261026_56"></script>
+  <script src="js/storage.js?v=20261026_56"></script>
+  <script src="js/questionEngine.js?v=20261026_56"></script>
+  <script src="js/sound.js?v=20261026_56"></script>
+  <script src="js/engine3d.js?v=20261026_56"></script>
   <!-- UI & Game Controller -->
-  <script src="js/ui.js?v=20261026_55"></script>
-  <script src="js/game.js?v=20261026_55"></script>
+  <script src="js/ui.js?v=20261026_56"></script>
+  <script src="js/game.js?v=20261026_56"></script>
 
   <!-- Google Chrome / Mobile PWA Service Worker & One-Click App Install Handler -->
   <script>
@@ -926,7 +926,7 @@
       var deferredInstallPrompt = null;
       var installBtn = document.getElementById('btn-install-pwa');
 
-      window.__SOYUN_CLIENT_BUILD__ = '20261026_55';
+      window.__SOYUN_CLIENT_BUILD__ = '20261026_56';
       if ('serviceWorker' in navigator && window.location.protocol !== 'file:') {
         window.addEventListener('load', function () {
           var refreshing = false;
@@ -936,7 +936,7 @@
               window.location.reload();
             }
           });
-          navigator.serviceWorker.register('sw.js?v=20261026_55', { updateViaCache: 'none' }).then(function (reg) {
+          navigator.serviceWorker.register('sw.js?v=20261026_56', { updateViaCache: 'none' }).then(function (reg) {
             reg.update();
           }).catch(function () {});
         });
