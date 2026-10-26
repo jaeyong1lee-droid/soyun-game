@@ -365,195 +365,703 @@
    * - 100% instant equation format ("🧮 24 + 18 = ?", "🧮 14 × 3 = ?", "🧮 48 ÷ 4 = ?", "🧮 10 + 3 × 4 = ?")
    * - Spread across 60+ stages so going up 1 stage nudges number ranges by only ~1.5%!
    */
+  // ==========================================================================
+  // 3. 수학 문제 생성기 (초5~초6 전 단원 100% 동적 알고리즘 생성 & 매 1단계마다 미세 상승)
+  // - 하드코딩된 문제 배열 없이 모든 문항을 수학 공식(서로소, 공약수, 비례배수, 등차대칭 등)으로 실시간 동적 생성
+  // - 스테이지가 1단계 오를 때마다(Stage 1 -> 2 -> 3 -> 4...) 숫자 범위가 +1~+3씩 즉시 살짝 올라가고,
+  //   Stage 2부터 Stage 14까지 매 단계마다 새로운 5~6학년 단원이 10~12% 비중으로 하나씩 부드럽게 합류합니다.
+  // ==========================================================================
+
+  function gcd(a, b) {
+    a = Math.abs(a);
+    b = Math.abs(b);
+    while (b > 0) {
+      const t = b;
+      b = a % b;
+      a = t;
+    }
+    return a || 1;
+  }
+
+  function lcm(a, b) {
+    return Math.abs(a * b) / gcd(a, b);
+  }
+
+  // 서로소(gcd === 1)인 두 정수 (a, b)를 실시간 동적으로 생성
+  function randomCoprimePair(minVal, maxVal, requireLessThan) {
+    const safeMin = Math.max(1, minVal);
+    const safeMax = Math.max(safeMin + 1, maxVal);
+    for (let attempt = 0; attempt < 50; attempt++) {
+      const a = randomInt(safeMin, safeMax);
+      const b = randomInt(safeMin, safeMax);
+      if (a === b) continue;
+      if (requireLessThan && a >= b) continue;
+      if (gcd(a, b) === 1) return [a, b];
+    }
+    return requireLessThan ? [2, 3] : [3, 4];
+  }
+
+  function buildSmartNumericDistractors(ans, spreadHint) {
+    const spread = Math.max(2, spreadHint || Math.round(Math.abs(ans) * 0.15) || 3);
+    const candidates = [
+      ans + 10,
+      ans - 10,
+      ans + 2,
+      ans - 2,
+      ans + 1,
+      ans - 1,
+      ans + spread,
+      ans - spread,
+      ans + 5,
+      ans - 5
+    ].filter(function (n) {
+      return n > 0 && n !== ans;
+    });
+
+    const shuffled = shuffleArray(candidates);
+    const d1 = shuffled[0] !== undefined ? shuffled[0] : ans + 2;
+    let d2 = shuffled.find(function (n) { return n !== d1; });
+    if (d2 === undefined) d2 = ans + 4;
+    return [String(d1), String(d2)];
+  }
+
+  // [단원 1] Stage 1+ : 두 자리 수 덧셈·뺄셈 동적 암산 (매 1스테이지마다 최소·최대 범위가 +2~+3씩 즉시 상승)
+  function genAddSub(stage) {
+    const s = Math.min(35, stage - 1);
+    const isAdd = Math.random() < 0.5;
+    if (isAdd) {
+      const a = randomInt(11 + s * 2, 22 + s * 3);
+      const b = randomInt(8 + s * 2, 18 + s * 3);
+      const ans = a + b;
+      const dists = generateMathDistractors(ans, a, b, 'addition');
+      return {
+        subType: 'addition',
+        categoryLabel: '초등 암산 · 빠른 덧셈',
+        prompt: `🧮 ${a} + ${b} = ?`,
+        ans: String(ans),
+        d1: dists[0],
+        d2: dists[1]
+      };
+    } else {
+      const b = randomInt(8 + s * 2, 17 + s * 2);
+      const ans = randomInt(9 + s * 2, 20 + s * 3);
+      const a = ans + b;
+      const dists = generateMathDistractors(ans, a, b, 'subtraction');
+      return {
+        subType: 'subtraction',
+        categoryLabel: '초등 암산 · 빠른 뺄셈',
+        prompt: `🧮 ${a} - ${b} = ?`,
+        ans: String(ans),
+        d1: dists[0],
+        d2: dists[1]
+      };
+    }
+  }
+
+  // [단원 2] Stage 1+ : 곱셈·나눗셈 동적 암산 (매 1스테이지마다 피연산자 상한이 +1~+2씩 즉시 상승하되 암산 가능한 범위 유지)
+  function genMulDiv(stage) {
+    const s = Math.min(35, stage - 1);
+    const isMul = Math.random() < 0.52;
+    if (isMul) {
+      const b = randomInt(2, Math.min(8, 3 + Math.floor((s + 1) / 3)));
+      const maxA = b >= 6 ? Math.min(19, 12 + Math.floor(s / 2)) : Math.min(32, 14 + s);
+      const minA = Math.min(maxA - 2, 10 + Math.floor(s / 2));
+      const a = randomInt(minA, maxA);
+      const ans = a * b;
+      const dists = generateMathDistractors(ans, a, b, 'multiplication');
+      return {
+        subType: 'multiplication',
+        categoryLabel: '초등 암산 · 빠른 곱셈',
+        prompt: `🧮 ${a} × ${b} = ?`,
+        ans: String(ans),
+        d1: dists[0],
+        d2: dists[1]
+      };
+    } else {
+      const b = randomInt(2, Math.min(9, 3 + Math.floor((s + 1) / 3)));
+      const maxQ = Math.min(24, 9 + s);
+      const minQ = Math.min(maxQ - 2, 4 + Math.floor(s / 2));
+      const ans = randomInt(minQ, maxQ);
+      const a = b * ans;
+      const dists = generateMathDistractors(ans, a, b, 'division');
+      return {
+        subType: 'division',
+        categoryLabel: '초등 암산 · 빠른 나눗셈',
+        prompt: `🧮 ${a} ÷ ${b} = ?`,
+        ans: String(ans),
+        d1: dists[0],
+        d2: dists[1]
+      };
+    }
+  }
+
+  // [단원 3] Stage 2+ : 5학년 자연수의 혼합계산 동적 생성 (Stage 2: 곱셈혼합 -> Stage 3+: 괄호·나눗셈 혼합 확장)
+  function genMixedCalc(stage) {
+    const s = Math.min(30, Math.max(0, stage - 2));
+    const maxPattern = stage >= 3 ? 3 : 1;
+    const pattern = randomInt(0, maxPattern);
+    let prompt = '';
+    let ans = 0;
+    let trap = 0;
+
+    if (pattern === 0) {
+      const b = randomInt(2, Math.min(9, 4 + Math.floor(s / 2)));
+      const c = randomInt(2, Math.min(9, 4 + Math.floor((s + 1) / 2)));
+      const a = randomInt(5 + s, 12 + s * 2);
+      ans = a + b * c;
+      trap = (a + b) * c;
+      prompt = `🧮 ${a} + ${b} × ${c} = ?`;
+    } else if (pattern === 1) {
+      const b = randomInt(2, Math.min(9, 4 + Math.floor(s / 2)));
+      const c = randomInt(2, Math.min(9, 4 + Math.floor((s + 1) / 2)));
+      const prod = b * c;
+      const ansVal = randomInt(4 + s, 11 + s * 2);
+      const a = prod + ansVal;
+      ans = ansVal;
+      trap = ansVal + b;
+      prompt = `🧮 ${a} - ${b} × ${c} = ?`;
+    } else if (pattern === 2) {
+      const c = randomInt(2, Math.min(9, 4 + Math.floor(s / 2)));
+      const q = randomInt(3 + Math.floor(s / 2), 7 + s);
+      const sum = c * q;
+      const a = randomInt(Math.max(2, Math.floor(sum * 0.25)), Math.floor(sum * 0.75));
+      const b = sum - a;
+      ans = q;
+      trap = q + 2;
+      prompt = `🧮 (${a} + ${b}) ÷ ${c} = ?`;
+    } else {
+      const a = randomInt(3, Math.min(11, 5 + Math.floor(s / 2)));
+      const b = randomInt(3, Math.min(9, 5 + Math.floor((s + 1) / 2)));
+      const prod = a * b;
+      const c = randomInt(3, Math.max(4, prod - 4));
+      ans = prod - c;
+      trap = prod - c + 2;
+      prompt = `🧮 ${a} × ${b} - ${c} = ?`;
+    }
+
+    const baseDists = buildSmartNumericDistractors(ans, 2);
+    const d1 = (trap > 0 && trap !== ans) ? String(trap) : baseDists[0];
+    const d2 = baseDists[1] !== d1 ? baseDists[1] : String(ans + 3);
+    return {
+      subType: 'mixed_calc',
+      categoryLabel: '초5 수학 · 자연수의 혼합계산',
+      prompt: prompt,
+      ans: String(ans),
+      d1: d1,
+      d2: d2
+    };
+  }
+
+  // [단원 4] Stage 4+ : 5학년 최대공약수·최소공배수 동적 생성 (서로소 p, q × 공약수 g 실시간 조합)
+  function genGcdLcm(stage) {
+    const s = Math.min(25, Math.max(0, stage - 4));
+    const isLcm = Math.random() < 0.55;
+    const maxG = Math.min(12, 3 + Math.floor((s + 1) / 2));
+    const g = randomInt(2, maxG);
+    const maxCoprime = Math.min(8, 3 + Math.floor(s / 2));
+    const pair = randomCoprimePair(2, maxCoprime, true);
+    const p = pair[0];
+    const q = pair[1];
+
+    const numA = g * p;
+    const numB = g * q;
+
+    if (isLcm) {
+      const ans = lcm(numA, numB);
+      const d1 = ans + g;
+      const d2 = Math.max(numB + g, ans - g === d1 ? ans * 2 : ans - g);
+      return {
+        subType: 'lcm',
+        categoryLabel: '초5 수학 · 최소공배수 암산',
+        prompt: `🧮 ${numA}, ${numB}의 최소공배수는?`,
+        ans: String(ans),
+        d1: String(d1 !== ans ? d1 : ans + numA),
+        d2: String(d2 !== ans && d2 !== d1 ? d2 : ans * 2)
+      };
+    } else {
+      const ans = gcd(numA, numB);
+      const d1 = ans === 2 ? 4 : ans - 1;
+      const d2 = ans + 2;
+      return {
+        subType: 'gcd',
+        categoryLabel: '초5 수학 · 최대공약수 암산',
+        prompt: `🧮 ${numA}, ${numB}의 최대공약수는?`,
+        ans: String(ans),
+        d1: String(d1),
+        d2: String(d2)
+      };
+    }
+  }
+
+  // [단원 5] Stage 5+ : 5학년 분수의 약분(기약분수) 100% 동적 생성 (서로소 분수 × 배수 k)
+  function genFractionSimplify(stage) {
+    const s = Math.min(25, Math.max(0, stage - 5));
+    const maxDen = Math.min(13, 4 + Math.floor((s + 1) / 2));
+    const pair = randomCoprimePair(1, maxDen, true);
+    const num = pair[0];
+    const den = pair[1];
+    const k = randomInt(2, Math.min(9, 3 + Math.floor(s / 2)));
+
+    const unreducedNum = num * k;
+    const unreducedDen = den * k;
+    const ans = `${num}/${den}`;
+
+    const altDen1 = den + 1;
+    const altNum1 = Math.min(num, altDen1 - 1);
+    const d1 = `${altNum1}/${altDen1}` !== ans ? `${altNum1}/${altDen1}` : `${num}/${den + 2}`;
+    const altNum2 = num + 1 < den ? num + 1 : Math.max(1, num - 1);
+    const d2 = (`${altNum2}/${den}` !== ans && `${altNum2}/${den}` !== d1)
+      ? `${altNum2}/${den}`
+      : `${num + 1}/${den + 1}`;
+
+    return {
+      subType: 'fraction_simplify',
+      categoryLabel: '초5 수학 · 분수의 약분(기약분수)',
+      prompt: `🧮 ${unreducedNum}/${unreducedDen} 약분(기약분수) → ?`,
+      ans: ans,
+      d1: d1,
+      d2: d2
+    };
+  }
+
+  // [단원 6] Stage 6+ : 5~6학년 소수 덧셈·뺄셈(Stage 6+) · 곱셈(Stage 8+) · 나눗셈(Stage 11+) 동적 암산
+  function genDecimalMental(stage) {
+    const s = Math.min(25, Math.max(0, stage - 6));
+    const maxMode = stage >= 11 ? 3 : (stage >= 8 ? 2 : 1);
+    const mode = randomInt(0, maxMode);
+
+    if (mode === 0) {
+      const a = randomInt(4 + s, 16 + s * 2);
+      const b = randomInt(3 + s, 14 + s * 2);
+      const sum = a + b;
+      const ans = (sum / 10).toFixed(1).replace(/\.0$/, '');
+      const d1 = ((sum + 2) / 10).toFixed(1).replace(/\.0$/, '');
+      const d2 = ((sum - 2 > 0 ? sum - 2 : sum + 4) / 10).toFixed(1).replace(/\.0$/, '');
+      return {
+        subType: 'decimal_add',
+        categoryLabel: '초5·6 수학 · 소수 덧셈 암산',
+        prompt: `🧮 ${(a / 10).toFixed(1)} + ${(b / 10).toFixed(1)} = ?`,
+        ans: ans,
+        d1: d1,
+        d2: d2
+      };
+    } else if (mode === 1) {
+      const b = randomInt(3 + s, 14 + s * 2);
+      const diff = randomInt(4 + s, 15 + s * 2);
+      const a = b + diff;
+      const ans = (diff / 10).toFixed(1).replace(/\.0$/, '');
+      const d1 = ((diff + 2) / 10).toFixed(1).replace(/\.0$/, '');
+      const d2 = ((diff - 2 > 0 ? diff - 2 : diff + 4) / 10).toFixed(1).replace(/\.0$/, '');
+      return {
+        subType: 'decimal_sub',
+        categoryLabel: '초5·6 수학 · 소수 뺄셈 암산',
+        prompt: `🧮 ${(a / 10).toFixed(1)} - ${(b / 10).toFixed(1)} = ?`,
+        ans: ans,
+        d1: d1,
+        d2: d2
+      };
+    } else if (mode === 2) {
+      const a = randomInt(2 + Math.floor(s / 2), 12 + s);
+      const k = randomInt(2, Math.min(6, 3 + Math.floor(s / 3)));
+      const prod = a * k;
+      const ans = (prod / 10).toFixed(1).replace(/\.0$/, '');
+      const d1 = ((prod + k) / 10).toFixed(1).replace(/\.0$/, '');
+      const d2 = ((prod - k > 0 ? prod - k : prod + 10) / 10).toFixed(1).replace(/\.0$/, '');
+      return {
+        subType: 'decimal_mul',
+        categoryLabel: '초5·6 수학 · 소수 곱셈 암산',
+        prompt: `🧮 ${(a / 10).toFixed(1)} × ${k} = ?`,
+        ans: ans,
+        d1: d1,
+        d2: d2
+      };
+    } else {
+      const divisorTenths = randomInt(2, Math.min(12, 5 + Math.floor(s / 2)));
+      const quotient = randomInt(2, Math.min(12, 5 + Math.floor(s / 2)));
+      const dividendTenths = divisorTenths * quotient;
+      const dists = buildSmartNumericDistractors(quotient, 2);
+      return {
+        subType: 'decimal_div',
+        categoryLabel: '초6 수학 · 소수 나눗셈 암산',
+        prompt: `🧮 ${(dividendTenths / 10).toFixed(1)} ÷ ${(divisorTenths / 10).toFixed(1)} = ?`,
+        ans: String(quotient),
+        d1: dists[0],
+        d2: dists[1]
+      };
+    }
+  }
+
+  // [단원 7] Stage 7+ : 5학년 다각형(삼각형·직사각형) 넓이 동적 암산
+  function genPolygonArea(stage) {
+    const s = Math.min(25, Math.max(0, stage - 7));
+    const isTriangle = Math.random() < 0.6;
+    if (isTriangle) {
+      const baseHalf = randomInt(2 + Math.floor(s / 3), 5 + Math.floor((s + 1) / 2));
+      const base = baseHalf * 2;
+      const height = randomInt(3 + Math.floor(s / 3), 6 + Math.floor((s + 1) / 2));
+      const ans = baseHalf * height;
+      const trapForgotDiv2 = base * height;
+      return {
+        subType: 'area_triangle',
+        categoryLabel: '초5 수학 · 삼각형의 넓이',
+        prompt: `📐 밑변 ${base}, 높이 ${height} 삼각형 넓이?`,
+        ans: String(ans),
+        d1: String(trapForgotDiv2),
+        d2: String(ans + base)
+      };
+    } else {
+      const w = randomInt(4 + Math.floor(s / 2), 7 + s);
+      const h = randomInt(3 + Math.floor(s / 3), 6 + Math.floor((s + 1) / 2));
+      const ans = w * h;
+      const trapPerimeter = (w + h) * 2;
+      return {
+        subType: 'area_rect',
+        categoryLabel: '초5 수학 · 직사각형의 넓이',
+        prompt: `📐 가로 ${w}, 세로 ${h} 직사각형 넓이?`,
+        ans: String(ans),
+        d1: String(trapPerimeter !== ans ? trapPerimeter : ans + w),
+        d2: String(ans + h)
+      };
+    }
+  }
+
+  // [단원 8] Stage 9+ : 6학년 비례식 (a : b = c : □) 동적 생성
+  function genProportion(stage) {
+    const s = Math.min(25, Math.max(0, stage - 9));
+    const maxRatio = Math.min(11, 4 + Math.floor((s + 1) / 2));
+    const pair = randomCoprimePair(1, maxRatio, false);
+    const a = pair[0];
+    const b = pair[1];
+    const mult = randomInt(2, Math.min(9, 3 + Math.floor((s + 1) / 2)));
+    const c = a * mult;
+    const d = b * mult;
+
+    const findFourth = Math.random() < 0.65;
+    if (findFourth) {
+      const dists = buildSmartNumericDistractors(d, b);
+      return {
+        subType: 'proportion',
+        categoryLabel: '초6 수학 · 비례식 암산',
+        prompt: `🧮 ${a} : ${b} = ${c} : □  (□는?)`,
+        ans: String(d),
+        d1: dists[0],
+        d2: dists[1]
+      };
+    } else {
+      const dists = buildSmartNumericDistractors(c, a);
+      return {
+        subType: 'proportion',
+        categoryLabel: '초6 수학 · 비례식 암산',
+        prompt: `🧮 ${a} : ${b} = □ : ${d}  (□는?)`,
+        ans: String(c),
+        d1: dists[0],
+        d2: dists[1]
+      };
+    }
+  }
+
+  // [단원 9] Stage 10+ : 5~6학년 분수 곱셈 (12 × 3/4 = 9) 동적 생성
+  function genFractionMul(stage) {
+    const s = Math.min(25, Math.max(0, stage - 10));
+    const maxDen = Math.min(11, 4 + Math.floor((s + 1) / 2));
+    const pair = randomCoprimePair(1, maxDen, true);
+    const num = pair[0];
+    const den = pair[1];
+    const k = randomInt(2, Math.min(9, 3 + Math.floor((s + 1) / 2)));
+    const whole = den * k;
+    const ans = num * k;
+    const dists = buildSmartNumericDistractors(ans, k);
+
+    return {
+      subType: 'fraction_mul',
+      categoryLabel: '초5·6 수학 · 분수 곱셈 암산',
+      prompt: `🧮 ${whole} × ${num}/${den} = ?`,
+      ans: String(ans),
+      d1: dists[0],
+      d2: dists[1]
+    };
+  }
+
+  // [단원 10] Stage 12+ : 6학년 백분율(%) 100% 동적 생성
+  function genPercent(stage) {
+    const s = Math.min(25, Math.max(0, stage - 12));
+    const isValueMode = Math.random() < 0.55;
+
+    if (isValueMode) {
+      const rateStep = s >= 4 ? 5 : 10;
+      const rate = randomInt(1, Math.floor(90 / rateStep)) * rateStep;
+      const unitBase = rate % 10 === 0 ? 10 : 20;
+      const base = randomInt(1, 4 + Math.floor((s + 1) / 2)) * unitBase * 2;
+      const ans = (base * rate) / 100;
+      const dists = buildSmartNumericDistractors(ans, Math.max(2, Math.round(ans * 0.2)));
+      return {
+        subType: 'percent_val',
+        categoryLabel: '초6 수학 · 백분율(%) 암산',
+        prompt: `🧮 ${base}의 ${rate}%는?`,
+        ans: String(ans),
+        d1: dists[0],
+        d2: dists[1]
+      };
+    } else {
+      const validFactors = [2, 4, 5, 10, 20, 25];
+      const maxIdx = Math.min(validFactors.length - 1, 2 + Math.floor((s + 1) / 2));
+      const den = validFactors[randomInt(0, maxIdx)];
+      let num = randomInt(1, den - 1);
+      while (gcd(num, den) !== 1 && den > 2) {
+        num = randomInt(1, den - 1);
+      }
+      const ansVal = (num * 100) / den;
+      const d1Val = Math.min(99, ansVal + 10);
+      const d2Val = Math.max(5, ansVal - 10 !== d1Val ? ansVal - 10 : ansVal + 5);
+      return {
+        subType: 'percent_conv',
+        categoryLabel: '초6 수학 · 분수와 백분율(%)',
+        prompt: `🧮 ${num}/${den}을 백분율(%)로?`,
+        ans: `${ansVal}%`,
+        d1: `${d1Val}%`,
+        d2: `${d2Val}%`
+      };
+    }
+  }
+
+  // [단원 11] Stage 13+ : 5~6학년 미지수 □ 구하기 등식 동적 생성 (4 × □ + 3 = 31)
+  function genFindUnknown(stage) {
+    const s = Math.min(25, Math.max(0, stage - 13));
+    const a = randomInt(2, Math.min(9, 4 + Math.floor((s + 1) / 2)));
+    const x = randomInt(3, 7 + s);
+    const b = randomInt(2, 9 + s);
+    const isPlus = Math.random() < 0.6;
+
+    const total = isPlus ? (a * x + b) : (a * x - b);
+    if (total <= 0) {
+      const safeTotal = a * x + b;
+      const dists = buildSmartNumericDistractors(x, 2);
+      return {
+        subType: 'find_unknown',
+        categoryLabel: '초5·6 수학 · 미지수 □ 구하기',
+        prompt: `🧮 ${a} × □ + ${b} = ${safeTotal}  (□는?)`,
+        ans: String(x),
+        d1: dists[0],
+        d2: dists[1]
+      };
+    }
+
+    const op = isPlus ? '+' : '-';
+    const dists = buildSmartNumericDistractors(x, 2);
+    return {
+      subType: 'find_unknown',
+      categoryLabel: '초5·6 수학 · 미지수 □ 구하기',
+      prompt: `🧮 ${a} × □ ${op} ${b} = ${total}  (□는?)`,
+      ans: String(x),
+      d1: dists[0],
+      d2: dists[1]
+    };
+  }
+
+  // [단원 12] Stage 14+ : 5학년 평균 구하기 동적 생성
+  function genAverage(stage) {
+    const s = Math.min(25, Math.max(0, stage - 14));
+    const mean = randomInt(15 + s * 2, 35 + s * 3);
+    const d = randomInt(2, Math.min(12, 4 + Math.floor((s + 1) / 2)));
+    const nums = shuffleArray([mean - d, mean, mean + d]);
+    const dists = buildSmartNumericDistractors(mean, d);
+
+    return {
+      subType: 'average',
+      categoryLabel: '초5 수학 · 평균 구하기 암산',
+      prompt: `🧮 [${nums[0]}, ${nums[1]}, ${nums[2]}]의 평균은?`,
+      ans: String(mean),
+      d1: dists[0],
+      d2: dists[1]
+    };
+  }
+
+  function calcUnlockWeight(stage, unlockStage, rampStages, minW, maxW) {
+    if (stage < unlockStage) return 0;
+    const progress = Math.min(1, (stage - unlockStage) / Math.max(1, rampStages));
+    return minW + (maxW - minW) * progress;
+  }
+
   function generateMathQuestion(stageNum) {
     const stage = Math.max(1, parseInt(stageNum, 10) || 1);
 
-    // Smooth continuous weights across Stage 1 -> Stage 60+
-    // Stage 1~11: Pure +, -, ×, ÷ mental arithmetic
-    // Stage 12+ : Gradually mixes 10% -> 24% short 3-number mental chain (e.g., 10 + 4 × 3 = ?)
-    const s = stage;
-    const wAdd  = Math.max(18, Math.round(30 - s * 0.22));
-    const wSub  = Math.max(18, Math.round(28 - s * 0.20));
-    const wMult = Math.min(34, Math.round(22 + s * 0.22));
-    const wDiv  = Math.min(34, Math.round(20 + s * 0.22));
-    const wMix  = s < 12 ? 0 : Math.min(22, Math.round((s - 11) * 0.45));
+    // 매 스테이지(Stage 1 -> 2 -> 3 -> 4 ... -> 14+)마다 새로운 단원이 하나씩 천천히 열리고,
+    // 각 단원 내부의 숫자 범위도 매 1스테이지마다 +1~+3씩 즉시 올라감!
+    const pool = [
+      { gen: genAddSub,           weight: Math.max(12, 36 - (stage - 1) * 1.4) },
+      { gen: genMulDiv,           weight: Math.max(12, 36 - (stage - 1) * 1.3) },
+      { gen: genMixedCalc,        weight: calcUnlockWeight(stage, 2,  6,  8, 18) },
+      { gen: genGcdLcm,           weight: calcUnlockWeight(stage, 4,  6,  8, 15) },
+      { gen: genFractionSimplify, weight: calcUnlockWeight(stage, 5,  6,  8, 15) },
+      { gen: genDecimalMental,    weight: calcUnlockWeight(stage, 6,  6,  8, 16) },
+      { gen: genPolygonArea,      weight: calcUnlockWeight(stage, 7,  6,  8, 14) },
+      { gen: genProportion,       weight: calcUnlockWeight(stage, 9,  6,  8, 16) },
+      { gen: genFractionMul,      weight: calcUnlockWeight(stage, 10, 6,  8, 15) },
+      { gen: genPercent,          weight: calcUnlockWeight(stage, 12, 6,  8, 15) },
+      { gen: genFindUnknown,      weight: calcUnlockWeight(stage, 13, 6,  8, 15) },
+      { gen: genAverage,          weight: calcUnlockWeight(stage, 14, 6,  8, 15) }
+    ].filter(function (item) {
+      return item.weight > 0;
+    });
 
-    const table = [
-      { op: 'addition',       w: wAdd },
-      { op: 'subtraction',    w: wSub },
-      { op: 'multiplication', w: wMult },
-      { op: 'division',       w: wDiv },
-      { op: 'mixed_calc',     w: wMix }
-    ];
+    const totalWeight = pool.reduce(function (acc, item) { return acc + item.weight; }, 0);
 
-    let totalW = 0;
-    for (let i = 0; i < table.length; i++) totalW += table[i].w;
-    let roll = Math.random() * totalW;
-    let chosenOp = 'addition';
-    for (let i = 0; i < table.length; i++) {
-      if (roll < table[i].w) {
-        chosenOp = table[i].op;
-        break;
-      }
-      roll -= table[i].w;
-    }
-
-    // Ultra-gradual progression index: rises by only 0.25 per stage (takes 48 stages to reach diffStep = 12!)
-    const diffStep = Math.min(14, (stage - 1) * 0.25);
-
-    let a = 20;
-    let b = 15;
-    let answerVal = 35;
-    let promptStr = '';
-    let categoryLabel = '초등 수학 · 빠른 암산';
-    let subPrompt = '빠르게 머리로 암산하여 정답 차선으로 달리세요!';
+    let chosenGen = genAddSub;
+    let qData = null;
     let candidateId = '';
 
-    for (let attempt = 0; attempt < 25; attempt++) {
-      if (chosenOp === 'multiplication') {
-        categoryLabel = '초등 수학 · 곱셈 빠른 암산';
-        // Stage 1~4: diffStep < 1 -> very easy mental multiplication (11~15 × 2~3, 20×2, 30×2)
-        // Stage 5~16: diffStep 1~3.75 -> 11~22 × 2~4
-        // Stage 17~36: diffStep 4~8.75 -> 12~28 × 2~5
-        // Stage 37+: diffStep 9~14 -> 12~32 × 2~6
-        if (diffStep < 1.2) {
-          const easyPoolA = [11, 12, 13, 14, 15, 20, 21, 22, 30];
-          a = easyPoolA[randomInt(0, easyPoolA.length - 1)];
-          b = randomInt(2, 3);
-        } else if (diffStep < 4.0) {
-          const medPoolA = [11, 12, 13, 14, 15, 16, 17, 18, 20, 21, 22, 24, 25, 30];
-          a = medPoolA[randomInt(0, medPoolA.length - 1)];
-          b = a >= 22 ? randomInt(2, 3) : randomInt(2, 4);
-        } else {
-          const maxA = Math.min(32, Math.round(16 + diffStep));
-          a = randomInt(11, maxA);
-          b = a >= 24 ? randomInt(2, 3) : (a >= 18 ? randomInt(2, 4) : randomInt(2, Math.min(6, 3 + Math.floor(diffStep / 4))));
+    for (let attempt = 0; attempt < 20; attempt++) {
+      let r = Math.random() * totalWeight;
+      for (let i = 0; i < pool.length; i++) {
+        r -= pool[i].weight;
+        if (r <= 0) {
+          chosenGen = pool[i].gen;
+          break;
         }
-        answerVal = a * b;
-        promptStr = `🧮 ${a} × ${b} = ?`;
-        candidateId = `math_mult_${a}_${b}`;
-      } else if (chosenOp === 'division') {
-        categoryLabel = '초등 수학 · 나눗셈 빠른 암산';
-        const maxB = Math.min(9, 4 + Math.floor(diffStep * 0.4));
-        const minQ = Math.min(8, 3 + Math.floor(diffStep * 0.35));
-        const maxQ = Math.min(22, Math.round(9 + diffStep));
-        b = randomInt(2, maxB);
-        const quotient = randomInt(minQ, maxQ);
-        a = b * quotient;
-        answerVal = quotient;
-        promptStr = `🧮 ${a} ÷ ${b} = ?`;
-        candidateId = `math_div_${a}_${b}`;
-      } else if (chosenOp === 'mixed_calc') {
-        categoryLabel = '초등 수학 · 혼합 암산';
-        subPrompt = '곱셈·나눗셈이나 괄호 안을 먼저 암산하세요!';
-        const pat = randomInt(1, 3);
-        if (pat === 1) {
-          // c + a × b
-          const m1 = randomInt(2, Math.min(8, 3 + Math.floor(diffStep * 0.4)));
-          const m2 = randomInt(2, Math.min(6, 3 + Math.floor(diffStep * 0.3)));
-          const c = randomInt(5, Math.min(30, Math.round(10 + diffStep * 1.5)));
-          a = m1;
-          b = m2;
-          answerVal = c + m1 * m2;
-          promptStr = `🧮 ${c} + ${m1} × ${m2} = ?`;
-          candidateId = `math_mix1_${c}_${m1}_${m2}`;
-        } else if (pat === 2) {
-          // c - a × b
-          const m1 = randomInt(2, Math.min(7, 3 + Math.floor(diffStep * 0.35)));
-          const m2 = randomInt(2, Math.min(5, 3 + Math.floor(diffStep * 0.25)));
-          const c = m1 * m2 + randomInt(4, Math.min(25, Math.round(8 + diffStep)));
-          a = m1;
-          b = m2;
-          answerVal = c - m1 * m2;
-          promptStr = `🧮 ${c} - ${m1} × ${m2} = ?`;
-          candidateId = `math_mix2_${c}_${m1}_${m2}`;
-        } else {
-          // (x + y) ÷ b
-          b = randomInt(2, 5);
-          answerVal = randomInt(3, Math.min(12, Math.round(5 + diffStep * 0.5)));
-          const sum = b * answerVal;
-          const x = Math.max(2, Math.floor(sum * 0.4));
-          const y = sum - x;
-          a = sum;
-          promptStr = `🧮 (${x} + ${y}) ÷ ${b} = ?`;
-          candidateId = `math_mix3_${x}_${y}_${b}`;
-        }
-      } else if (chosenOp === 'addition') {
-        categoryLabel = '초등 수학 · 두 자리 덧셈 암산';
-        const maxNum = Math.min(82, Math.round(24 + diffStep * 4.2));
-        const carryProb = Math.min(0.72, 0.15 + diffStep * 0.042);
-        a = randomInt(11, maxNum);
-        if (Math.random() > carryProb) {
-          const maxOnesB = Math.max(0, 9 - (a % 10));
-          const maxTensB = Math.max(1, Math.min(4, Math.floor((maxNum - 10) / 10)));
-          b = randomInt(1, maxTensB) * 10 + randomInt(0, maxOnesB);
-        } else {
-          b = randomInt(11, Math.min(59, maxNum));
-        }
-        answerVal = a + b;
-        promptStr = `🧮 ${a} + ${b} = ?`;
-        candidateId = `math_add_${a}_${b}`;
-      } else {
-        categoryLabel = '초등 수학 · 두 자리 뺄셈 암산';
-        const maxNum = Math.min(92, Math.round(30 + diffStep * 4.5));
-        const borrowProb = Math.min(0.72, 0.15 + diffStep * 0.042);
-        a = randomInt(24, maxNum);
-        if (Math.random() > borrowProb && (a % 10) >= 1) {
-          const tensA = Math.floor(a / 10);
-          const onesA = a % 10;
-          const tensB = randomInt(1, Math.max(1, tensA - 1));
-          const onesB = randomInt(0, onesA);
-          b = tensB * 10 + onesB;
-        } else {
-          b = randomInt(11, a - 6);
-        }
-        if (b < 10) b = 10;
-        if (a <= b + 1) a = Math.min(99, b + randomInt(5, 18));
-        answerVal = a - b;
-        promptStr = `🧮 ${a} - ${b} = ?`;
-        candidateId = `math_sub_${a}_${b}`;
       }
-
-      if (!_recentIds.includes(candidateId)) {
+      qData = chosenGen(stage);
+      candidateId = `math_${qData.subType}_${qData.prompt}`;
+      if (!_recentIds.includes(candidateId) || attempt === 19) {
         rememberQuestionId(candidateId);
         break;
       }
     }
 
-    const answerStr = String(answerVal);
-    const distractors = generateMathDistractors(answerVal, a, b, chosenOp);
-    const laneData = buildThreeLaneChoices(answerStr, distractors[0], distractors[1]);
+    const laneData = buildThreeLaneChoices(qData.ans, qData.d1, qData.d2);
 
     return {
       id: candidateId,
       category: 'math',
-      categoryLabel: categoryLabel,
-      subType: chosenOp,
+      categoryLabel: qData.categoryLabel,
+      subType: qData.subType,
       stage: stage,
-      prompt: promptStr,
-      subPrompt: subPrompt,
+      prompt: qData.prompt,
+      subPrompt: '빠르게 암산하여 정답 차선으로 달리세요!',
       choices: laneData.choices,
       correctLane: laneData.correctLane,
-      answerText: answerStr,
-      correctAnswer: answerStr,
+      answerText: qData.ans,
+      correctAnswer: qData.ans,
       isReview: false,
       wrongCount: 0
     };
   }
 
-  /**
-   * Generates a Conversational English question with ultra-gradual stage progression
-   */
+  // ==========================================================================
+  // 4. 영어 어휘 · 숙어 · 문법 · 회화 생성기 (매 1스테이지마다 슬라이딩 윈도우가 이동하여 즉시 미세 상승)
+  // - 전체 어휘(ENGLISH_DICTIONARY)와 회화(DAILY_ENGLISH_EXPRESSIONS)를 세부 난이도(level + 단어 길이)로 정렬한 뒤,
+  //   스테이지가 1단계 오를 때마다 출제 윈도우가 10단어씩 우측(고난도)으로 즉시 이동합니다.
+  // - 또한 Stage 3+부터 초5~초6 불규칙 과거형·비교급·숙어 빈칸 문제가 점진적으로 합류합니다.
+  // ==========================================================================
+
+  let _sortedDictCache = null;
+  function getSortedDictionary() {
+    if (!_sortedDictCache) {
+      _sortedDictCache = ENGLISH_DICTIONARY.slice().sort(function (a, b) {
+        const scoreA = (a.level || 1) * 100 + (a.en || '').length * 4;
+        const scoreB = (b.level || 1) * 100 + (b.en || '').length * 4;
+        return scoreA - scoreB;
+      });
+    }
+    return _sortedDictCache;
+  }
+
+  let _sortedExprCache = null;
+  function getSortedDailyExpressions() {
+    if (!_sortedExprCache) {
+      _sortedExprCache = DAILY_ENGLISH_EXPRESSIONS.slice().sort(function (a, b) {
+        const scoreA = (a.level || 1) * 100 + (a.en || '').length * 2;
+        const scoreB = (b.level || 1) * 100 + (b.en || '').length * 2;
+        return scoreA - scoreB;
+      });
+    }
+    return _sortedExprCache;
+  }
+
+  // 초5~초6 생활영어·숙어 문장 내 핵심 단어 동적 빈칸(Cloze) 생성기 (하드코딩 없이 DAILY_ENGLISH_EXPRESSIONS에서 실시간 동적 마스킹)
+  function generateGrammarOrIdiomQuestion(stage) {
+    const sorted = getSortedDailyExpressions();
+    const windowSize = 22;
+    const maxStart = Math.max(0, sorted.length - windowSize);
+    const startIdx = Math.min(maxStart, Math.max(0, (stage - 3) * 3));
+    const pool = sorted.slice(startIdx, startIdx + windowSize).filter(function (item) {
+      const words = String(item.en || '').replace(/[.?!,~]/g, '').trim().split(/\s+/);
+      return words.length >= 3;
+    });
+
+    if (pool.length === 0) {
+      return generateDailyEnglishQuestion(stage);
+    }
+
+    let targetExpr = pool[randomInt(0, pool.length - 1)];
+    for (let i = 0; i < 15; i++) {
+      const cand = pool[randomInt(0, pool.length - 1)];
+      if (!_recentIds.includes('cloze_' + cand.en)) {
+        targetExpr = cand;
+        rememberQuestionId('cloze_' + cand.en);
+        break;
+      }
+    }
+
+    const rawTokens = String(targetExpr.en).trim().split(/\s+/);
+    // 마스킹할 핵심 단어 인덱스 동적 선택 (2글자 이상인 단어 중 선택)
+    const validIndices = [];
+    for (let i = 0; i < rawTokens.length; i++) {
+      const clean = rawTokens[i].replace(/[^a-zA-Z']/g, '');
+      if (clean.length >= 2) validIndices.push(i);
+    }
+    const maskIdx = validIndices.length > 0 ? validIndices[randomInt(0, validIndices.length - 1)] : 0;
+    const originalToken = rawTokens[maskIdx];
+    const cleanAns = originalToken.replace(/[^a-zA-Z']/g, '');
+    const punctSuffix = originalToken.slice(cleanAns.length);
+
+    const maskedTokens = rawTokens.slice();
+    maskedTokens[maskIdx] = '___' + punctSuffix;
+    const maskedSentence = maskedTokens.join(' ');
+
+    // 다른 표현들에서 비슷한 길이의 영단어를 실시간 추출하여 동적 오답 구성
+    const otherWords = [];
+    for (let i = 0; i < DAILY_ENGLISH_EXPRESSIONS.length; i++) {
+      const tokens = String(DAILY_ENGLISH_EXPRESSIONS[i].en || '').split(/\s+/);
+      for (let j = 0; j < tokens.length; j++) {
+        const w = tokens[j].replace(/[^a-zA-Z']/g, '');
+        if (w.length >= 2 && w.toLowerCase() !== cleanAns.toLowerCase() && !otherWords.includes(w)) {
+          otherWords.push(w);
+        }
+      }
+    }
+    const similarLenWords = otherWords.filter(function (w) {
+      return Math.abs(w.length - cleanAns.length) <= 2;
+    });
+    const distPool = shuffleArray(similarLenWords.length >= 4 ? similarLenWords : otherWords);
+    const d1 = distPool[0] || 'to';
+    const d2 = distPool[1] || 'for';
+
+    const laneData = buildThreeLaneChoices(cleanAns, d1, d2);
+    return {
+      id: 'cloze_' + targetExpr.en + '_' + cleanAns,
+      category: 'english',
+      categoryLabel: '초5·6 영어 · 실전 문장 빈칸 완성',
+      subType: 'expr_cloze',
+      stage: stage,
+      prompt: `💬 "${maskedSentence}" (${targetExpr.kr})`,
+      subPrompt: '빈칸(___)에 들어갈 알맞은 영어 단어를 고르세요!',
+      choices: laneData.choices,
+      correctLane: laneData.correctLane,
+      answerText: cleanAns,
+      correctAnswer: cleanAns,
+      isReview: false,
+      wrongCount: 0
+    };
+  }
+
   function generateDailyEnglishQuestion(stageNum) {
     const stage = Math.max(1, parseInt(stageNum, 10) || 1);
-    // Rises by only +0.04 per stage across 50+ stages!
-    const targetLv = Math.min(3.0, 1.0 + (stage - 1) * 0.04);
-    let eligiblePool = DAILY_ENGLISH_EXPRESSIONS.filter(function (item) {
-      return Math.abs(item.level - targetLv) <= 1.1;
-    });
-    if (eligiblePool.length < 5) {
-      eligiblePool = DAILY_ENGLISH_EXPRESSIONS;
-    }
+    const sorted = getSortedDailyExpressions();
+    const windowSize = 20;
+    const maxStart = Math.max(0, sorted.length - windowSize);
+    // 매 1스테이지마다 회화 슬라이딩 윈도우가 3문장씩 이동하여 바로 체감 반영
+    const startIdx = Math.min(maxStart, (stage - 1) * 3);
+    const eligiblePool = sorted.slice(startIdx, startIdx + windowSize);
 
     let targetExpr = eligiblePool[randomInt(0, eligiblePool.length - 1)];
     for (let attempt = 0; attempt < 25; attempt++) {
@@ -645,34 +1153,30 @@
     return dp[s.length][t.length];
   }
 
-  /**
-   * Generates an Elementary English Question with ultra-slow 60-stage progression
-   */
   function generateEnglishQuestion(stageNum) {
     const stage = Math.max(1, parseInt(stageNum, 10) || 1);
     ensureStageReadingTracker(stage);
 
-    const dailyExprProb = Math.min(0.36, 0.24 + (stage - 1) * 0.004);
+    // Stage 3+ 부터 초5~초6 영문법/숙어 빈칸 문제 15~22% 확률 출제
+    if (stage >= 3 && Math.random() < Math.min(0.22, 0.10 + (stage - 2) * 0.015)) {
+      return generateGrammarOrIdiomQuestion(stage);
+    }
+
+    const dailyExprProb = Math.min(0.35, 0.22 + (stage - 1) * 0.008);
     if (Math.random() < dailyExprProb) {
       return generateDailyEnglishQuestion(stage);
     }
 
-    // Ultra-gradual center level: starts at 1.25 on Stage 1 and rises by only +0.06 per stage!
-    // Stage 1: 1.25 -> Stage 5: 1.49 -> Stage 10: 1.79 -> Stage 20: 2.39 -> Stage 35: 3.29 -> Stage 50: 4.19 -> Stage 60+: 4.85
-    const centerLv = Math.min(4.85, 1.25 + (stage - 1) * 0.06);
-    const weightedWords = [];
-    for (let i = 0; i < ENGLISH_DICTIONARY.length; i++) {
-      const w = ENGLISH_DICTIONARY[i];
-      const dist = Math.abs(w.level - centerLv);
-      if (dist <= 1.35) {
-        const copies = dist <= 0.55 ? 3 : (dist <= 0.95 ? 2 : 1);
-        for (let c = 0; c < copies; c++) weightedWords.push(w);
-      }
-    }
-    const eligiblePool = weightedWords.length >= 8 ? weightedWords : ENGLISH_DICTIONARY;
+    // 매 1스테이지마다 어휘 슬라이딩 윈도우(폭 55단어)가 10단어씩 우측(고난도)으로 즉시 이동!
+    // Stage 1: [0..55], Stage 2: [10..65], Stage 3: [20..75], Stage 4: [30..85] ...
+    const sorted = getSortedDictionary();
+    const windowSize = 55;
+    const maxStart = Math.max(0, sorted.length - windowSize);
+    const startIdx = Math.min(maxStart, (stage - 1) * 10);
+    const eligiblePool = sorted.slice(startIdx, startIdx + windowSize);
 
     const canAskReadingQuiz = _stageReadingTracker.count < _stageReadingTracker.limit;
-    const isReadingQuiz = canAskReadingQuiz && (Math.random() < 0.25);
+    const isReadingQuiz = canAskReadingQuiz && (Math.random() < 0.22);
 
     const readingPool = isReadingQuiz
       ? eligiblePool.filter(function (w) { return Boolean(w.pron); })
@@ -690,13 +1194,11 @@
       }
     }
 
-    const sameThemePool = ENGLISH_DICTIONARY.filter(function (w) {
-      return w.en !== targetWord.en && w.kr !== targetWord.kr && w.pron !== targetWord.pron &&
-             Math.abs(w.level - targetWord.level) <= 1 && w.theme === targetWord.theme;
+    const sameThemePool = eligiblePool.filter(function (w) {
+      return w.en !== targetWord.en && w.kr !== targetWord.kr && w.pron !== targetWord.pron && w.theme === targetWord.theme;
     });
-    const otherPool = ENGLISH_DICTIONARY.filter(function (w) {
-      return w.en !== targetWord.en && w.kr !== targetWord.kr && w.pron !== targetWord.pron &&
-             Math.abs(w.level - targetWord.level) <= 1 && w.theme !== targetWord.theme;
+    const otherPool = eligiblePool.filter(function (w) {
+      return w.en !== targetWord.en && w.kr !== targetWord.kr && w.pron !== targetWord.pron && w.theme !== targetWord.theme;
     });
     const fallbackPool = ENGLISH_DICTIONARY.filter(function (w) {
       return w.en !== targetWord.en && w.kr !== targetWord.kr && w.pron !== targetWord.pron;
