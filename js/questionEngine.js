@@ -366,11 +366,28 @@
    * - Spread across 60+ stages so going up 1 stage nudges number ranges by only ~1.5%!
    */
   // ==========================================================================
-  // 3. 수학 문제 생성기 (초5~초6 전 단원 100% 동적 알고리즘 생성 & 매 1단계마다 미세 상승)
-  // - 하드코딩된 문제 배열 없이 모든 문항을 수학 공식(서로소, 공약수, 비례배수, 등차대칭 등)으로 실시간 동적 생성
-  // - 스테이지가 1단계 오를 때마다(Stage 1 -> 2 -> 3 -> 4...) 숫자 범위가 +1~+3씩 즉시 살짝 올라가고,
-  //   Stage 2부터 Stage 14까지 매 단계마다 새로운 5~6학년 단원이 10~12% 비중으로 하나씩 부드럽게 합류합니다.
+  // 3. 수학 문제 생성기 (사칙연산 & 혼합 사칙연산 중심 + Stage 20 이상에서만 응용 단원 스테이지당 1문제 출제)
+  // - 기본 핵심(Stage 1 ~ 무한): 덧셈·뺄셈·곱셈·나눗셈 및 혼합된 사칙연산(+, -, ×, ÷ 복합 수식) 위주로 출제
+  // - 단계가 1 오를 때마다 사칙연산과 혼합 사칙연산의 숫자 범위·연산 깊이가 아주 살짝씩(+1 수준) 점진 상승
+  // - 응용 단원(약분, 공약수/공배수, 소수, 넓이, 비례식, 백분율, 미지수, 평균)은 Stage 20 이상에서만 해금되며,
+  //   스테이지당 최대 1문제(_stageSpecialMathTracker.limit = 1)만 등장합니다.
   // ==========================================================================
+
+  let _stageSpecialMathTracker = {
+    stage: 1,
+    count: 0,
+    limit: 0
+  };
+
+  function ensureStageSpecialMathTracker(stageNum) {
+    const s = Math.max(1, parseInt(stageNum, 10) || 1);
+    if (_stageSpecialMathTracker.stage !== s) {
+      _stageSpecialMathTracker.stage = s;
+      _stageSpecialMathTracker.count = 0;
+      // 20단계 이상에서만 전체 문제 중 1문제 정도 출제
+      _stageSpecialMathTracker.limit = s >= 20 ? 1 : 0;
+    }
+  }
 
   function gcd(a, b) {
     a = Math.abs(a);
@@ -387,7 +404,6 @@
     return Math.abs(a * b) / gcd(a, b);
   }
 
-  // 서로소(gcd === 1)인 두 정수 (a, b)를 실시간 동적으로 생성
   function randomCoprimePair(minVal, maxVal, requireLessThan) {
     const safeMin = Math.max(1, minVal);
     const safeMax = Math.max(safeMin + 1, maxVal);
@@ -425,13 +441,17 @@
     return [String(d1), String(d2)];
   }
 
-  // [단원 1] Stage 1+ : 두 자리 수 덧셈·뺄셈 동적 암산 (매 1스테이지마다 최소·최대 범위가 +2~+3씩 즉시 상승)
+  // [핵심 1] 사칙연산: 덧셈·뺄셈 동적 암산 (매 1단계마다 숫자 범위가 +1씩 아주 완만하게 상승)
   function genAddSub(stage) {
-    const s = Math.min(35, stage - 1);
+    const s = Math.min(45, stage - 1);
     const isAdd = Math.random() < 0.5;
     if (isAdd) {
-      const a = randomInt(11 + s * 2, 22 + s * 3);
-      const b = randomInt(8 + s * 2, 18 + s * 3);
+      const minA = 11 + s;
+      const maxA = 20 + Math.round(s * 1.4);
+      const minB = 7 + Math.floor(s * 0.8);
+      const maxB = 15 + Math.round(s * 1.3);
+      const a = randomInt(minA, maxA);
+      const b = randomInt(minB, maxB);
       const ans = a + b;
       const dists = generateMathDistractors(ans, a, b, 'addition');
       return {
@@ -443,8 +463,12 @@
         d2: dists[1]
       };
     } else {
-      const b = randomInt(8 + s * 2, 17 + s * 2);
-      const ans = randomInt(9 + s * 2, 20 + s * 3);
+      const minB = 7 + Math.floor(s * 0.8);
+      const maxB = 15 + Math.round(s * 1.1);
+      const minAns = 8 + Math.floor(s * 0.8);
+      const maxAns = 18 + Math.round(s * 1.3);
+      const b = randomInt(minB, maxB);
+      const ans = randomInt(minAns, maxAns);
       const a = ans + b;
       const dists = generateMathDistractors(ans, a, b, 'subtraction');
       return {
@@ -458,14 +482,15 @@
     }
   }
 
-  // [단원 2] Stage 1+ : 곱셈·나눗셈 동적 암산 (매 1스테이지마다 피연산자 상한이 +1~+2씩 즉시 상승하되 암산 가능한 범위 유지)
+  // [핵심 2] 사칙연산: 곱셈·나눗셈 동적 암산 (매 1단계마다 피연산자 범위가 아주 살짝씩 상승)
   function genMulDiv(stage) {
-    const s = Math.min(35, stage - 1);
+    const s = Math.min(45, stage - 1);
     const isMul = Math.random() < 0.52;
     if (isMul) {
-      const b = randomInt(2, Math.min(8, 3 + Math.floor((s + 1) / 3)));
-      const maxA = b >= 6 ? Math.min(19, 12 + Math.floor(s / 2)) : Math.min(32, 14 + s);
-      const minA = Math.min(maxA - 2, 10 + Math.floor(s / 2));
+      const maxB = Math.min(9, 3 + Math.floor(s / 5));
+      const b = randomInt(2, maxB);
+      const maxA = b >= 6 ? Math.min(22, 11 + Math.floor(s / 3)) : Math.min(35, 13 + Math.floor(s * 0.6));
+      const minA = Math.min(maxA - 1, 9 + Math.floor(s * 0.25));
       const a = randomInt(minA, maxA);
       const ans = a * b;
       const dists = generateMathDistractors(ans, a, b, 'multiplication');
@@ -478,9 +503,10 @@
         d2: dists[1]
       };
     } else {
-      const b = randomInt(2, Math.min(9, 3 + Math.floor((s + 1) / 3)));
-      const maxQ = Math.min(24, 9 + s);
-      const minQ = Math.min(maxQ - 2, 4 + Math.floor(s / 2));
+      const maxB = Math.min(9, 3 + Math.floor(s / 5));
+      const b = randomInt(2, maxB);
+      const maxQ = Math.min(26, 8 + Math.floor(s * 0.5));
+      const minQ = Math.min(maxQ - 1, 4 + Math.floor(s * 0.2));
       const ans = randomInt(minQ, maxQ);
       const a = b * ans;
       const dists = generateMathDistractors(ans, a, b, 'division');
@@ -495,48 +521,128 @@
     }
   }
 
-  // [단원 3] Stage 2+ : 5학년 자연수의 혼합계산 동적 생성 (Stage 2: 곱셈혼합 -> Stage 3+: 괄호·나눗셈 혼합 확장)
+  // [핵심 3] 혼합 사칙연산 동적 생성기 (Stage 2+ 부터 단계별로 패턴과 숫자가 서서히 깊어지는 핵심 암산 엔진)
+  // - Stage 2~4  : 3수 덧·뺄셈 혼합 (a + b - c, a - b + c) & 기초 곱셈 혼합 (a + b × c)
+  // - Stage 5~8  : 곱셈·나눗셈 사칙 혼합 (a - b × c, a × b - c, a + b ÷ c, a - b ÷ c)
+  // - Stage 9~13 : 괄호 사칙 혼합 ((a + b) ÷ c, (a + b) × c, (a - b) × c)
+  // - Stage 14+  : 복합 사칙 혼합 (a × b ÷ c, a × b + c × d, (a × b - c) ÷ d 등) + 매 단계 숫자 살짝씩 상승
   function genMixedCalc(stage) {
-    const s = Math.min(30, Math.max(0, stage - 2));
-    const maxPattern = stage >= 3 ? 3 : 1;
-    const pattern = randomInt(0, maxPattern);
+    const s = Math.min(45, Math.max(0, stage - 2));
+
+    // 스테이지에 따라 열려 있는 혼합 사칙연산 패턴 범위가 천천히 확장됨
+    let maxPattern = 2; // Stage 2~4: 패턴 0, 1, 2
+    if (stage >= 5) maxPattern = 4;  // Stage 5~6: + 나눗셈 혼합(a + b ÷ c)
+    if (stage >= 7) maxPattern = 6;  // Stage 7~8: + 뺄셈·나눗셈 혼합(a - b ÷ c, a × b + c)
+    if (stage >= 9) maxPattern = 8;  // Stage 9~12: + 괄호 혼합((a + b) ÷ c, (a - b) × c)
+    if (stage >= 13) maxPattern = 10; // Stage 13+: + 연속 곱·나눗셈(a × b ÷ c) 및 두 묶음 혼합(a × b + c × d)
+
+    // 고단계에서는 최근 열린 혼합 패턴이 조금 더 자주 나오도록 가중 선택
+    const minPattern = stage >= 12 ? randomInt(0, 2) : 0;
+    const pattern = randomInt(minPattern, maxPattern);
+
     let prompt = '';
     let ans = 0;
     let trap = 0;
 
     if (pattern === 0) {
-      const b = randomInt(2, Math.min(9, 4 + Math.floor(s / 2)));
-      const c = randomInt(2, Math.min(9, 4 + Math.floor((s + 1) / 2)));
-      const a = randomInt(5 + s, 12 + s * 2);
+      // a + b - c (3수 덧·뺄셈 혼합 암산)
+      const a = randomInt(12 + Math.floor(s * 0.7), 22 + s);
+      const b = randomInt(6 + Math.floor(s * 0.5), 14 + Math.floor(s * 0.8));
+      const c = randomInt(5 + Math.floor(s * 0.4), Math.max(6, a + b - 6));
+      ans = a + b - c;
+      trap = a + b - c + 2;
+      prompt = `🧮 ${a} + ${b} - ${c} = ?`;
+    } else if (pattern === 1) {
+      // a - b + c (3수 뺄·덧셈 혼합 암산: a - (b+c)로 잘못 계산하는 함정 오답 포함)
+      const b = randomInt(6 + Math.floor(s * 0.4), 13 + Math.floor(s * 0.7));
+      const a = b + randomInt(6 + Math.floor(s * 0.4), 16 + Math.floor(s * 0.8));
+      const c = randomInt(5 + Math.floor(s * 0.4), 14 + Math.floor(s * 0.7));
+      ans = a - b + c;
+      trap = Math.max(2, a - (b + c));
+      prompt = `🧮 ${a} - ${b} + ${c} = ?`;
+    } else if (pattern === 2) {
+      // a + b × c (곱셈 먼저! 앞에서부터 계산한 (a+b)×c 함정 오답)
+      const b = randomInt(2, Math.min(8, 3 + Math.floor(s / 4)));
+      const c = randomInt(2, Math.min(8, 4 + Math.floor(s / 4)));
+      const a = randomInt(6 + Math.floor(s * 0.5), 14 + s);
       ans = a + b * c;
       trap = (a + b) * c;
       prompt = `🧮 ${a} + ${b} × ${c} = ?`;
-    } else if (pattern === 1) {
-      const b = randomInt(2, Math.min(9, 4 + Math.floor(s / 2)));
-      const c = randomInt(2, Math.min(9, 4 + Math.floor((s + 1) / 2)));
+    } else if (pattern === 3) {
+      // a - b × c (곱셈 먼저!)
+      const b = randomInt(2, Math.min(8, 3 + Math.floor(s / 4)));
+      const c = randomInt(2, Math.min(8, 4 + Math.floor(s / 4)));
       const prod = b * c;
-      const ansVal = randomInt(4 + s, 11 + s * 2);
+      const ansVal = randomInt(4 + Math.floor(s * 0.4), 13 + Math.floor(s * 0.8));
       const a = prod + ansVal;
       ans = ansVal;
       trap = ansVal + b;
       prompt = `🧮 ${a} - ${b} × ${c} = ?`;
-    } else if (pattern === 2) {
-      const c = randomInt(2, Math.min(9, 4 + Math.floor(s / 2)));
-      const q = randomInt(3 + Math.floor(s / 2), 7 + s);
+    } else if (pattern === 4) {
+      // a + b ÷ c (나눗셈 먼저!)
+      const c = randomInt(2, Math.min(8, 3 + Math.floor(s / 4)));
+      const q = randomInt(2, Math.min(11, 5 + Math.floor(s / 3)));
+      const b = c * q;
+      const a = randomInt(7 + Math.floor(s * 0.5), 16 + s);
+      ans = a + q;
+      trap = Math.max(2, Math.round((a + b) / c));
+      prompt = `🧮 ${a} + ${b} ÷ ${c} = ?`;
+    } else if (pattern === 5) {
+      // a × b - c
+      const a = randomInt(3, Math.min(9, 4 + Math.floor(s / 4)));
+      const b = randomInt(3, Math.min(8, 4 + Math.floor(s / 4)));
+      const prod = a * b;
+      const c = randomInt(4, Math.max(5, prod - 4));
+      ans = prod - c;
+      trap = prod - c + 2;
+      prompt = `🧮 ${a} × ${b} - ${c} = ?`;
+    } else if (pattern === 6) {
+      // a - b ÷ c (나눗셈 먼저!)
+      const c = randomInt(2, Math.min(8, 3 + Math.floor(s / 4)));
+      const q = randomInt(2, Math.min(10, 4 + Math.floor(s / 3)));
+      const b = c * q;
+      const ansVal = randomInt(5 + Math.floor(s * 0.4), 15 + Math.floor(s * 0.8));
+      const a = ansVal + q;
+      ans = ansVal;
+      trap = ansVal + 2;
+      prompt = `🧮 ${a} - ${b} ÷ ${c} = ?`;
+    } else if (pattern === 7) {
+      // (a + b) ÷ c (괄호 먼저!)
+      const c = randomInt(2, Math.min(8, 4 + Math.floor(s / 4)));
+      const q = randomInt(3 + Math.floor(s / 5), 8 + Math.floor(s / 2));
       const sum = c * q;
       const a = randomInt(Math.max(2, Math.floor(sum * 0.25)), Math.floor(sum * 0.75));
       const b = sum - a;
       ans = q;
       trap = q + 2;
       prompt = `🧮 (${a} + ${b}) ÷ ${c} = ?`;
+    } else if (pattern === 8) {
+      // (a - b) × c (괄호 먼저!)
+      const diff = randomInt(3, Math.min(11, 5 + Math.floor(s / 4)));
+      const b = randomInt(5 + Math.floor(s * 0.3), 12 + Math.floor(s * 0.6));
+      const a = b + diff;
+      const c = randomInt(2, Math.min(7, 3 + Math.floor(s / 5)));
+      ans = diff * c;
+      trap = Math.max(2, a - b * c);
+      prompt = `🧮 (${a} - ${b}) × ${c} = ?`;
+    } else if (pattern === 9) {
+      // a × b ÷ c (곱셈·나눗셈 연속 암산)
+      const c = randomInt(2, Math.min(7, 3 + Math.floor(s / 5)));
+      const k = randomInt(2, Math.min(6, 3 + Math.floor(s / 6)));
+      const a = c * k;
+      const b = randomInt(3, Math.min(9, 4 + Math.floor(s / 4)));
+      ans = k * b;
+      trap = ans + k;
+      prompt = `🧮 ${a} × ${b} ÷ ${c} = ?`;
     } else {
-      const a = randomInt(3, Math.min(11, 5 + Math.floor(s / 2)));
-      const b = randomInt(3, Math.min(9, 5 + Math.floor((s + 1) / 2)));
-      const prod = a * b;
-      const c = randomInt(3, Math.max(4, prod - 4));
-      ans = prod - c;
-      trap = prod - c + 2;
-      prompt = `🧮 ${a} × ${b} - ${c} = ?`;
+      // a × b + c × d (두 곱셈 묶음의 합 암산)
+      const a = randomInt(2, Math.min(6, 3 + Math.floor(s / 6)));
+      const b = randomInt(2, Math.min(6, 4 + Math.floor(s / 6)));
+      const c = randomInt(2, Math.min(6, 3 + Math.floor(s / 6)));
+      const d = randomInt(2, Math.min(6, 4 + Math.floor(s / 6)));
+      ans = a * b + c * d;
+      trap = (a * b + c) * d;
+      prompt = `🧮 ${a} × ${b} + ${c} × ${d} = ?`;
     }
 
     const baseDists = buildSmartNumericDistractors(ans, 2);
@@ -544,7 +650,7 @@
     const d2 = baseDists[1] !== d1 ? baseDists[1] : String(ans + 3);
     return {
       subType: 'mixed_calc',
-      categoryLabel: '초5 수학 · 자연수의 혼합계산',
+      categoryLabel: '초등 암산 · 혼합 사칙연산',
       prompt: prompt,
       ans: String(ans),
       d1: d1,
@@ -552,19 +658,19 @@
     };
   }
 
-  // [단원 4] Stage 4+ : 5학년 최대공약수·최소공배수 동적 생성 (서로소 p, q × 공약수 g 실시간 조합)
-  function genGcdLcm(stage) {
-    const s = Math.min(25, Math.max(0, stage - 4));
-    const isLcm = Math.random() < 0.55;
-    const maxG = Math.min(12, 3 + Math.floor((s + 1) / 2));
-    const g = randomInt(2, maxG);
-    const maxCoprime = Math.min(8, 3 + Math.floor(s / 2));
-    const pair = randomCoprimePair(2, maxCoprime, true);
-    const p = pair[0];
-    const q = pair[1];
+  // ==========================================================================
+  // [Stage 20+ 전용 응용 문제 생성기] (스테이지당 최대 1문제만 출제)
+  // ==========================================================================
 
-    const numA = g * p;
-    const numB = g * q;
+  function genGcdLcm(stage) {
+    const s = Math.min(25, Math.max(0, stage - 20));
+    const isLcm = Math.random() < 0.55;
+    const maxG = Math.min(10, 3 + Math.floor((s + 1) / 3));
+    const g = randomInt(2, maxG);
+    const maxCoprime = Math.min(7, 3 + Math.floor(s / 3));
+    const pair = randomCoprimePair(2, maxCoprime, true);
+    const numA = g * pair[0];
+    const numB = g * pair[1];
 
     if (isLcm) {
       const ans = lcm(numA, numB);
@@ -572,7 +678,7 @@
       const d2 = Math.max(numB + g, ans - g === d1 ? ans * 2 : ans - g);
       return {
         subType: 'lcm',
-        categoryLabel: '초5 수학 · 최소공배수 암산',
+        categoryLabel: '초5·6 심화 · 최소공배수 암산',
         prompt: `🧮 ${numA}, ${numB}의 최소공배수는?`,
         ans: String(ans),
         d1: String(d1 !== ans ? d1 : ans + numA),
@@ -584,7 +690,7 @@
       const d2 = ans + 2;
       return {
         subType: 'gcd',
-        categoryLabel: '초5 수학 · 최대공약수 암산',
+        categoryLabel: '초5·6 심화 · 최대공약수 암산',
         prompt: `🧮 ${numA}, ${numB}의 최대공약수는?`,
         ans: String(ans),
         d1: String(d1),
@@ -593,14 +699,13 @@
     }
   }
 
-  // [단원 5] Stage 5+ : 5학년 분수의 약분(기약분수) 100% 동적 생성 (서로소 분수 × 배수 k)
   function genFractionSimplify(stage) {
-    const s = Math.min(25, Math.max(0, stage - 5));
-    const maxDen = Math.min(13, 4 + Math.floor((s + 1) / 2));
+    const s = Math.min(25, Math.max(0, stage - 22));
+    const maxDen = Math.min(11, 4 + Math.floor((s + 1) / 3));
     const pair = randomCoprimePair(1, maxDen, true);
     const num = pair[0];
     const den = pair[1];
-    const k = randomInt(2, Math.min(9, 3 + Math.floor(s / 2)));
+    const k = randomInt(2, Math.min(7, 3 + Math.floor(s / 3)));
 
     const unreducedNum = num * k;
     const unreducedDen = den * k;
@@ -616,7 +721,7 @@
 
     return {
       subType: 'fraction_simplify',
-      categoryLabel: '초5 수학 · 분수의 약분(기약분수)',
+      categoryLabel: '초5·6 심화 · 분수의 약분',
       prompt: `🧮 ${unreducedNum}/${unreducedDen} 약분(기약분수) → ?`,
       ans: ans,
       d1: d1,
@@ -624,65 +729,64 @@
     };
   }
 
-  // [단원 6] Stage 6+ : 5~6학년 소수 덧셈·뺄셈(Stage 6+) · 곱셈(Stage 8+) · 나눗셈(Stage 11+) 동적 암산
   function genDecimalMental(stage) {
-    const s = Math.min(25, Math.max(0, stage - 6));
-    const maxMode = stage >= 11 ? 3 : (stage >= 8 ? 2 : 1);
+    const s = Math.min(25, Math.max(0, stage - 24));
+    const maxMode = stage >= 30 ? 3 : (stage >= 27 ? 2 : 1);
     const mode = randomInt(0, maxMode);
 
     if (mode === 0) {
-      const a = randomInt(4 + s, 16 + s * 2);
-      const b = randomInt(3 + s, 14 + s * 2);
+      const a = randomInt(5 + s, 18 + s);
+      const b = randomInt(4 + s, 15 + s);
       const sum = a + b;
       const ans = (sum / 10).toFixed(1).replace(/\.0$/, '');
       const d1 = ((sum + 2) / 10).toFixed(1).replace(/\.0$/, '');
       const d2 = ((sum - 2 > 0 ? sum - 2 : sum + 4) / 10).toFixed(1).replace(/\.0$/, '');
       return {
         subType: 'decimal_add',
-        categoryLabel: '초5·6 수학 · 소수 덧셈 암산',
+        categoryLabel: '초5·6 심화 · 소수 덧셈 암산',
         prompt: `🧮 ${(a / 10).toFixed(1)} + ${(b / 10).toFixed(1)} = ?`,
         ans: ans,
         d1: d1,
         d2: d2
       };
     } else if (mode === 1) {
-      const b = randomInt(3 + s, 14 + s * 2);
-      const diff = randomInt(4 + s, 15 + s * 2);
+      const b = randomInt(4 + s, 14 + s);
+      const diff = randomInt(5 + s, 16 + s);
       const a = b + diff;
       const ans = (diff / 10).toFixed(1).replace(/\.0$/, '');
       const d1 = ((diff + 2) / 10).toFixed(1).replace(/\.0$/, '');
       const d2 = ((diff - 2 > 0 ? diff - 2 : diff + 4) / 10).toFixed(1).replace(/\.0$/, '');
       return {
         subType: 'decimal_sub',
-        categoryLabel: '초5·6 수학 · 소수 뺄셈 암산',
+        categoryLabel: '초5·6 심화 · 소수 뺄셈 암산',
         prompt: `🧮 ${(a / 10).toFixed(1)} - ${(b / 10).toFixed(1)} = ?`,
         ans: ans,
         d1: d1,
         d2: d2
       };
     } else if (mode === 2) {
-      const a = randomInt(2 + Math.floor(s / 2), 12 + s);
-      const k = randomInt(2, Math.min(6, 3 + Math.floor(s / 3)));
+      const a = randomInt(3, 12 + Math.floor(s / 2));
+      const k = randomInt(2, 5);
       const prod = a * k;
       const ans = (prod / 10).toFixed(1).replace(/\.0$/, '');
       const d1 = ((prod + k) / 10).toFixed(1).replace(/\.0$/, '');
       const d2 = ((prod - k > 0 ? prod - k : prod + 10) / 10).toFixed(1).replace(/\.0$/, '');
       return {
         subType: 'decimal_mul',
-        categoryLabel: '초5·6 수학 · 소수 곱셈 암산',
+        categoryLabel: '초5·6 심화 · 소수 곱셈 암산',
         prompt: `🧮 ${(a / 10).toFixed(1)} × ${k} = ?`,
         ans: ans,
         d1: d1,
         d2: d2
       };
     } else {
-      const divisorTenths = randomInt(2, Math.min(12, 5 + Math.floor(s / 2)));
-      const quotient = randomInt(2, Math.min(12, 5 + Math.floor(s / 2)));
+      const divisorTenths = randomInt(2, 9);
+      const quotient = randomInt(2, 9);
       const dividendTenths = divisorTenths * quotient;
       const dists = buildSmartNumericDistractors(quotient, 2);
       return {
         subType: 'decimal_div',
-        categoryLabel: '초6 수학 · 소수 나눗셈 암산',
+        categoryLabel: '초5·6 심화 · 소수 나눗셈 암산',
         prompt: `🧮 ${(dividendTenths / 10).toFixed(1)} ÷ ${(divisorTenths / 10).toFixed(1)} = ?`,
         ans: String(quotient),
         d1: dists[0],
@@ -691,32 +795,31 @@
     }
   }
 
-  // [단원 7] Stage 7+ : 5학년 다각형(삼각형·직사각형) 넓이 동적 암산
   function genPolygonArea(stage) {
-    const s = Math.min(25, Math.max(0, stage - 7));
+    const s = Math.min(25, Math.max(0, stage - 26));
     const isTriangle = Math.random() < 0.6;
     if (isTriangle) {
-      const baseHalf = randomInt(2 + Math.floor(s / 3), 5 + Math.floor((s + 1) / 2));
+      const baseHalf = randomInt(2, 5 + Math.floor(s / 3));
       const base = baseHalf * 2;
-      const height = randomInt(3 + Math.floor(s / 3), 6 + Math.floor((s + 1) / 2));
+      const height = randomInt(3, 7 + Math.floor(s / 3));
       const ans = baseHalf * height;
       const trapForgotDiv2 = base * height;
       return {
         subType: 'area_triangle',
-        categoryLabel: '초5 수학 · 삼각형의 넓이',
+        categoryLabel: '초5·6 심화 · 삼각형의 넓이',
         prompt: `📐 밑변 ${base}, 높이 ${height} 삼각형 넓이?`,
         ans: String(ans),
         d1: String(trapForgotDiv2),
         d2: String(ans + base)
       };
     } else {
-      const w = randomInt(4 + Math.floor(s / 2), 7 + s);
-      const h = randomInt(3 + Math.floor(s / 3), 6 + Math.floor((s + 1) / 2));
+      const w = randomInt(4, 8 + Math.floor(s / 2));
+      const h = randomInt(3, 7 + Math.floor(s / 3));
       const ans = w * h;
       const trapPerimeter = (w + h) * 2;
       return {
         subType: 'area_rect',
-        categoryLabel: '초5 수학 · 직사각형의 넓이',
+        categoryLabel: '초5·6 심화 · 직사각형의 넓이',
         prompt: `📐 가로 ${w}, 세로 ${h} 직사각형 넓이?`,
         ans: String(ans),
         d1: String(trapPerimeter !== ans ? trapPerimeter : ans + w),
@@ -725,56 +828,39 @@
     }
   }
 
-  // [단원 8] Stage 9+ : 6학년 비례식 (a : b = c : □) 동적 생성
   function genProportion(stage) {
-    const s = Math.min(25, Math.max(0, stage - 9));
-    const maxRatio = Math.min(11, 4 + Math.floor((s + 1) / 2));
+    const s = Math.min(25, Math.max(0, stage - 28));
+    const maxRatio = Math.min(9, 4 + Math.floor(s / 3));
     const pair = randomCoprimePair(1, maxRatio, false);
     const a = pair[0];
     const b = pair[1];
-    const mult = randomInt(2, Math.min(9, 3 + Math.floor((s + 1) / 2)));
+    const mult = randomInt(2, Math.min(8, 3 + Math.floor(s / 3)));
     const c = a * mult;
     const d = b * mult;
-
-    const findFourth = Math.random() < 0.65;
-    if (findFourth) {
-      const dists = buildSmartNumericDistractors(d, b);
-      return {
-        subType: 'proportion',
-        categoryLabel: '초6 수학 · 비례식 암산',
-        prompt: `🧮 ${a} : ${b} = ${c} : □  (□는?)`,
-        ans: String(d),
-        d1: dists[0],
-        d2: dists[1]
-      };
-    } else {
-      const dists = buildSmartNumericDistractors(c, a);
-      return {
-        subType: 'proportion',
-        categoryLabel: '초6 수학 · 비례식 암산',
-        prompt: `🧮 ${a} : ${b} = □ : ${d}  (□는?)`,
-        ans: String(c),
-        d1: dists[0],
-        d2: dists[1]
-      };
-    }
+    const dists = buildSmartNumericDistractors(d, b);
+    return {
+      subType: 'proportion',
+      categoryLabel: '초6 심화 · 비례식 암산',
+      prompt: `🧮 ${a} : ${b} = ${c} : □  (□는?)`,
+      ans: String(d),
+      d1: dists[0],
+      d2: dists[1]
+    };
   }
 
-  // [단원 9] Stage 10+ : 5~6학년 분수 곱셈 (12 × 3/4 = 9) 동적 생성
   function genFractionMul(stage) {
-    const s = Math.min(25, Math.max(0, stage - 10));
-    const maxDen = Math.min(11, 4 + Math.floor((s + 1) / 2));
+    const s = Math.min(25, Math.max(0, stage - 30));
+    const maxDen = Math.min(9, 4 + Math.floor(s / 3));
     const pair = randomCoprimePair(1, maxDen, true);
     const num = pair[0];
     const den = pair[1];
-    const k = randomInt(2, Math.min(9, 3 + Math.floor((s + 1) / 2)));
+    const k = randomInt(2, Math.min(7, 3 + Math.floor(s / 3)));
     const whole = den * k;
     const ans = num * k;
     const dists = buildSmartNumericDistractors(ans, k);
-
     return {
       subType: 'fraction_mul',
-      categoryLabel: '초5·6 수학 · 분수 곱셈 암산',
+      categoryLabel: '초5·6 심화 · 분수 곱셈 암산',
       prompt: `🧮 ${whole} × ${num}/${den} = ?`,
       ans: String(ans),
       d1: dists[0],
@@ -782,93 +868,48 @@
     };
   }
 
-  // [단원 10] Stage 12+ : 6학년 백분율(%) 100% 동적 생성
   function genPercent(stage) {
-    const s = Math.min(25, Math.max(0, stage - 12));
-    const isValueMode = Math.random() < 0.55;
-
-    if (isValueMode) {
-      const rateStep = s >= 4 ? 5 : 10;
-      const rate = randomInt(1, Math.floor(90 / rateStep)) * rateStep;
-      const unitBase = rate % 10 === 0 ? 10 : 20;
-      const base = randomInt(1, 4 + Math.floor((s + 1) / 2)) * unitBase * 2;
-      const ans = (base * rate) / 100;
-      const dists = buildSmartNumericDistractors(ans, Math.max(2, Math.round(ans * 0.2)));
-      return {
-        subType: 'percent_val',
-        categoryLabel: '초6 수학 · 백분율(%) 암산',
-        prompt: `🧮 ${base}의 ${rate}%는?`,
-        ans: String(ans),
-        d1: dists[0],
-        d2: dists[1]
-      };
-    } else {
-      const validFactors = [2, 4, 5, 10, 20, 25];
-      const maxIdx = Math.min(validFactors.length - 1, 2 + Math.floor((s + 1) / 2));
-      const den = validFactors[randomInt(0, maxIdx)];
-      let num = randomInt(1, den - 1);
-      while (gcd(num, den) !== 1 && den > 2) {
-        num = randomInt(1, den - 1);
-      }
-      const ansVal = (num * 100) / den;
-      const d1Val = Math.min(99, ansVal + 10);
-      const d2Val = Math.max(5, ansVal - 10 !== d1Val ? ansVal - 10 : ansVal + 5);
-      return {
-        subType: 'percent_conv',
-        categoryLabel: '초6 수학 · 분수와 백분율(%)',
-        prompt: `🧮 ${num}/${den}을 백분율(%)로?`,
-        ans: `${ansVal}%`,
-        d1: `${d1Val}%`,
-        d2: `${d2Val}%`
-      };
-    }
+    const s = Math.min(25, Math.max(0, stage - 32));
+    const rate = randomInt(1, 9) * 10;
+    const base = randomInt(1, 4 + Math.floor(s / 3)) * 20;
+    const ans = (base * rate) / 100;
+    const dists = buildSmartNumericDistractors(ans, Math.max(2, Math.round(ans * 0.2)));
+    return {
+      subType: 'percent_val',
+      categoryLabel: '초6 심화 · 백분율(%) 암산',
+      prompt: `🧮 ${base}의 ${rate}%는?`,
+      ans: String(ans),
+      d1: dists[0],
+      d2: dists[1]
+    };
   }
 
-  // [단원 11] Stage 13+ : 5~6학년 미지수 □ 구하기 등식 동적 생성 (4 × □ + 3 = 31)
   function genFindUnknown(stage) {
-    const s = Math.min(25, Math.max(0, stage - 13));
-    const a = randomInt(2, Math.min(9, 4 + Math.floor((s + 1) / 2)));
-    const x = randomInt(3, 7 + s);
-    const b = randomInt(2, 9 + s);
-    const isPlus = Math.random() < 0.6;
-
-    const total = isPlus ? (a * x + b) : (a * x - b);
-    if (total <= 0) {
-      const safeTotal = a * x + b;
-      const dists = buildSmartNumericDistractors(x, 2);
-      return {
-        subType: 'find_unknown',
-        categoryLabel: '초5·6 수학 · 미지수 □ 구하기',
-        prompt: `🧮 ${a} × □ + ${b} = ${safeTotal}  (□는?)`,
-        ans: String(x),
-        d1: dists[0],
-        d2: dists[1]
-      };
-    }
-
-    const op = isPlus ? '+' : '-';
+    const s = Math.min(25, Math.max(0, stage - 34));
+    const a = randomInt(2, Math.min(7, 4 + Math.floor(s / 3)));
+    const x = randomInt(3, 8 + Math.floor(s / 2));
+    const b = randomInt(2, 10 + Math.floor(s / 2));
+    const total = a * x + b;
     const dists = buildSmartNumericDistractors(x, 2);
     return {
       subType: 'find_unknown',
-      categoryLabel: '초5·6 수학 · 미지수 □ 구하기',
-      prompt: `🧮 ${a} × □ ${op} ${b} = ${total}  (□는?)`,
+      categoryLabel: '초5·6 심화 · 미지수 □ 구하기',
+      prompt: `🧮 ${a} × □ + ${b} = ${total}  (□는?)`,
       ans: String(x),
       d1: dists[0],
       d2: dists[1]
     };
   }
 
-  // [단원 12] Stage 14+ : 5학년 평균 구하기 동적 생성
   function genAverage(stage) {
-    const s = Math.min(25, Math.max(0, stage - 14));
-    const mean = randomInt(15 + s * 2, 35 + s * 3);
-    const d = randomInt(2, Math.min(12, 4 + Math.floor((s + 1) / 2)));
+    const s = Math.min(25, Math.max(0, stage - 36));
+    const mean = randomInt(15 + s, 35 + s * 2);
+    const d = randomInt(2, Math.min(10, 4 + Math.floor(s / 3)));
     const nums = shuffleArray([mean - d, mean, mean + d]);
     const dists = buildSmartNumericDistractors(mean, d);
-
     return {
       subType: 'average',
-      categoryLabel: '초5 수학 · 평균 구하기 암산',
+      categoryLabel: '초5·6 심화 · 평균 구하기 암산',
       prompt: `🧮 [${nums[0]}, ${nums[1]}, ${nums[2]}]의 평균은?`,
       ans: String(mean),
       d1: dists[0],
@@ -876,54 +917,71 @@
     };
   }
 
-  function calcUnlockWeight(stage, unlockStage, rampStages, minW, maxW) {
-    if (stage < unlockStage) return 0;
-    const progress = Math.min(1, (stage - unlockStage) / Math.max(1, rampStages));
-    return minW + (maxW - minW) * progress;
+  function generateSpecialMathByStage(stage) {
+    const specialPool = [{ gen: genGcdLcm }];
+    if (stage >= 22) specialPool.push({ gen: genFractionSimplify });
+    if (stage >= 24) specialPool.push({ gen: genDecimalMental });
+    if (stage >= 26) specialPool.push({ gen: genPolygonArea });
+    if (stage >= 28) specialPool.push({ gen: genProportion });
+    if (stage >= 30) specialPool.push({ gen: genFractionMul });
+    if (stage >= 32) specialPool.push({ gen: genPercent });
+    if (stage >= 34) specialPool.push({ gen: genFindUnknown });
+    if (stage >= 36) specialPool.push({ gen: genAverage });
+
+    const picked = specialPool[randomInt(0, specialPool.length - 1)];
+    return picked.gen(stage);
   }
 
   function generateMathQuestion(stageNum) {
     const stage = Math.max(1, parseInt(stageNum, 10) || 1);
+    ensureStageSpecialMathTracker(stage);
 
-    // 매 스테이지(Stage 1 -> 2 -> 3 -> 4 ... -> 14+)마다 새로운 단원이 하나씩 천천히 열리고,
-    // 각 단원 내부의 숫자 범위도 매 1스테이지마다 +1~+3씩 즉시 올라감!
-    const pool = [
-      { gen: genAddSub,           weight: Math.max(12, 36 - (stage - 1) * 1.4) },
-      { gen: genMulDiv,           weight: Math.max(12, 36 - (stage - 1) * 1.3) },
-      { gen: genMixedCalc,        weight: calcUnlockWeight(stage, 2,  6,  8, 18) },
-      { gen: genGcdLcm,           weight: calcUnlockWeight(stage, 4,  6,  8, 15) },
-      { gen: genFractionSimplify, weight: calcUnlockWeight(stage, 5,  6,  8, 15) },
-      { gen: genDecimalMental,    weight: calcUnlockWeight(stage, 6,  6,  8, 16) },
-      { gen: genPolygonArea,      weight: calcUnlockWeight(stage, 7,  6,  8, 14) },
-      { gen: genProportion,       weight: calcUnlockWeight(stage, 9,  6,  8, 16) },
-      { gen: genFractionMul,      weight: calcUnlockWeight(stage, 10, 6,  8, 15) },
-      { gen: genPercent,          weight: calcUnlockWeight(stage, 12, 6,  8, 15) },
-      { gen: genFindUnknown,      weight: calcUnlockWeight(stage, 13, 6,  8, 15) },
-      { gen: genAverage,          weight: calcUnlockWeight(stage, 14, 6,  8, 15) }
-    ].filter(function (item) {
-      return item.weight > 0;
-    });
+    // Stage 20 이상이고 이번 스테이지에서 아직 응용 문제를 안 냈다면 약 22% 확률(스테이지당 최대 1문제)로 응용 문제 출제
+    const canAskSpecial = stage >= 20 && (_stageSpecialMathTracker.count < _stageSpecialMathTracker.limit);
+    const useSpecialNow = canAskSpecial && (Math.random() < 0.25);
 
-    const totalWeight = pool.reduce(function (acc, item) { return acc + item.weight; }, 0);
-
-    let chosenGen = genAddSub;
     let qData = null;
     let candidateId = '';
 
-    for (let attempt = 0; attempt < 20; attempt++) {
-      let r = Math.random() * totalWeight;
-      for (let i = 0; i < pool.length; i++) {
-        r -= pool[i].weight;
-        if (r <= 0) {
-          chosenGen = pool[i].gen;
+    if (useSpecialNow) {
+      _stageSpecialMathTracker.count += 1;
+      qData = generateSpecialMathByStage(stage);
+      candidateId = `math_${qData.subType}_${qData.prompt}`;
+      rememberQuestionId(candidateId);
+    } else {
+      // 기본 핵심: 사칙연산(덧·뺄·곱·나눗셈) + 혼합된 사칙연산 위주!
+      // Stage 1: 순수 사칙연산 (덧·뺄셈 52%, 곱·나눗셈 48%)
+      // Stage 2+: 혼합 사칙연산이 14%에서 시작해 단계별로 1.8%씩 서서히 비중을 넓혀가며 사칙연산과 어우러짐
+      const mixedWeight = stage < 2 ? 0 : Math.min(52, 12 + (stage - 2) * 1.8);
+      const addSubWeight = Math.max(24, 52 - mixedWeight * 0.5);
+      const mulDivWeight = Math.max(24, 48 - mixedWeight * 0.5);
+
+      const pool = [
+        { gen: genAddSub,    weight: addSubWeight },
+        { gen: genMulDiv,    weight: mulDivWeight },
+        { gen: genMixedCalc, weight: mixedWeight }
+      ].filter(function (item) {
+        return item.weight > 0;
+      });
+
+      const totalWeight = pool.reduce(function (acc, item) { return acc + item.weight; }, 0);
+
+      for (let attempt = 0; attempt < 20; attempt++) {
+        let r = Math.random() * totalWeight;
+        let chosenGen = genAddSub;
+        for (let i = 0; i < pool.length; i++) {
+          r -= pool[i].weight;
+          if (r <= 0) {
+            chosenGen = pool[i].gen;
+            break;
+          }
+        }
+        qData = chosenGen(stage);
+        candidateId = `math_${qData.subType}_${qData.prompt}`;
+        if (!_recentIds.includes(candidateId) || attempt === 19) {
+          rememberQuestionId(candidateId);
           break;
         }
-      }
-      qData = chosenGen(stage);
-      candidateId = `math_${qData.subType}_${qData.prompt}`;
-      if (!_recentIds.includes(candidateId) || attempt === 19) {
-        rememberQuestionId(candidateId);
-        break;
       }
     }
 
@@ -947,10 +1005,7 @@
   }
 
   // ==========================================================================
-  // 4. 영어 어휘 · 숙어 · 문법 · 회화 생성기 (매 1스테이지마다 슬라이딩 윈도우가 이동하여 즉시 미세 상승)
-  // - 전체 어휘(ENGLISH_DICTIONARY)와 회화(DAILY_ENGLISH_EXPRESSIONS)를 세부 난이도(level + 단어 길이)로 정렬한 뒤,
-  //   스테이지가 1단계 오를 때마다 출제 윈도우가 10단어씩 우측(고난도)으로 즉시 이동합니다.
-  // - 또한 Stage 3+부터 초5~초6 불규칙 과거형·비교급·숙어 빈칸 문제가 점진적으로 합류합니다.
+  // 4. 영어 어휘 · 숙어 · 문법 · 회화 생성기 (매 1스테이지마다 슬라이딩 윈도우가 6단어씩 천천히 이동)
   // ==========================================================================
 
   let _sortedDictCache = null;
@@ -977,12 +1032,11 @@
     return _sortedExprCache;
   }
 
-  // 초5~초6 생활영어·숙어 문장 내 핵심 단어 동적 빈칸(Cloze) 생성기 (하드코딩 없이 DAILY_ENGLISH_EXPRESSIONS에서 실시간 동적 마스킹)
   function generateGrammarOrIdiomQuestion(stage) {
     const sorted = getSortedDailyExpressions();
     const windowSize = 22;
     const maxStart = Math.max(0, sorted.length - windowSize);
-    const startIdx = Math.min(maxStart, Math.max(0, (stage - 3) * 3));
+    const startIdx = Math.min(maxStart, Math.max(0, (stage - 3) * 2));
     const pool = sorted.slice(startIdx, startIdx + windowSize).filter(function (item) {
       const words = String(item.en || '').replace(/[.?!,~]/g, '').trim().split(/\s+/);
       return words.length >= 3;
@@ -1003,7 +1057,6 @@
     }
 
     const rawTokens = String(targetExpr.en).trim().split(/\s+/);
-    // 마스킹할 핵심 단어 인덱스 동적 선택 (2글자 이상인 단어 중 선택)
     const validIndices = [];
     for (let i = 0; i < rawTokens.length; i++) {
       const clean = rawTokens[i].replace(/[^a-zA-Z']/g, '');
@@ -1018,7 +1071,6 @@
     maskedTokens[maskIdx] = '___' + punctSuffix;
     const maskedSentence = maskedTokens.join(' ');
 
-    // 다른 표현들에서 비슷한 길이의 영단어를 실시간 추출하여 동적 오답 구성
     const otherWords = [];
     for (let i = 0; i < DAILY_ENGLISH_EXPRESSIONS.length; i++) {
       const tokens = String(DAILY_ENGLISH_EXPRESSIONS[i].en || '').split(/\s+/);
@@ -1059,8 +1111,8 @@
     const sorted = getSortedDailyExpressions();
     const windowSize = 20;
     const maxStart = Math.max(0, sorted.length - windowSize);
-    // 매 1스테이지마다 회화 슬라이딩 윈도우가 3문장씩 이동하여 바로 체감 반영
-    const startIdx = Math.min(maxStart, (stage - 1) * 3);
+    // 매 1스테이지마다 회화 슬라이딩 윈도우가 2문장씩 완만하게 이동
+    const startIdx = Math.min(maxStart, (stage - 1) * 2);
     const eligiblePool = sorted.slice(startIdx, startIdx + windowSize);
 
     let targetExpr = eligiblePool[randomInt(0, eligiblePool.length - 1)];
@@ -1157,22 +1209,20 @@
     const stage = Math.max(1, parseInt(stageNum, 10) || 1);
     ensureStageReadingTracker(stage);
 
-    // Stage 3+ 부터 초5~초6 영문법/숙어 빈칸 문제 15~22% 확률 출제
-    if (stage >= 3 && Math.random() < Math.min(0.22, 0.10 + (stage - 2) * 0.015)) {
+    if (stage >= 6 && Math.random() < Math.min(0.18, 0.08 + (stage - 6) * 0.006)) {
       return generateGrammarOrIdiomQuestion(stage);
     }
 
-    const dailyExprProb = Math.min(0.35, 0.22 + (stage - 1) * 0.008);
+    const dailyExprProb = Math.min(0.32, 0.20 + (stage - 1) * 0.005);
     if (Math.random() < dailyExprProb) {
       return generateDailyEnglishQuestion(stage);
     }
 
-    // 매 1스테이지마다 어휘 슬라이딩 윈도우(폭 55단어)가 10단어씩 우측(고난도)으로 즉시 이동!
-    // Stage 1: [0..55], Stage 2: [10..65], Stage 3: [20..75], Stage 4: [30..85] ...
+    // 매 1스테이지마다 어휘 슬라이딩 윈도우(폭 60단어)가 6단어씩 우측(고난도)으로 천천히 이동!
     const sorted = getSortedDictionary();
-    const windowSize = 55;
+    const windowSize = 60;
     const maxStart = Math.max(0, sorted.length - windowSize);
-    const startIdx = Math.min(maxStart, (stage - 1) * 10);
+    const startIdx = Math.min(maxStart, (stage - 1) * 6);
     const eligiblePool = sorted.slice(startIdx, startIdx + windowSize);
 
     const canAskReadingQuiz = _stageReadingTracker.count < _stageReadingTracker.limit;
