@@ -4119,18 +4119,8 @@
       this.petRightWing.position.set(0.42, 0.06, 0);
       this.petGroup.add(this.petLeftWing, this.petRightWing);
 
-      // 5. Undercarriage Neon Glow
-      const glowGeo = new THREE.PlaneGeometry(2.8, 4.6);
-      const glowMat = new THREE.MeshBasicMaterial({
-        color: pal.glow,
-        transparent: true,
-        opacity: 0.38,
-        side: THREE.DoubleSide
-      });
-      this.carUnderGlow = new THREE.Mesh(glowGeo, glowMat);
-      this.carUnderGlow.rotation.x = -Math.PI / 2;
-      this.carUnderGlow.position.set(0, 0.03, 0);
-      this.carGroup.add(this.carUnderGlow);
+      // 5. Undercarriage flat plate removed (prevented purple/rectangular stepping-pad artifact under character's feet)
+      this.carUnderGlow = null;
 
       return this.carGroup;
     },
@@ -4489,7 +4479,7 @@
       this.clearObbyObstacles();
 
       const numSteps = Math.max(5, Number(totalSteps) || 30);
-      const passZ = getCfg().GATE_PASS_Z;
+      const passZ = this.carGroup ? this.carGroup.position.z : (getCfg().GATE_PASS_Z - 4.2);
 
       this.isHeavenStairsActive = true;
       this.heavenStairsTotal = numSteps;
@@ -7283,7 +7273,8 @@
           targetX = curStepObj.x;
           targetBaseY = curStepObj.y;
           if (this.heavenStairsGroup) {
-            const targetGroupZ = cfg.GATE_PASS_Z + this.heavenStairsStepIndex * 2.5;
+            const baseCarZ = this.carGroup ? this.carGroup.position.z : (cfg.GATE_PASS_Z - 4.2);
+            const targetGroupZ = baseCarZ + this.heavenStairsStepIndex * 2.5;
             this.heavenStairsGroup.position.z += (targetGroupZ - this.heavenStairsGroup.position.z) * Math.min(1, dt * 11.5);
           }
           if (this.heavenNextStepRing) {
@@ -7341,7 +7332,7 @@
           this.heavenFacingArrowGroup.position.set(
             this.carGroup.position.x,
             this.carGroup.position.y + 3.25 + Math.sin(this.elapsedTime * 9) * 0.15,
-            cfg.GATE_PASS_Z
+            this.carGroup.position.z
           );
         }
 
