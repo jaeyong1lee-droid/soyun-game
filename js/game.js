@@ -242,7 +242,7 @@
     const actionFactor = Number(state.activeSpeedFactor) || 1.0;
     const baseCap = state.isObbyMode ? 280 : (state.isBossPhase ? 260 : 225);
     const cap = actionFactor > 1.0 ? Math.round(baseCap * actionFactor) : baseCap;
-    return Math.max(2, Math.min(cap, Math.round(((state.speed || 32.4) * (state.speedMultiplier || 1.0) * obbyFactor * bossFactor * actionFactor) * 100) / 100));
+    return Math.max(1.5, Math.min(cap, Math.round(((state.speed || 32.4) * (state.speedMultiplier || 1.0) * obbyFactor * bossFactor * actionFactor) * 100) / 100));
   }
 
   function getMaxHp() {
@@ -1185,8 +1185,9 @@
 
       const nextStageCfg = getStageCfg(nextStage);
 
-      // Recover +2 HP up to MAX_HP (5) & recharge 2 pause chances for the new stage!
+      // Recover +2 HP (preserving any extra maxHp earned from mini-games!) & recharge 2 pause chances for the new stage!
       state.hp = Math.min(state.maxHp, state.hp + 2);
+      state.maxHp = Math.max(getMaxHp(), state.hp);
       state.pauseChancesRemaining = state.maxPauseChances || 2;
 
       // Transition state to next stage immediately so state & HUD reflect the new stage
@@ -1571,7 +1572,7 @@
     /**
      * 🛑 Sudden Hard-Brake Button (#btn-brake-action, right of Turn-Jump button):
      * - Starts at 0 charges; each Booster use adds +1 charge!
-     * - When pressed (if brakeCount > 0), slows speed to 0.5x for 2.0 seconds with sudden stop animation!
+     * - When pressed (if brakeCount > 0), slows speed by 90% (0.1x) for 4.0 seconds with sudden stop animation!
      */
     triggerBrake: function () {
       if (!state.isPlaying || state.isGameOver || state.isPaused) return false;
@@ -1597,7 +1598,7 @@
       state.brakeCount = Math.max(0, state.brakeCount - 1);
       state.isBrakeActive = true;
       state.isBoosterActive = false;
-      state.activeSpeedFactor = 0.2;
+      state.activeSpeedFactor = 0.1;
 
       if (this._speedActionTimer) {
         clearTimeout(this._speedActionTimer);
@@ -1619,7 +1620,7 @@
       if (window.Engine3D) {
         window.Engine3D.setSpeed(getEffectiveSpeed());
         if (typeof window.Engine3D.triggerKartBrake === 'function') {
-          window.Engine3D.triggerKartBrake(2.0);
+          window.Engine3D.triggerKartBrake(4.0);
         }
       }
 
@@ -1629,7 +1630,7 @@
         }
         window.UIManager.showFeedbackToast(
           true,
-          `🛑💨 끼이익!! [급브레이크 작동!] 2초간 속도가 80% 감속됩니다! (남은 브레이크: ${state.brakeCount}회)`
+          `🛑💨 끼이익!! [급브레이크 작동!] 4초간 속도가 90% 감속됩니다! (남은 브레이크: ${state.brakeCount}회)`
         );
       }
 
@@ -1651,7 +1652,7 @@
           window.UIManager.updateBoosterBrakeUI(state.brakeCount, false, false);
         }
         syncHUD();
-      }, 2000);
+      }, 4000);
 
       return true;
     },
@@ -1733,6 +1734,7 @@
       state.obbyGameType = gameType;
       state.obbyWavesCleared = 0;
       state.obbySuccessCount = 0;
+      state.obbyFailedOnce = false;
       state.obbyWaveQueue = [];
 
       if (window.Engine3D) {
@@ -1767,7 +1769,7 @@
           }
           window.UIManager.showFeedbackToast(
             true,
-            '☁️🌈 [미니게임 1: 무한의 계단 30층!] 3계단 올라가면 시작 계단부터 무너집니다! 우측 [⬆️ 오르기]와 좌측 [🔄 방향전환]으로 빠르게 올라가세요!'
+            '☁️🌈 [미니게임 1: 천국의 계단 30층!] 완주 시 피 +1 ❤️! (한 번 틀리면 피 1 깎이고 즉시 종료됩니다!)'
           );
         }
         syncHUD();
@@ -1890,7 +1892,9 @@
           }, 550);
         }
       } else {
-        // Stepped in the wrong direction OR collapsing stairs caught up -> -1 HP & hurt feedback!
+        // 1번 틀리면(반대 방향 헛디딤 또는 바닥 계단 소멸) 피 1 깎이고 그냥 즉시 종료!
+        if (state.obbyFailedOnce) return;
+        state.obbyFailedOnce = true;
         state.combo = 0;
         state.hp = Math.max(0, state.hp - 1);
         state.obbyWavesCleared = res.stepIndex;
@@ -1907,35 +1911,25 @@
               maxHp: state.maxHp
             });
           }
-          if (typeof window.UIManager.showHeavenStairsHUD === 'function') {
-            window.UIManager.showHeavenStairsHUD(
-              res.stepIndex,
-              res.totalSteps,
-              res.facingDir,
-              res.nextRequiredDir
-            );
-          }
           const failMsg = res.collapsedCatchup
-            ? `☁️💥 바닥 계단이 사라져 피가 1 깎였어요! 빨리 올라가세요! (❤️ ${state.hp}/${state.maxHp})`
-            : `☁️💦 어이쿠!! 계단 반대쪽으로 헛디뎌 피가 1 깎였어요! (❤️ ${state.hp}/${state.maxHp} · 이제 우측 [⬆️ 오르기]를 누르세요!)`;
+            ? `☁️💥 바닥 계단이 무너져 실패! 피가 1 깎이고 천국의 계단이 종료됩니다! (❤️ ${state.hp}/${state.maxHp})`
+            : `☁️💦 어이쿠!! 방향을 틀려 피가 1 깎이고 천국의 계단이 종료됩니다! (❤️ ${state.hp}/${state.maxHp})`;
           window.UIManager.showFeedbackToast(false, failMsg);
         }
         syncHUD();
 
+        const self = this;
+        if (this._obbyWaveTimer) clearTimeout(this._obbyWaveTimer);
         if (state.hp <= 0) {
-          const self = this;
-          if (this._obbyWaveTimer) clearTimeout(this._obbyWaveTimer);
           this._obbyWaveTimer = setTimeout(function () {
             self._obbyWaveTimer = null;
             self.handleGameOver();
           }, 680);
-        } else if (res.isFinished || res.stepIndex >= res.totalSteps) {
-          const self = this;
-          if (this._obbyWaveTimer) clearTimeout(this._obbyWaveTimer);
+        } else {
           this._obbyWaveTimer = setTimeout(function () {
             self._obbyWaveTimer = null;
             self.endObbyMinigame();
-          }, 550);
+          }, 650);
         }
       }
     },
@@ -2002,6 +1996,7 @@
         }
       } else {
         // FAILED to clear obstacle -> Subtract 1 HP & trigger Hurt / Ouch Animation ("피가 깎이고 아픈 애니")!
+        state.obbyFailedOnce = true;
         state.combo = 0;
         state.hp = Math.max(0, state.hp - 1);
 
@@ -2083,6 +2078,8 @@
       state.isObbyMode = false;
       const clearedCnt = state.obbySuccessCount || 0;
       const totalCnt = state.obbyWavesTotal || 3;
+      const wasFailed = Boolean(state.obbyFailedOnce);
+      state.obbyFailedOnce = false;
       state.obbyWavesCleared = 0;
       state.obbySuccessCount = 0;
       state.obbyWaveQueue = [];
@@ -2091,9 +2088,20 @@
         return;
       }
 
-      const clearBonus = finishedGameType === 'heaven_stairs' ? 240 : (clearedCnt * 80);
+      const isPassed = (clearedCnt >= totalCnt) && !wasFailed;
+      const clearBonus = finishedGameType === 'heaven_stairs'
+        ? (isPassed ? 240 : (clearedCnt * 10))
+        : (clearedCnt * 80);
       if (clearBonus > 0 && window.SaveManager) {
         window.SaveManager.addScore(clearBonus, getEffectiveSpeed());
+      }
+
+      // 미니게임 3종('heaven_stairs', 'laser_jump', 'obby_rush') 각 게임 통과 시 피(생명력) +1 상승!
+      if (isPassed) {
+        state.hp += 1;
+        if (state.hp > state.maxHp) {
+          state.maxHp = state.hp;
+        }
       }
 
       if (window.Engine3D) {
@@ -2108,7 +2116,7 @@
 
       if (window.SoundEngine) {
         window.SoundEngine.setSpeedTempo(getEffectiveSpeed());
-        if (clearedCnt > 0) {
+        if (isPassed || clearedCnt > 0) {
           window.SoundEngine.playStageClear();
         }
       }
@@ -2120,18 +2128,22 @@
         const gameLabel = finishedGameType === 'heaven_stairs'
           ? '☁️🌈 천국의 계단'
           : (finishedGameType === 'laser_jump' ? '⚡🪵 회전 레이저봉·통나무 점프' : '🧱🔥 용암·장애물 오비');
-        if (clearedCnt >= totalCnt) {
+        if (isPassed) {
           if (typeof window.UIManager.triggerImpactEffect === 'function') {
-            window.UIManager.triggerImpactEffect('correct', { points: clearBonus, combo: state.combo });
+            window.UIManager.triggerImpactEffect('minigame_hp_up', {
+              points: clearBonus,
+              hp: state.hp,
+              maxHp: state.maxHp
+            });
           }
           window.UIManager.showFeedbackToast(
             true,
-            `🏁 ${gameLabel} 완벽 클리어!! 보너스 +${clearBonus} R$ 획득! 다시 문제를 풀어볼까요?`
+            `🏁❤️ ${gameLabel} 통과 성공!! 생명력(피) +1 상승! (❤️ ${state.hp}/${state.maxHp} · 보너스 +${clearBonus} R$)`
           );
         } else {
           window.UIManager.showFeedbackToast(
-            clearedCnt > 0,
-            `🏁 ${gameLabel} 종료! (보너스 +${clearBonus} R$) 다시 문제 풀기로 돌아갑니다!`
+            clearedCnt > 0 && finishedGameType !== 'heaven_stairs',
+            `🏁 ${gameLabel} 종료! (현재 ❤️ ${state.hp}/${state.maxHp}) 다시 문제 풀기로 돌아갑니다!`
           );
         }
       }

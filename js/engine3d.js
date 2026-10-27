@@ -20,7 +20,7 @@
     BOSS_Z: -38,
     BASE_SPEED: 32.4,
     MAX_SPEED: 500,
-    MIN_SPEED: 8
+    MIN_SPEED: 1.5
   };
 
   const STAGE_THEMES = [
@@ -3378,11 +3378,11 @@
     },
 
     /**
-     * Triggers a 2.0-second Sudden Hard-Brake / Screech Stop 3D Animation!
-     * @param {number} [duration=2.0]
+     * Triggers a 4.0-second Sudden Hard-Brake / Screech Stop 3D Animation!
+     * @param {number} [duration=4.0]
      */
     triggerKartBrake: function (duration) {
-      const dur = typeof duration === 'number' ? duration : 2.0;
+      const dur = typeof duration === 'number' ? duration : 4.0;
       this.kartBrakeTimer = dur;
       this.kartBoosterTimer = 0;
       this.boostEffectTimer = 0;
@@ -4482,6 +4482,7 @@
       const passZ = this.carGroup ? this.carGroup.position.z : (getCfg().GATE_PASS_Z - 4.2);
 
       this.isHeavenStairsActive = true;
+      this.heavenStairsFailed = false;
       this.heavenStairsTotal = numSteps;
       this.heavenStairsStepIndex = 0;
       this.stairClimbedY = 0;
@@ -4657,7 +4658,7 @@
      * @param {boolean} isTurnAndClimb - false = [⬆️ 오르기] (keep direction & climb), true = [🔄 방향전환] (flip direction & climb)
      */
     stepHeavenStairs: function (isTurnAndClimb) {
-      if (!this.isHeavenStairsActive || !Array.isArray(this.heavenStairsSteps)) return false;
+      if (!this.isHeavenStairsActive || this.heavenStairsFailed || !Array.isArray(this.heavenStairsSteps)) return false;
       const nextIdx = this.heavenStairsStepIndex + 1;
       if (nextIdx > this.heavenStairsTotal) return false;
 
@@ -4733,19 +4734,19 @@
         }
         return true;
       } else {
-        // WRONG DIRECTION -> Stepped into empty air!
+        // WRONG DIRECTION -> 1번 틀리면 피 1 깎이고 즉시 천국의 계단 종료!
+        this.heavenStairsFailed = true;
+        this.heavenStairsCollapseActive = false;
+        if (this.heavenNextStepRing) {
+          this.heavenNextStepRing.visible = false;
+        }
         const curStep = this.heavenStairsSteps[this.heavenStairsStepIndex] || { x: 0, y: 0 };
         this.triggerDamageEffect(curStep.x, 'stair_miss');
-
-        // Auto-align Soyun's facing direction toward the next step after a stumble so she can easily climb with [⬆️]!
-        this.heavenStairsFacingDir = nextStep.dir;
-        if (this.heavenFacingArrowGroup) {
-          this.heavenFacingArrowGroup.scale.set(this.heavenStairsFacingDir, 1, 1);
-        }
 
         if (typeof this.onHeavenStairStep === 'function') {
           this.onHeavenStairStep({
             cleared: false,
+            isFailedEnd: true,
             isFinished: false,
             stepIndex: this.heavenStairsStepIndex,
             totalSteps: this.heavenStairsTotal,
@@ -4762,6 +4763,7 @@
      */
     clearHeavenStairs: function () {
       this.isHeavenStairsActive = false;
+      this.heavenStairsFailed = false;
       this.heavenStairsCollapseActive = false;
       this.heavenStairsCollapsedIndex = -1;
       this.heavenStairsCollapseTimer = 0;
@@ -7194,50 +7196,26 @@
                 this._spawnParticleBurst(collapsingStep.x, collapsingStep.y + 0.3, worldZ, 0xff5500, 14, 0.85);
               }
 
-              // 무너지는 계단이 현재 서 있는 계단까지 따라잡은 경우: 피 1 감소 후 다음 안전 계단으로 밀어올림!
-              if (this.heavenStairsCollapsedIndex >= this.heavenStairsStepIndex && this.heavenStairsStepIndex < this.heavenStairsTotal) {
+              // 무너지는 계단이 현재 서 있는 계단까지 따라잡은 경우: 피 1 감소 후 즉시 천국의 계단 종료!
+              if (!this.heavenStairsFailed && this.heavenStairsCollapsedIndex >= this.heavenStairsStepIndex && this.heavenStairsStepIndex < this.heavenStairsTotal) {
+                this.heavenStairsFailed = true;
+                this.heavenStairsCollapseActive = false;
+                if (this.heavenNextStepRing) {
+                  this.heavenNextStepRing.visible = false;
+                }
                 const curSt = this.heavenStairsSteps[this.heavenStairsStepIndex] || { x: 0, y: 0 };
                 this.triggerDamageEffect(curSt.x, 'stair_miss');
-
-                const rescuedIdx = Math.min(this.heavenStairsTotal, this.heavenStairsStepIndex + 1);
-                const rescuedStep = this.heavenStairsSteps[rescuedIdx];
-                this.heavenStairsStepIndex = rescuedIdx;
-                if (rescuedStep && rescuedStep.coinMesh) {
-                  rescuedStep.coinMesh.visible = false;
-                }
-
-                const upcomingAfterRescue = this.heavenStairsSteps[rescuedIdx + 1] || null;
-                if (upcomingAfterRescue) {
-                  this.heavenStairsFacingDir = upcomingAfterRescue.dir;
-                }
-                if (this.heavenFacingArrowGroup) {
-                  this.heavenFacingArrowGroup.scale.set(this.heavenStairsFacingDir, 1, 1);
-                }
-                if (this.heavenNextStepRing) {
-                  if (upcomingAfterRescue) {
-                    this.heavenNextStepRing.visible = true;
-                    this.heavenNextStepRing.position.set(upcomingAfterRescue.x, upcomingAfterRescue.y + 0.35, upcomingAfterRescue.z);
-                  } else {
-                    this.heavenNextStepRing.visible = false;
-                  }
-                }
-                // 연속 피격 방지를 위한 짧은 여유 시간 부여
-                this.heavenStairsCollapseTimer = -0.35;
-
-                const isFinishedAfterRescue = rescuedIdx >= this.heavenStairsTotal;
-                if (isFinishedAfterRescue) {
-                  this.triggerStageClearEffect();
-                }
 
                 if (typeof this.onHeavenStairStep === 'function') {
                   this.onHeavenStairStep({
                     cleared: false,
                     collapsedCatchup: true,
-                    isFinished: isFinishedAfterRescue,
-                    stepIndex: rescuedIdx,
+                    isFailedEnd: true,
+                    isFinished: false,
+                    stepIndex: this.heavenStairsStepIndex,
                     totalSteps: this.heavenStairsTotal,
                     facingDir: this.heavenStairsFacingDir,
-                    nextRequiredDir: upcomingAfterRescue ? upcomingAfterRescue.dir : this.heavenStairsFacingDir
+                    nextRequiredDir: this.heavenStairsFacingDir
                   });
                 }
               }

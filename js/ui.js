@@ -386,8 +386,10 @@
      */
     updateHUD: function (data) {
       if (!data) return;
-      const maxHp = (window.GameConfig && window.GameConfig.MAX_HP) ? window.GameConfig.MAX_HP : 5;
-      const hp = Math.max(0, Math.min(maxHp, typeof data.hp === 'number' ? data.hp : maxHp));
+      const baseMaxHp = (window.GameConfig && window.GameConfig.MAX_HP) ? window.GameConfig.MAX_HP : 5;
+      const rawHp = Math.max(0, typeof data.hp === 'number' ? data.hp : baseMaxHp);
+      const maxHp = Math.max(baseMaxHp, typeof data.maxHp === 'number' ? data.maxHp : baseMaxHp, rawHp);
+      const hp = Math.max(0, Math.min(maxHp, rawHp));
 
       // 1. HP Hearts
       const elHearts = byId('hp-hearts');
@@ -397,6 +399,17 @@
           heartsStr += i < hp ? '❤️' : '🖤';
         }
         elHearts.textContent = heartsStr;
+        elHearts.style.whiteSpace = 'nowrap';
+        if (maxHp <= 5) {
+          elHearts.style.fontSize = '';
+          elHearts.style.letterSpacing = '';
+        } else if (maxHp <= 7) {
+          elHearts.style.fontSize = '15px';
+          elHearts.style.letterSpacing = '1px';
+        } else {
+          elHearts.style.fontSize = '13px';
+          elHearts.style.letterSpacing = '0px';
+        }
       }
       const elHpNum = byId('hp-numeric');
       if (elHpNum) {
@@ -713,6 +726,9 @@
       } else if (type === 'stageClear') {
         spawnBadge(`👑 BOSS KO!! 상금 게이지 +10 상승!`, 'impact-boss', 0, -22);
         spawnBadge(`🎉 보스 클리어 보너스 +${pts} R$!`, 'impact-combo', 0, 26);
+      } else if (type === 'minigame_hp_up') {
+        spawnBadge(`❤️✨ 미니게임 통과! 피 +1 상승!!`, 'impact-correct', 0, -20);
+        spawnBadge(`🎉 클리어 보너스 +${pts} R$!`, 'impact-combo', 0, 26);
       } else if (type === 'obby_hurt') {
         const isFire = opts.outcome === 'hit_fire' || opts.waveType === 'fire_pit';
         const isLaser = opts.outcome === 'hit_laser' || opts.waveType === 'low_laser';
