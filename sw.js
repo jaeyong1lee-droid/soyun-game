@@ -1,18 +1,23 @@
-const CACHE_NAME = 'soyun-obby-racer-pwa-v70';
+const CACHE_NAME = 'soyun-obby-racer-pwa-v71';
 const PRECACHE_URLS = [
   './',
   './index.html',
   './manifest.json',
-  './css/style.css?v=20261027_66',
-  './js/config.js?v=20261027_66',
-  './js/storage.js?v=20261027_66',
-  './js/questionEngine.js?v=20261027_66',
-  './js/sound.js?v=20261027_66',
-  './js/engine3d.js?v=20261027_66',
-  './js/ui.js?v=20261027_66',
-  './js/game.js?v=20261027_66',
+  './css/style.css?v=70_67',
+  './js/config.js?v=70_67',
+  './js/storage.js?v=70_67',
+  './js/questionEngine.js?v=70_67',
+  './js/sound.js?v=70_67',
+  './js/engine3d.js?v=70_67',
+  './js/ui.js?v=70_67',
+  './js/game.js?v=70_67',
+  'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js',
   './assets/icon-192.png',
-  './assets/icon-512.png'
+  './assets/icon-512.png',
+  './assets/boss_mecha.png',
+  './assets/soyun_roblox_hero.png',
+  './assets/bg_skybox.png',
+  './assets/player_car.png'
 ];
 
 self.addEventListener('install', function (event) {
@@ -40,27 +45,74 @@ self.addEventListener('activate', function (event) {
   );
 });
 
-// Network-first strategy with cache: 'no-cache' so mobile browsers always get the latest push immediately
+// High-Performance Mobile Caching Strategy:
+// 1. Navigation (index.html): Network first with 1.2s timeout -> Instant local cache fallback
+// 2. Static Assets (scripts, styles, images, Three.js): Cache-First + Stale-While-Revalidate
 self.addEventListener('fetch', function (event) {
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
   if (url.pathname.startsWith('/api/')) return;
 
+  const isNavigation = event.request.mode === 'navigate' || url.pathname === '/' || url.pathname.endsWith('/index.html');
+
+  if (isNavigation) {
+    event.respondWith(
+      new Promise(function (resolve) {
+        var didResolve = false;
+        var timerId = setTimeout(function () {
+          if (!didResolve) {
+            didResolve = true;
+            caches.match('./index.html').then(function (cached) {
+              if (cached) resolve(cached);
+              else fetch(event.request).then(resolve).catch(resolve);
+            });
+          }
+        }, 1200);
+
+        fetch(event.request)
+          .then(function (networkRes) {
+            if (!didResolve) {
+              didResolve = true;
+              clearTimeout(timerId);
+              if (networkRes && networkRes.status === 200) {
+                var clone = networkRes.clone();
+                caches.open(CACHE_NAME).then(function (cache) {
+                  cache.put(event.request, clone).catch(function () {});
+                });
+              }
+              resolve(networkRes);
+            }
+          })
+          .catch(function () {
+            if (!didResolve) {
+              didResolve = true;
+              clearTimeout(timerId);
+              caches.match('./index.html').then(function (cached) {
+                resolve(cached || caches.match('/'));
+              });
+            }
+          });
+      })
+    );
+    return;
+  }
+
+  // Static Assets: Instant Cache-First response with background revalidation
   event.respondWith(
-    fetch(event.request, { cache: 'no-cache' })
-      .then(function (networkRes) {
-        if (networkRes && networkRes.status === 200 && url.origin === self.location.origin) {
-          const clone = networkRes.clone();
+    caches.match(event.request).then(function (cachedRes) {
+      var fetchPromise = fetch(event.request).then(function (networkRes) {
+        if (networkRes && networkRes.status === 200 && (url.origin === self.location.origin || url.hostname.includes('cdnjs'))) {
+          var clone = networkRes.clone();
           caches.open(CACHE_NAME).then(function (cache) {
             cache.put(event.request, clone).catch(function () {});
           });
         }
         return networkRes;
-      })
-      .catch(function () {
-        return caches.match(event.request).then(function (cachedRes) {
-          return cachedRes || caches.match('/index.html');
-        });
-      })
+      }).catch(function () {
+        return cachedRes;
+      });
+
+      return cachedRes || fetchPromise;
+    })
   );
 });
