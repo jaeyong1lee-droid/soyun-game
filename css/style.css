@@ -6398,3 +6398,23 @@ body.graphic-mode-cartoon #webgl-container canvas {
 body.graphic-mode-pixel {
   --font-arcade: 'Press Start 2P', 'Orbitron', monospace !important;
 }
+
+/* ==========================================================================
+   Mobile Performance & 60FPS Stutter-Free Overrides (모바일 렉·발열 방지)
+   ========================================================================== */
+@media (max-width: 768px) {
+  .cockpit-fx-overlay {
+    background: radial-gradient(circle at 50% 50%, transparent 68%, rgba(4, 3, 15, 0.45) 100%) !important;
+  }
+  .attract-marquee-box {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: 0 0 16px rgba(255, 230, 0, 0.55), 0 0 24px rgba(255, 42, 133, 0.35) !important;
+  }
+  .showcase-speed-lines {
+    animation-duration: 3.5s !important;
+  }
+  .neon-arrow-btn {
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4)) !important;
+  }
+}

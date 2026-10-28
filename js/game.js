@@ -2890,6 +2890,46 @@
       }
 
       // 🎨 Parent Window 3-Way Graphic Style Selector (✨ 스무스 3D / 🎨 카툰·애니 3D / 🧱 도트·블록식)
+      // 🚀 Parent Window Graphic Quality / Performance Selector (🤖 자동 최적화 / ⚡ 모바일 최적화 60FPS / ✨ 고화질 모드)
+      const parentQualitySelector = document.getElementById('parent-graphic-quality-selector');
+      const parentQualityBadge = document.getElementById('parent-current-quality-badge');
+      const gqualityLabels = {
+        auto: '🤖 자동 최적화 (권장)',
+        performance: '⚡ 모바일 최적화 (빠름 60FPS)',
+        quality: '✨ 고화질 모드 (선명함 / PC)'
+      };
+      const syncGQualityUI = function (mode) {
+        const activeQuality = (mode === 'performance' || mode === 'quality') ? mode : 'auto';
+        if (parentQualitySelector) {
+          const btns = parentQualitySelector.querySelectorAll('[data-quality]');
+          btns.forEach(function (b) {
+            b.classList.toggle('active', b.getAttribute('data-quality') === activeQuality);
+          });
+        }
+        if (parentQualityBadge) {
+          parentQualityBadge.textContent = gqualityLabels[activeQuality] || '🤖 자동 최적화 (권장)';
+        }
+      };
+      if (window.Engine3D && typeof window.Engine3D.getGraphicQuality === 'function') {
+        syncGQualityUI(window.Engine3D.getGraphicQuality());
+      }
+      if (parentQualitySelector) {
+        parentQualitySelector.addEventListener('click', function (e) {
+          const btn = e.target.closest('[data-quality]');
+          if (!btn) return;
+          e.preventDefault();
+          const mode = btn.getAttribute('data-quality') || 'auto';
+          if (window.Engine3D && typeof window.Engine3D.setGraphicQuality === 'function') {
+            window.Engine3D.setGraphicQuality(mode);
+            syncGQualityUI(mode);
+            if (window.UIManager) {
+              const label = gqualityLabels[mode] || mode;
+              window.UIManager.showFeedbackToast(true, `🚀 화면 성능이 [${label}] 모드로 변경되었습니다!`);
+            }
+          }
+        });
+      }
+
       const parentGraphicSelector = document.getElementById('parent-graphic-style-selector');
       const parentGraphicBadge = document.getElementById('parent-current-graphic-badge');
       const gstyleLabels = {

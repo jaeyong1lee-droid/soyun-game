@@ -19,9 +19,9 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
   <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
   <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" as="script" />
-  <link rel="preload" href="js/engine3d.js?v=70_67" as="script" />
-  <link rel="preload" href="js/game.js?v=70_67" as="script" />
-  <link rel="stylesheet" href="css/style.css?v=70_67" />
+  <link rel="preload" href="js/engine3d.js?v=70_68" as="script" />
+  <link rel="preload" href="js/game.js?v=70_68" as="script" />
+  <link rel="stylesheet" href="css/style.css?v=70_68" />
 </head>
 <body>
   <!-- 3D WebGL Viewport Container -->
@@ -591,6 +591,28 @@
         <!-- TAB 2: ⚙️ 속도·학습·화면 설정창 -->
         <div id="parent-tab-settings" class="parent-tab-pane hidden">
           <!-- 3-Way Game Graphic Style Selector (스무스 3D / 카툰·애니 3D / 도트·블록식) -->
+          <!-- Graphic Performance / Quality Mode Selector (🚀 모바일 최적화 60FPS / ✨ 고화질 모드 / 🤖 자동 최적화) -->
+          <section class="parent-section" aria-label="보호자 전용 화면 화질 및 60FPS 성능 모드 설정">
+            <div class="parent-section-header">
+              <h3 class="parent-section-title">🚀 화면 화질 &amp; 60FPS 성능 모드 <small>(핸드폰 발열 방지 및 부드러운 60fps 주행)</small></h3>
+              <span id="parent-current-quality-badge" class="parent-status-pill pill-gold">🤖 자동 최적화</span>
+            </div>
+            <div id="parent-graphic-quality-selector" class="subject-mode-group" role="radiogroup" aria-label="화면 화질 및 성능 모드 선택">
+              <button type="button" class="mode-pill graphic-quality-pill active" data-quality="auto" title="기기를 자동 감지하여 모바일은 60fps 최적화, PC는 고화질 적용">
+                <span class="mode-icon">🤖</span>
+                <span class="mode-name">자동 최적화 (기본 권장)</span>
+              </button>
+              <button type="button" class="mode-pill graphic-quality-pill" data-quality="performance" title="스마트폰 끊김 방지, 1.0x 해상도, 가벼운 3D 연산으로 60FPS 고정">
+                <span class="mode-icon">⚡</span>
+                <span class="mode-name">모바일 최적화 (빠름 60FPS)</span>
+              </button>
+              <button type="button" class="mode-pill graphic-quality-pill" data-quality="quality" title="PC 및 고성능 태블릿 전용 고해상도 렌더링 모드">
+                <span class="mode-icon">✨</span>
+                <span class="mode-name">고화질 모드 (선명함 / PC)</span>
+              </button>
+            </div>
+          </section>
+
           <section class="parent-section" aria-label="보호자 전용 게임 그래픽 방식 3종 선택">
             <div class="parent-section-header">
               <h3 class="parent-section-title">🎨 게임 그래픽 방식 선택 <small>(3가지 3D 렌더링 스타일 즉시 전환)</small></h3>
@@ -929,14 +951,14 @@
   <!-- Three.js r128 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <!-- Shared Game Modules -->
-  <script src="js/config.js?v=70_67"></script>
-  <script src="js/storage.js?v=70_67"></script>
-  <script src="js/questionEngine.js?v=70_67"></script>
-  <script src="js/sound.js?v=70_67"></script>
-  <script src="js/engine3d.js?v=70_67"></script>
+  <script src="js/config.js?v=70_68"></script>
+  <script src="js/storage.js?v=70_68"></script>
+  <script src="js/questionEngine.js?v=70_68"></script>
+  <script src="js/sound.js?v=70_68"></script>
+  <script src="js/engine3d.js?v=70_68"></script>
   <!-- UI & Game Controller -->
-  <script src="js/ui.js?v=70_67"></script>
-  <script src="js/game.js?v=70_67"></script>
+  <script src="js/ui.js?v=70_68"></script>
+  <script src="js/game.js?v=70_68"></script>
 
   <!-- Google Chrome / Mobile PWA Service Worker & One-Click App Install Handler -->
   <script>
@@ -944,7 +966,7 @@
       var deferredInstallPrompt = null;
       var installBtn = document.getElementById('btn-install-pwa');
 
-      window.__SOYUN_CLIENT_BUILD__ = '20261027_67';
+      window.__SOYUN_CLIENT_BUILD__ = '20261028_68';
       if ('serviceWorker' in navigator && window.location.protocol !== 'file:') {
         window.addEventListener('load', function () {
           var refreshing = false;

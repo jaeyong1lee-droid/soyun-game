@@ -650,6 +650,70 @@
      * Initialize shared geometries & materials for 3D Roblox Brick Shatter & Studs
      */
     graphicStyle: 'smooth',
+_isMobileDevice: function () {
+      if (typeof window === 'undefined') return false;
+      const ua = (global.navigator && global.navigator.userAgent) ? global.navigator.userAgent : '';
+      const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+      const isSmallScreen = (global.innerWidth || 1280) < 768;
+      const hasTouch = (('ontouchstart' in global) || (global.navigator && global.navigator.maxTouchPoints > 0));
+      return isMobileUA || (hasTouch && isSmallScreen);
+    },
+
+    graphicQuality: 'auto', // 'auto' | 'performance' | 'quality'
+
+    getGraphicQuality: function () {
+      if (!this._graphicQualityLoaded) {
+        this._graphicQualityLoaded = true;
+        try {
+          const saved = global.localStorage && global.localStorage.getItem('soyun_graphic_quality_v1');
+          if (saved === 'auto' || saved === 'performance' || saved === 'quality') {
+            this.graphicQuality = saved;
+          }
+        } catch (_e) {}
+      }
+      return this.graphicQuality || 'auto';
+    },
+
+    setGraphicQuality: function (quality) {
+      const q = (quality === 'performance' || quality === 'quality') ? quality : 'auto';
+      this.graphicQuality = q;
+      this._graphicQualityLoaded = true;
+      try {
+        if (global.localStorage) {
+          global.localStorage.setItem('soyun_graphic_quality_v1', q);
+        }
+      } catch (_e) {}
+      if (this.isInitialized && this.scene) {
+        this.resize();
+        const savedStage = this.currentStage || 1;
+        while (this.scene.children.length > 0) {
+          this.scene.remove(this.scene.children[0]);
+        }
+        this.activeGates = [];
+        this.activeObstacles = [];
+        this.activeProjectiles = [];
+        this.particles = [];
+        this._initSharedBrickAssets();
+        this._initTextures();
+        this._buildLighting();
+        this._buildSkyAndHorizon();
+        this._buildHighwayAndScenery();
+        this._buildPlayerCar();
+        this._buildSpeedLines();
+        this._buildBossModel();
+        this.setStageTheme(savedStage);
+        this.renderSingleFrame();
+      }
+      return this;
+    },
+
+    _isPerformanceMode: function () {
+      const q = this.getGraphicQuality();
+      if (q === 'performance') return true;
+      if (q === 'quality') return false;
+      return this._isMobileDevice();
+    },
+
 
     getGraphicStyle: function () {
       if (!this._graphicStyleLoaded) {
@@ -756,7 +820,9 @@
       // 2. ConeGeometry: In 'smooth' mode, upgrade low-poly cones (4~12 segs) to 32 smooth segments!
       const PatchedCone = function (r, h, radialSegs, heightSegs, openEnded, thetaStart, thetaLength) {
         const gMode = self.getGraphicStyle(); const isSmooth = gMode === 'smooth' || gMode === 'cartoon';
-        const segs = isSmooth ? Math.max(32, radialSegs || 32) : radialSegs;
+        const isPerf = self._isPerformanceMode();
+        const targetSegs = isPerf ? 14 : 28;
+        const segs = isSmooth ? Math.max(targetSegs, radialSegs || targetSegs) : radialSegs;
         return new OrigCone(r, h, segs, heightSegs, openEnded, thetaStart, thetaLength);
       };
       PatchedCone.prototype = OrigCone.prototype;
@@ -766,7 +832,9 @@
       // 3. CylinderGeometry: In 'smooth' mode, upgrade low-poly cylinders (6~16 segs) to 28 smooth segments!
       const PatchedCyl = function (rt, rb, h, radialSegs, heightSegs, openEnded, thetaStart, thetaLength) {
         const gMode = self.getGraphicStyle(); const isSmooth = gMode === 'smooth' || gMode === 'cartoon';
-        const segs = isSmooth ? Math.max(28, radialSegs || 28) : radialSegs;
+        const isPerf = self._isPerformanceMode();
+        const targetSegs = isPerf ? 12 : 24;
+        const segs = isSmooth ? Math.max(targetSegs, radialSegs || targetSegs) : radialSegs;
         return new OrigCyl(rt, rb, h, segs, heightSegs, openEnded, thetaStart, thetaLength);
       };
       PatchedCyl.prototype = OrigCyl.prototype;
@@ -777,7 +845,9 @@
       if (OrigDodec) {
         const PatchedDodec = function (r, detail) {
           const gMode = self.getGraphicStyle(); const isSmooth = gMode === 'smooth' || gMode === 'cartoon';
-          return new OrigDodec(r, isSmooth ? Math.max(3, detail || 0) : detail);
+          const isPerf = self._isPerformanceMode();
+          const targetDetail = isPerf ? 1 : 2;
+          return new OrigDodec(r, isSmooth ? Math.max(targetDetail, detail || 0) : detail);
         };
         PatchedDodec.prototype = OrigDodec.prototype;
         THREE.DodecahedronGeometry = PatchedDodec;
@@ -785,7 +855,9 @@
       if (OrigOcta) {
         const PatchedOcta = function (r, detail) {
           const gMode = self.getGraphicStyle(); const isSmooth = gMode === 'smooth' || gMode === 'cartoon';
-          return new OrigOcta(r, isSmooth ? Math.max(3, detail || 0) : detail);
+          const isPerf = self._isPerformanceMode();
+          const targetDetail = isPerf ? 1 : 2;
+          return new OrigOcta(r, isSmooth ? Math.max(targetDetail, detail || 0) : detail);
         };
         PatchedOcta.prototype = OrigOcta.prototype;
         THREE.OctahedronGeometry = PatchedOcta;
@@ -2216,7 +2288,9 @@
       this.curbMatA = new THREE.MeshBasicMaterial({ color: this.currentTheme.curbA });
       this.curbMatB = new THREE.MeshBasicMaterial({ color: this.currentTheme.curbB });
 
-      for (let i = 0; i < 32; i++) {
+      const isPerf = this._isPerformanceMode();
+      const curbRows = isPerf ? 20 : 32;
+      for (let i = 0; i < curbRows; i++) {
         const zPos = 24 - i * 7.5;
         const wf = 1;
         const curveX = this._getRoadCurveX(zPos);
@@ -2264,7 +2338,9 @@
         color: 0xf4fbff
       });
 
-      for (let i = 0; i < 18; i++) {
+      const sceneryRows = isPerf ? 10 : 18;
+      const animalRows = isPerf ? 6 : 14;
+      for (let i = 0; i < sceneryRows; i++) {
         const zPos = 20 - i * 12;
         [-1, 1].forEach((side) => {
           // Floating Roblox Obby Rainbow Brick Platform beside the highway
@@ -2285,7 +2361,7 @@
           this.obbyPlatforms.push(obbyPlat);
 
           // Roaming 3D Biome Animals right beside the road (Lions in Jungle, Camels + Foxes in Desert, Penguins + Polar Bears in Glacier, Dinosaurs in Jurassic, Deer/Pegasus/Turtles/Pandas!)
-          if (i < 14) {
+          if (i < animalRows) {
             const animalCluster = this._createMultiBiomeAnimalContainer(i, side);
             const animalBaseX = side * (10.4 + (i % 2) * 1.6);
             animalCluster.position.set(animalBaseX, 0, zPos - 2);
@@ -6942,7 +7018,9 @@
       this.camera.updateProjectionMatrix();
       if (this.renderer) {
         this.renderer.setSize(width, height);
-        this.renderer.setPixelRatio(Math.min(global.devicePixelRatio || 1, width < 768 ? 1.75 : 2));
+        const isPerf = this._isPerformanceMode();
+        const maxRatio = isPerf ? 1.0 : (width < 768 ? 1.25 : 1.75);
+        this.renderer.setPixelRatio(Math.min(global.devicePixelRatio || 1, maxRatio));
       }
     },
 
