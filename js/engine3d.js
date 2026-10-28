@@ -5407,10 +5407,15 @@ _isMobileDevice: function () {
      */
     _createChoiceSignTexture: function (laneIndex, choiceText, accentHex) {
       const THREE = global.THREE;
+      const S = 2; // 2x high-resolution supersampling scale (1280 x 840) for ultra-sharp signboard text
       const canvas = document.createElement('canvas');
-      canvas.width = 640;
-      canvas.height = 420;
+      canvas.width = 640 * S;
+      canvas.height = 420 * S;
       const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+      }
 
       const laneColors = ['#00f3ff', '#ffe600', '#ff2a85'];
       const borderColor = accentHex ? hexToCss(accentHex) : laneColors[laneIndex] || '#00f3ff';
@@ -5421,10 +5426,10 @@ _isMobileDevice: function () {
       // Thick glowing neon border on transparent glass
       ctx.save();
       ctx.strokeStyle = borderColor;
-      ctx.lineWidth = 14;
+      ctx.lineWidth = 14 * S;
       ctx.shadowColor = borderColor;
-      ctx.shadowBlur = 20;
-      roundRectPath(ctx, 16, 16, canvas.width - 32, canvas.height - 32, 26);
+      ctx.shadowBlur = 20 * S;
+      roundRectPath(ctx, 16 * S, 16 * S, canvas.width - 32 * S, canvas.height - 32 * S, 26 * S);
       ctx.stroke();
       ctx.restore();
 
@@ -5433,19 +5438,19 @@ _isMobileDevice: function () {
       const isSpeechSign = rawChoiceStr.startsWith('🎤');
       if (isSpeechSign) {
         ctx.fillStyle = borderColor;
-        roundRectPath(ctx, 24, 22, 148, 52, 14);
+        roundRectPath(ctx, 24 * S, 22 * S, 148 * S, 52 * S, 14 * S);
         ctx.fill();
 
         ctx.fillStyle = '#050614';
-        ctx.font = '900 30px "Malgun Gothic", "Orbitron", sans-serif';
+        ctx.font = '900 ' + (30 * S) + 'px "Malgun Gothic", "Orbitron", sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('🎤 말하기', 98, 49);
+        ctx.fillText('🎤 말하기', 98 * S, 49 * S);
       }
 
-      // Giant Answer Text filling 100% of the signboard
+      // Giant Answer Text filling 100% of the signboard - ULTRA HIGH CONTRAST & PIN-SHARP
       const text = rawChoiceStr.trim();
-      const maxWidth = canvas.width - 36;
+      const maxWidth = canvas.width - 36 * S;
       const fontFamily = '"Malgun Gothic", "Pretendard", "Apple SD Gothic Neo", "Orbitron", sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
@@ -5453,7 +5458,7 @@ _isMobileDevice: function () {
       ctx.strokeStyle = '#040614';
       ctx.fillStyle = '#ffffff';
       ctx.shadowColor = borderColor;
-      ctx.shadowBlur = 22;
+      ctx.shadowBlur = 22 * S;
 
       // Determine whether 2-line split gives much larger text (e.g. multi-word English or Korean > 4 chars)
       const hasSpaceOrSlash = text.indexOf(' ') > 0 || text.indexOf('/') > 0;
@@ -5471,45 +5476,45 @@ _isMobileDevice: function () {
         const line2 = text.slice(splitIdx).trim();
 
         if (line1 && line2) {
-          let fontSize = isSpeechSign ? 176 : 212;
-          while (fontSize > 96) {
+          let fontSize = (isSpeechSign ? 176 : 212) * S;
+          while (fontSize > 96 * S) {
             ctx.font = `900 ${fontSize}px ${fontFamily}`;
             const w1 = ctx.measureText(line1).width;
             const w2 = ctx.measureText(line2).width;
             if (Math.max(w1, w2) <= maxWidth) break;
-            fontSize -= 6;
+            fontSize -= 6 * S;
           }
           ctx.font = `900 ${fontSize}px ${fontFamily}`;
-          ctx.lineWidth = Math.max(14, Math.round(fontSize * 0.095));
-          const y1 = isSpeechSign ? 166 : 126;
-          const y2 = isSpeechSign ? 314 : 302;
+          ctx.lineWidth = Math.max(14 * S, Math.round(fontSize * 0.095));
+          const y1 = (isSpeechSign ? 166 : 126) * S;
+          const y2 = (isSpeechSign ? 314 : 302) * S;
           ctx.strokeText(line1, canvas.width / 2, y1, maxWidth);
           ctx.fillText(line1, canvas.width / 2, y1, maxWidth);
           ctx.strokeText(line2, canvas.width / 2, y2, maxWidth);
           ctx.fillText(line2, canvas.width / 2, y2, maxWidth);
         } else {
-          let fontSize = 286;
-          while (fontSize > 110) {
+          let fontSize = 286 * S;
+          while (fontSize > 110 * S) {
             ctx.font = `900 ${fontSize}px ${fontFamily}`;
             if (ctx.measureText(text).width <= maxWidth) break;
-            fontSize -= 8;
+            fontSize -= 8 * S;
           }
           ctx.font = `900 ${fontSize}px ${fontFamily}`;
-          ctx.lineWidth = Math.max(16, Math.round(fontSize * 0.095));
-          const cy = isSpeechSign ? 242 : 214;
+          ctx.lineWidth = Math.max(16 * S, Math.round(fontSize * 0.095));
+          const cy = (isSpeechSign ? 242 : 214) * S;
           ctx.strokeText(text, canvas.width / 2, cy, maxWidth);
           ctx.fillText(text, canvas.width / 2, cy, maxWidth);
         }
       } else {
-        let fontSize = 292;
-        while (fontSize > 120) {
+        let fontSize = 292 * S;
+        while (fontSize > 120 * S) {
           ctx.font = `900 ${fontSize}px ${fontFamily}`;
           if (ctx.measureText(text).width <= maxWidth) break;
-          fontSize -= 8;
+          fontSize -= 8 * S;
         }
         ctx.font = `900 ${fontSize}px ${fontFamily}`;
-        ctx.lineWidth = Math.max(16, Math.round(fontSize * 0.095));
-        const cy = isSpeechSign ? 242 : 214;
+        ctx.lineWidth = Math.max(16 * S, Math.round(fontSize * 0.095));
+        const cy = (isSpeechSign ? 242 : 214) * S;
         ctx.strokeText(text, canvas.width / 2, cy, maxWidth);
         ctx.fillText(text, canvas.width / 2, cy, maxWidth);
       }
@@ -5517,6 +5522,15 @@ _isMobileDevice: function () {
       ctx.shadowBlur = 0;
 
       const texture = new THREE.CanvasTexture(canvas);
+      texture.generateMipmaps = true;
+      texture.minFilter = THREE.LinearMipmapLinearFilter;
+      texture.magFilter = THREE.LinearFilter;
+      if (this.renderer && this.renderer.capabilities) {
+        try {
+          const maxAniso = this.renderer.capabilities.getMaxAnisotropy() || 1;
+          texture.anisotropy = Math.min(16, maxAniso);
+        } catch (_e) {}
+      }
       texture.needsUpdate = true;
       return texture;
     },
@@ -5524,13 +5538,20 @@ _isMobileDevice: function () {
     /**
      * Spawn a 3-Lane Overhead Roblox Obby Quiz Gate at GATE_SPAWN_Z (-88)
      */
-    spawnQuestionGate: function (questionData) {
+    spawnQuestionGate: function (questionData, isBossPhaseOverride) {
       if (!this.isInitialized) this.init();
       const THREE = global.THREE;
       if (!THREE || !this.scene) return null;
 
       const cfg = getCfg();
       const lanes = cfg.LANES;
+      const isBoss = (typeof isBossPhaseOverride === 'boolean') ? isBossPhaseOverride : Boolean(this.isBossActive);
+
+      // In Boss Battle Phase, increase question distance interval by 1.3x!
+      const normalSpan = cfg.GATE_PASS_Z - cfg.GATE_SPAWN_Z;
+      const actualSpan = isBoss ? (normalSpan * 1.3) : normalSpan;
+      const spawnZ = cfg.GATE_PASS_Z - actualSpan;
+
       const qData = questionData || {
         question: '3 + 4 = ?',
         choices: ['6', '7', '8'],
@@ -5551,7 +5572,8 @@ _isMobileDevice: function () {
           : 0;
 
       const gateGroup = new THREE.Group();
-      gateGroup.position.set(0, 0, cfg.GATE_SPAWN_Z);
+      gateGroup.position.set(0, 0, spawnZ);
+      gateGroup.userData = { spawnZ: spawnZ };
       // Start scaled up when far away so the 3 answer signboards are BIG right from the start,
       // while adapting automatically on narrow mobile portrait screens so all 3 lanes fit 100%!
       const initScale = this._getAdaptiveGateScale(0);
@@ -5660,7 +5682,9 @@ _isMobileDevice: function () {
         progress: 0,
         curtains,
         hazardMeshes,
-        disposables
+        disposables,
+        spawnZ: spawnZ,
+        passZ: cfg.GATE_PASS_Z
       };
 
       this.activeGates.push(gateObj);
@@ -6277,8 +6301,9 @@ _isMobileDevice: function () {
 
       // 4. Violent 3D Boss Stagger, Knockback, Air-Pop, Spin-Yaw, Roll & Elastic Squash-and-Stretch!
       const sideSign = Math.random() < 0.5 ? 1 : -1;
-      this.bossHitTimer = isSecondaryChain ? Math.max(this.bossHitTimer, 0.48) : 0.72;
-      this.bossSquashTimer = isSecondaryChain ? Math.max(this.bossSquashTimer, 0.36) : 0.54;
+      // 1.3x extended boss under-attack reaction, flail and spotlight duration
+      this.bossHitTimer = isSecondaryChain ? Math.max(this.bossHitTimer, 0.62) : 0.94;
+      this.bossSquashTimer = isSecondaryChain ? Math.max(this.bossSquashTimer, 0.47) : 0.70;
       this.bossRecoilZ = isSecondaryChain ? Math.min(this.bossRecoilZ, -9.5) : -13.5;
       this.bossRecoilY = isSecondaryChain ? Math.max(this.bossRecoilY, 2.0) : 3.2;
       this.bossRecoilPitch = isSecondaryChain ? -0.65 : -0.92;
@@ -6286,9 +6311,9 @@ _isMobileDevice: function () {
       this.bossRecoilRoll = -sideSign * (isSecondaryChain ? 0.38 : 0.58);
 
       this.shakeIntensity = isSecondaryChain ? 0.78 : 1.08;
-      this.shakeTimer = isSecondaryChain ? 0.32 : 0.48;
+      this.shakeTimer = isSecondaryChain ? 0.42 : 0.62;
       this.cameraZoomPunch = isSecondaryChain ? 12.0 : 17.5;
-      this.bossSpotlightTimer = Math.max(this.bossSpotlightTimer || 0, 0.95);
+      this.bossSpotlightTimer = Math.max(this.bossSpotlightTimer || 0, 1.25);
 
       if (this.bossImpactLight) {
         this.bossImpactLight.color.setHex(sphereColor);
@@ -6305,8 +6330,8 @@ _isMobileDevice: function () {
       // 6. Queue 2 secondary chain-detonations on the Boss's shoulders/hammer for BOOM-BOOM-BOOM impact!
       if (!isSecondaryChain && Array.isArray(this.bossChainExplosions)) {
         this.bossChainExplosions.push(
-          { delay: 0.16, offsetX: -3.2, offsetY: 1.4, offsetZ: 0.6, attackType: atkType },
-          { delay: 0.34, offsetX: 3.4, offsetY: -0.6, offsetZ: 1.0, attackType: atkType }
+          { delay: 0.21, offsetX: -3.2, offsetY: 1.4, offsetZ: 0.6, attackType: atkType },
+          { delay: 0.44, offsetX: 3.4, offsetY: -0.6, offsetZ: 1.0, attackType: atkType }
         );
       }
 
@@ -6446,7 +6471,7 @@ _isMobileDevice: function () {
           trailColor: 0xffaa00,
           attackType: 'ballistic_missile',
           age: 0,
-          duration: 0.40,
+          duration: 0.52,
           isPrimaryBomb: true
         });
 
@@ -6464,7 +6489,7 @@ _isMobileDevice: function () {
           trailColor: 0x00f3ff,
           attackType: 'ballistic_missile',
           age: 0,
-          duration: 0.44,
+          duration: 0.57,
           isPrimaryBomb: false
         });
 
@@ -6482,7 +6507,7 @@ _isMobileDevice: function () {
           trailColor: 0xff2a85,
           attackType: 'ballistic_missile',
           age: 0,
-          duration: 0.46,
+          duration: 0.60,
           isPrimaryBomb: false
         });
 
@@ -6533,7 +6558,7 @@ _isMobileDevice: function () {
           trailColor: 0x00e5ff,
           attackType: 'water_gun',
           age: 0,
-          duration: 0.30,
+          duration: 0.39,
           isPrimaryBomb: true
         });
 
@@ -6552,7 +6577,7 @@ _isMobileDevice: function () {
             trailColor: 0x90e0ef,
             attackType: 'water_gun',
             age: 0,
-            duration: 0.36 + idx * 0.04,
+            duration: 0.47 + idx * 0.05,
             isPrimaryBomb: false
           });
         });
@@ -6610,7 +6635,7 @@ _isMobileDevice: function () {
           trailColor: 0xffe600,
           attackType: 'meteor_hammer',
           age: 0,
-          duration: 0.36,
+          duration: 0.47,
           isPrimaryBomb: true
         });
 
@@ -6629,7 +6654,7 @@ _isMobileDevice: function () {
             trailColor: 0xff007f,
             attackType: 'meteor_hammer',
             age: 0,
-            duration: 0.40 + idx * 0.04,
+            duration: 0.52 + idx * 0.05,
             isPrimaryBomb: false
           });
         });
@@ -6652,7 +6677,7 @@ _isMobileDevice: function () {
           trailColor: 0xff9900,
           attackType: 'round_bomb',
           age: 0,
-          duration: 0.34,
+          duration: 0.44,
           isPrimaryBomb: true
         });
 
@@ -6671,7 +6696,7 @@ _isMobileDevice: function () {
           trailColor: 0xff2a85,
           attackType: 'round_bomb',
           age: 0,
-          duration: 0.37,
+          duration: 0.48,
           isPrimaryBomb: false
         });
 
@@ -6679,14 +6704,14 @@ _isMobileDevice: function () {
         spawnBeam(petStart, endPos, 0xff2a85, 0.16, 0.28, 0.85, 0.30);
       }
 
-      // Immediate launch recoil + muzzle blast + 1.35s Boss Camera Spotlight!
-      this.bossSpotlightTimer = Math.max(this.bossSpotlightTimer || 0, 1.35);
+      // Immediate launch recoil + muzzle blast + 1.76s (1.3x) Boss Camera Spotlight!
+      this.bossSpotlightTimer = Math.max(this.bossSpotlightTimer || 0, 1.76);
       if (this.bossImpactLight) {
         this.bossImpactLight.color.setHex(chosen.type === 'water_gun' ? 0x00e5ff : 0xffe600);
         this.bossImpactLight.intensity = 6.5;
       }
-      this.bossHitTimer = Math.max(this.bossHitTimer, 0.55);
-      this.bossSquashTimer = Math.max(this.bossSquashTimer, 0.32);
+      this.bossHitTimer = Math.max(this.bossHitTimer, 0.72);
+      this.bossSquashTimer = Math.max(this.bossSquashTimer, 0.42);
       this.bossRecoilZ = Math.min(this.bossRecoilZ, -2.2);
       this.bossRecoilY = Math.max(this.bossRecoilY, 0.32);
       this.bossRecoilPitch = -0.48;
@@ -6842,7 +6867,7 @@ _isMobileDevice: function () {
       if (now - this.lastAutoLaserTime > 120) {
         this._fireLaserAtBoss();
       } else {
-        this.bossHitTimer = Math.max(this.bossHitTimer, 0.58);
+        this.bossHitTimer = Math.max(this.bossHitTimer, 0.75);
       }
       return this;
     },
@@ -6870,28 +6895,28 @@ _isMobileDevice: function () {
       this._updateBossHpBar(0);
       this.bossDefeating = false;
       this.isVictoryCruise = false;
-      this.bossFinisherSlowMoTimer = 8.0; // Exact 8.0s Slow-Motion Boss Finisher Barrage
-      this.bossSpotlightTimer = 8.0;
-      this.avatarCheerTimer = 8.0;
-      this.petSpinTimer = 8.0;
-      this.boostEffectTimer = 8.0;
+      this.bossFinisherSlowMoTimer = 10.4; // 1.3x extended (10.4s) Slow-Motion Boss Finisher Barrage
+      this.bossSpotlightTimer = 10.4;
+      this.avatarCheerTimer = 10.4;
+      this.petSpinTimer = 10.4;
+      this.boostEffectTimer = 10.4;
 
       this.bossFinisherQueue = [
-        { delay: 0.15, weapon: 'ballistic_missile' },
-        { delay: 0.65, weapon: 'water_gun' },
-        { delay: 1.15, weapon: 'mega_laser' },
-        { delay: 1.65, weapon: 'round_bomb' },
-        { delay: 2.15, weapon: 'meteor_hammer' },
-        { delay: 2.65, weapon: 'ballistic_missile' },
-        { delay: 3.15, weapon: 'water_gun' },
-        { delay: 3.65, weapon: 'mega_laser' },
-        { delay: 4.15, weapon: 'round_bomb' },
-        { delay: 4.65, weapon: 'meteor_hammer' },
-        { delay: 5.15, weapon: 'ballistic_missile' },
-        { delay: 5.65, weapon: 'water_gun' },
-        { delay: 6.10, weapon: 'mega_laser' },
-        { delay: 6.50, weapon: 'round_bomb' },
-        { delay: 6.85, weapon: 'meteor_hammer', isFinale: true }
+        { delay: 0.20, weapon: 'ballistic_missile' },
+        { delay: 0.85, weapon: 'water_gun' },
+        { delay: 1.50, weapon: 'mega_laser' },
+        { delay: 2.15, weapon: 'round_bomb' },
+        { delay: 2.80, weapon: 'meteor_hammer' },
+        { delay: 3.45, weapon: 'ballistic_missile' },
+        { delay: 4.10, weapon: 'water_gun' },
+        { delay: 4.75, weapon: 'mega_laser' },
+        { delay: 5.40, weapon: 'round_bomb' },
+        { delay: 6.05, weapon: 'meteor_hammer' },
+        { delay: 6.70, weapon: 'ballistic_missile' },
+        { delay: 7.35, weapon: 'water_gun' },
+        { delay: 7.93, weapon: 'mega_laser' },
+        { delay: 8.45, weapon: 'round_bomb' },
+        { delay: 8.90, weapon: 'meteor_hammer', isFinale: true }
       ];
       return this;
     },
@@ -7666,7 +7691,8 @@ _isMobileDevice: function () {
         gate.group.position.x = this._getRoadCurveX(gate.group.position.z) * 0.45;
         gate.group.rotation.y = -this._getRoadCurveSlope(gate.group.position.z) * 0.25;
 
-        const rawProgress = (gate.group.position.z - spawnZ) / Math.max(1, passZ - spawnZ);
+        const gateSpawnZ = (typeof gate.spawnZ === 'number') ? gate.spawnZ : spawnZ;
+        const rawProgress = (gate.group.position.z - gateSpawnZ) / Math.max(1, passZ - gateSpawnZ);
         gate.progress = Math.max(0, Math.min(1, rawProgress));
 
         // Perspective distance scale compensation: starts large when far away so answers are BIG right from the start,

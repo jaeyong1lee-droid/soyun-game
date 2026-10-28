@@ -588,7 +588,7 @@
 
       if (window.Engine3D && typeof window.Engine3D.spawnQuestionGate === 'function') {
         window.Engine3D.clearActiveGates();
-        window.Engine3D.spawnQuestionGate(question);
+        window.Engine3D.spawnQuestionGate(question, state.isBossPhase);
       }
 
       if (window.UIManager) {
@@ -889,7 +889,7 @@
                 return;
               }
               self._showBossFinisherClickPrompt(pointsEarned);
-            }, 8000);
+            }, 10400); // 1.3x extended boss finisher duration
             return;
           } else {
             if (window.UIManager && typeof window.UIManager.pushRobloxChat === 'function') {
@@ -921,7 +921,7 @@
                 window.Engine3D.setSpeed(getEffectiveSpeed());
               }
               self.spawnNextQuestion();
-            }, 1300);
+            }, 1690); // 1.3x extended boss attack spotlight duration
           }
         } else {
           // Normal Stage Question Phase
@@ -1040,6 +1040,12 @@
 
         if (state.hp <= 0) {
           this.handleGameOver();
+        } else if (state.isBossPhase) {
+          const self = this;
+          setTimeout(function () {
+            if (!state.isPlaying || state.isGameOver || !state.isBossPhase) return;
+            self.spawnNextQuestion();
+          }, 1690); // 1.3x spacing interval between questions in Boss battle
         } else {
           this.spawnNextQuestion();
         }
